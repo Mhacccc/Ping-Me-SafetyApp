@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, ShieldAlert, CheckCircle } from 'lucide-react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { ChevronRight, ShieldAlert } from 'lucide-react';
+import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useBraceletUsers } from '../hooks/useUsers';
+import { useAuth } from '../context/AuthContext';
 import ReportDetailModal from '../components/ReportDetailModal';
 import './Report.css';
 
@@ -10,10 +11,19 @@ const Report = () => {
   const [reports, setReports] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
   const { braceletUsers } = useBraceletUsers();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
+    if (!currentUser) {
+      setReports([]);
+      return;
+    }
+
     // Listen to reports collection
-    const q = query(collection(db, 'reports'));
+    const q = query(
+      collection(db, 'reports'),
+      where('appUserId', '==', currentUser.uid)
+    );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedReports = snapshot.docs.map(doc => ({
@@ -32,15 +42,14 @@ const Report = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   // Helper to merge report data with user data
   const getEnrichedReport = (report) => {
-    const user = braceletUsers.find(u => u.id === report.userId) || {
+    const user = braceletUsers.find(u => u.id === report.braceletUserId) || {
       name: 'Unknown Device',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown'
     };
-
     return {
       ...report,
       user: {
@@ -50,8 +59,8 @@ const Report = () => {
       // Since reports are generated when SOS turns OFF, we treat them as "Resolved"
       displayStatus: { 
         text: 'Marked Safe',
-        color: 'green', 
-        icon: CheckCircle 
+        color: 'red', 
+        icon: ShieldAlert 
       },
       // Map fields for the modal
       pulse: `${report.pulseRate} bpm`,

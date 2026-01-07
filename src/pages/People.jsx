@@ -8,7 +8,10 @@ import { collection, addDoc, doc, updateDoc, arrayUnion, serverTimestamp } from 
 import { db } from "../config/firebaseConfig";
 import { Plus, X } from "lucide-react";
 
-// Simple Search Icon
+/**
+ * Simple Search Icon component used in the search input field.
+ * Renders an SVG icon.
+ */
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"></circle>
@@ -16,6 +19,17 @@ const SearchIcon = () => (
   </svg>
 );
 
+/**
+ * People Page Component
+ * 
+ * Displays a list of tracked bracelet users (people).
+ * Allows the App User to:
+ * 1. View the status (online/offline, battery, SOS) of linked bracelets.
+ * 2. Search/Filter the list of people.
+ * 3. Add new bracelets to their account via a modal form.
+ * 
+ * Uses the `useBraceletUsers` hook to fetch real-time data from Firestore.
+ */
 function People() {
   const { braceletUsers, loading, error } = useBraceletUsers();
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +42,18 @@ function People() {
   const [emergencyContactInput, setEmergencyContactInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * Filters and sorts the list of users based on the search query and status.
+   * 
+   * Sorting priority:
+   * 1. SOS Active (High priority)
+   * 2. Online status
+   * 3. Alphabetical by name
+   * 
+   * @param {Array} users - The list of bracelet users.
+   * @param {string} query - The search string.
+   * @returns {Array} - The sorted and filtered list.
+   */
   const sortAndFilterUsers = (users, query) => {
     const filtered = users.filter((user) =>
       user.name.toLowerCase().includes(query.toLowerCase())
@@ -44,6 +70,17 @@ function People() {
 
   const filteredUsers = sortAndFilterUsers(braceletUsers, searchQuery);
 
+  /**
+   * Handles the submission of the "Add Bracelet" form.
+   * 
+   * Performs the following steps:
+   * 1. Validates the current user is authenticated.
+   * 2. Creates a new document in the `braceletUsers` collection.
+   * 3. Creates a corresponding initial document in the `deviceStatus` collection.
+   * 4. Updates the current `appUser` document to link the new bracelet ID.
+   * 
+   * @param {Event} e - The form submission event.
+   */
   const handleAddBracelet = async (e) => {
     e.preventDefault();
     if (!newBraceletName.trim()) return;
@@ -60,8 +97,10 @@ function People() {
         return;
       }
 
-      // 1. Create the braceletUser document
-      // This matches your requested structure with ownerAppUserId
+      /**
+       * 1. Create the braceletUser document.
+       * This stores the static profile information of the bracelet wearer.
+       */
       const newBraceletUser = {
         name: newBraceletName,
         ownerAppUserId: user.uid,
@@ -76,7 +115,10 @@ function People() {
 
       const docRef = await addDoc(collection(db, 'braceletUsers'), newBraceletUser);
 
-      // Create initial deviceStatus document for this bracelet user
+      /**
+       * 2. Create initial deviceStatus document for this bracelet user.
+       * This collection tracks dynamic data like battery, location, and SOS status.
+       */
       const deviceData = {
         battery: 100,
         isBraceletOn: true,
@@ -93,8 +135,10 @@ function People() {
         console.error('Failed to create deviceStatus for new bracelet:', devErr);
       }
 
-      // 2. Link to the appUser
-      // This adds the new ID to the linkedBraceletsID array
+      /**
+       * 3. Link to the appUser.
+       * Updates the logged-in user's document to include the new bracelet's ID.
+       */
       const appUserRef = doc(db, 'appUsers', user.uid);
       await updateDoc(appUserRef, {
         linkedBraceletsID: arrayUnion(docRef.id)
