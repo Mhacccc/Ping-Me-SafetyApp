@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Login from "./context/Login";
 import Signup from "./context/Signup";
+import { ToastProvider } from "./context/ToastContext";
 import AppLayout from "./layouts/AppLayout";
 import People from "./pages/People";
 import UserProfile from "./pages/UserProfile";
@@ -20,6 +21,7 @@ function App() {
   return (
     <>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -37,6 +39,7 @@ function App() {
             </Route>
           </Route>
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </>
 

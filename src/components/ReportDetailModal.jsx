@@ -40,7 +40,6 @@ const ReportDetailModal = ({ incident, onClose }) => {
                     <DetailRow label="Time" value={incident.time} />
                     <DetailRow label="Location" value={incident.location} />
                     <DetailRow label="Pulse Reading" value={incident.pulse} />
-                    <DetailRow label="Family Notified" value={incident.familyNotified} />
                     <DetailRow label="Bracelet Status" value={incident.braceletStatus} />
                 </div>
             </section>

@@ -1,20 +1,26 @@
-
-import { useState, useEffect } from 'react';
-import { collection, getDocs, onSnapshot, doc, getDoc, query, where, documentId } from 'firebase/firestore';
+import { useState, useEffect, useRef } from 'react';
+import { collection, getDocs, onSnapshot, doc, getDoc, query, where, documentId, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import * as mapHelpers from '../utils/mapHelpers';
 import { useAuth } from '../context/AuthContext';
+import { reverseGeocode } from '../utils/geocode';
+import { useToast } from '../context/ToastContext';
 
 export function useBraceletUsers() {
   const { currentUser } = useAuth();
+  const { addToast } = useToast();
   const [braceletUsers, setBraceletUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Track previous SOS states to detect when SOS turns off
+  const previousSosStates = useRef(new Map());
 
   useEffect(() => {
     let unsubDevice = null;
 
     async function initialLoad() {
+      previousSosStates.current.clear();
       // If no user is logged in, do nothing.
       if (!currentUser) {
         setBraceletUsers([]);
@@ -36,7 +42,9 @@ export function useBraceletUsers() {
           return;
         }
 
-        const linkedBraceletsID = appUserSnap.data()?.linkedBraceletsID;
+        const appUserData = appUserSnap.data();
+        const linkedBraceletsID = appUserData?.linkedBraceletsID;
+        const appUserName = appUserData?.name || "App User";
 
         // 2. If the user has no linked bracelets, return an empty list.
         if (!linkedBraceletsID || linkedBraceletsID.length === 0) {
@@ -61,6 +69,13 @@ export function useBraceletUsers() {
         });
 
         const merged = usersSnap.docs.map((u) => mapHelpers.buildUserWithDevice(u, deviceMap));
+        
+        // Map for report generation
+        const braceletNameMap = new Map();
+        usersSnap.docs.forEach(doc => {
+          braceletNameMap.set(doc.id, doc.data().name || "Unknown Bracelet");
+        });
+
         setBraceletUsers(merged);
         setLoading(false);
 
@@ -72,9 +87,51 @@ export function useBraceletUsers() {
             if (!uid) return;
             if (change.type === 'added' || change.type === 'modified') {
               updatesByUser.set(uid, dd);
+
+              // Check for SOS transition: True -> False (Incident Resolved)
+              const newSos = (dd.sos && (dd.sos.active ?? dd.sos)) || false;
+              const oldSos = previousSosStates.current.get(uid);
+
+              if (oldSos === true && newSos === false) {
+                // Generate Report
+                (async () => {
+                  try {
+                    const loc = mapHelpers.parseLocation(dd.location) || mapHelpers.parseLocation(dd);
+                    let locationAddress = "Unknown Location";
+                    if (loc) {
+                      const addr = await reverseGeocode(loc[0], loc[1]);
+                      if (addr) locationAddress = addr;
+                    }
+
+                    let reportDate = new Date();
+                    if (dd.sos && dd.sos.timestamp) {
+                       const parsed = mapHelpers.parseFirestoreDate(dd.sos.timestamp);
+                       if (parsed) reportDate = parsed;
+                    }
+
+                    await addDoc(collection(db, 'reports'), {
+                      braceletStatus: dd.isBraceletOn ?? false,
+                      avatar: null,
+                      date: reportDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                      time: reportDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                      pulseRate: dd.pulseRate ?? 0,
+                      location: locationAddress,
+                      appUserId: currentUser.uid,
+                      appUserName: appUserName,
+                      braceletUserId: uid,
+                      braceletUserName: braceletNameMap.get(uid) || "Unknown Bracelet"
+                    });
+                    addToast('SOS Resolved: New incident report generated.', 'success');
+                  } catch (err) {
+                    console.error("Error generating report:", err);
+                  }
+                })();
+              }
+              previousSosStates.current.set(uid, newSos);
             }
             if (change.type === 'removed') {
               updatesByUser.set(uid, null);
+              previousSosStates.current.delete(uid);
             }
           });
 

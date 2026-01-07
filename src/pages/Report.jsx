@@ -1,41 +1,66 @@
-import { useState } from 'react';
-import { ChevronRight, ShieldAlert } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronRight, ShieldAlert, CheckCircle } from 'lucide-react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
+import { useBraceletUsers } from '../hooks/useUsers';
 import ReportDetailModal from '../components/ReportDetailModal';
 import './Report.css';
 
-// Existing incidentData...
-export const incidentData = [
-  {
-    id: 4,
-    type: 'Panic Button',
-    date: 'April 25, 2025',
-    time: '03:15 PM',
-    location: 'TUP Library, Manila',
-    user: { name: 'Sister', avatar: 'https://i.pravatar.cc/150?u=sister' },
-    displayStatus: { text: 'Panic Button Active', color: 'red', icon: ShieldAlert },
-    pulse: '122 bpm',
-    familyNotified: 'April 25, 03:16 PM',
-    braceletStatus: 'On',
-  },
-  {
-    id: 1,
-    type: 'Panic Button',
-    date: 'April 24, 2025',
-    time: '10:03 AM',
-    location: 'South Road Drive, Kalaw Ave, Ext, Manila',
-    user: { name: 'Mary', avatar: 'https://i.pravatar.cc/150?u=mary' },
-    displayStatus: { text: 'Panic Button', color: 'red', icon: ShieldAlert },
-    pulse: '115 bpm',
-    familyNotified: 'April 24, 10:04 AM',
-    braceletStatus: 'On',
-  },
-];
-
 const Report = () => {
+  const [reports, setReports] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const { braceletUsers } = useBraceletUsers();
+
+  useEffect(() => {
+    // Listen to reports collection
+    const q = query(collection(db, 'reports'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedReports = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Client-side sort by date/time (Newest first)
+      fetchedReports.sort((a, b) => {
+        const dateA = new Date(`${a.date} ${a.time}`);
+        const dateB = new Date(`${b.date} ${b.time}`);
+        return dateB - dateA;
+      });
+
+      setReports(fetchedReports);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Helper to merge report data with user data
+  const getEnrichedReport = (report) => {
+    const user = braceletUsers.find(u => u.id === report.userId) || {
+      name: 'Unknown Device',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown'
+    };
+
+    return {
+      ...report,
+      user: {
+        name: user.name,
+        avatar: user.avatar
+      },
+      // Since reports are generated when SOS turns OFF, we treat them as "Resolved"
+      displayStatus: { 
+        text: 'Marked Safe',
+        color: 'green', 
+        icon: CheckCircle 
+      },
+      // Map fields for the modal
+      pulse: `${report.pulseRate} bpm`,
+      braceletStatus: report.braceletStatus ? 'On' : 'Off',
+    };
+  };
 
   const handleRowClick = (incident) => {
-    setSelectedIncident(incident);
+    setSelectedIncident(getEnrichedReport(incident));
   };
 
   const handleCloseModal = () => {
@@ -46,7 +71,8 @@ const Report = () => {
     <div className="report-page-frame">
       <main className="app-main">
         <ul className="incident-list" aria-label="Incident list">
-          {incidentData.map(incident => {
+          {reports.map(rawReport => {
+            const incident = getEnrichedReport(rawReport);
             const IconComponent = incident.displayStatus.icon;
             
             return (
@@ -55,11 +81,11 @@ const Report = () => {
                 className="incident-item"
                 role="button"
                 tabIndex={0}
-                onClick={() => handleRowClick(incident)}
+                onClick={() => handleRowClick(rawReport)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    handleRowClick(incident);
+                    handleRowClick(rawReport);
                   }
                 }}
               >
