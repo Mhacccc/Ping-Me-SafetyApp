@@ -9,6 +9,9 @@ import { useState, useRef, useEffect } from "react";
 import L from "leaflet";
 import * as mapHelpers from "../utils/mapHelpers";
 import { useBraceletUsers } from "../hooks/useUsers";
+import { useAuth } from "../context/AuthContext";
+import { db } from "../config/firebaseConfig";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, limit } from "firebase/firestore";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -21,7 +24,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const LOCAL_STORAGE_KEY = "pingme_geofences";
-const GEOFENCE_ALERTS_KEY = "pingme_geofence_alerts";
+// Notifications are saved to Firestore `notifications` collection
 
 /* ---------------------- Helpers ---------------------- */
 
@@ -39,15 +42,12 @@ const Places = () => {
   const featureGroupRef = useRef(null);
   const pendingLayerRef = useRef(null);
   const alertedUsersRef = useRef(new Set());
+  const { currentUser } = useAuth();
 
-  // Check geofences for all users and trigger alerts
+  // Check geofences for all users and trigger alerts (save to Firestore)
   useEffect(() => {
     const currentAlerts = [];
-    const newGeofenceAlerts = [];
-
-    // Load existing alerts to check for duplicates
-    const existingAlerts = localStorage.getItem(GEOFENCE_ALERTS_KEY);
-    const parsedAlerts = existingAlerts ? JSON.parse(existingAlerts) : [];
+    const newlyDetected = [];
 
     braceletUsers.forEach((user) => {
       if (!Array.isArray(user.position) || user.position.length !== 2) return;
@@ -61,41 +61,57 @@ const Places = () => {
         const avatarVisualRadius = 10;
 
         if (distance <= zone.radius + avatarVisualRadius) {
-          currentAlerts.push(`${user.name} entered ${zone.name}`);
+          const alertMessage = `${user.name} entered ${zone.name}`;
+          currentAlerts.push(alertMessage);
           const alertKey = `${user.id}-${zone.id}`;
 
           // Track geofence hit only once per user-zone combination
           if (!alertedUsersRef.current.has(alertKey)) {
             alertedUsersRef.current.add(alertKey);
             console.warn(`🚨 ${user.name} entered geofence: ${zone.name}`);
-
-            // Check if this exact alert already exists to prevent duplicates on refresh
-            const alertMessage = `${user.name} entered ${zone.name}`;
-            const alertExists = parsedAlerts.some(
-              (alert) => alert.message === alertMessage
-            );
-
-            if (!alertExists) {
-              // Create notification alert object
-              const alertNotification = {
-                id: Date.now() + Math.random(), // Unique ID
-                title: "Geofence Alert",
-                message: alertMessage,
-                time: new Date().toLocaleTimeString(),
-                icon: user.avatar,
-                unread: true,
-              };
-              newGeofenceAlerts.push(alertNotification);
-            }
+            newlyDetected.push({ user, zone, message: alertMessage });
           }
         }
       });
     });
 
-    // Save geofence alerts to localStorage
-    if (newGeofenceAlerts.length > 0) {
-      const updatedAlerts = [...newGeofenceAlerts, ...parsedAlerts];
-      localStorage.setItem(GEOFENCE_ALERTS_KEY, JSON.stringify(updatedAlerts));
+    // For each new detection, write a notification to Firestore if not already present
+    if (newlyDetected.length > 0) {
+      (async () => {
+        try {
+          if (!currentUser) return;
+
+          for (const det of newlyDetected) {
+            const { user, zone, message } = det;
+
+            // Prevent duplicate notifications with a simple query
+            const dupQ = query(
+              collection(db, 'notifications'),
+              where('appUserId', '==', currentUser.uid),
+              where('braceletUserId', '==', user.id),
+              where('message', '==', message),
+              limit(1)
+            );
+            const dupSnap = await getDocs(dupQ);
+            if (!dupSnap.empty) {
+              continue;
+            }
+
+            await addDoc(collection(db, 'notifications'), {
+              appUserId: currentUser.uid,
+              braceletUserId: user.id,
+              title: 'Geofence Alert',
+              message: message,
+              read: false,
+              type: 'Geofence',
+              time: serverTimestamp(),
+              icon: user.avatar || null,
+            });
+          }
+        } catch (err) {
+          console.error('Failed saving geofence notifications:', err);
+        }
+      })();
     }
 
     setActiveAlerts(currentAlerts);
