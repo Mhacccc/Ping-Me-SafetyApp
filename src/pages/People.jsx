@@ -7,6 +7,7 @@ import { getAuth } from "firebase/auth";
 import { collection, addDoc, doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import { db } from "../config/firebaseConfig";
 import { Plus, X } from "lucide-react";
+import LoadingSpinner from '../components/LoadingSpinner';
 
 /**
  * Simple Search Icon component used in the search input field.
@@ -164,7 +165,7 @@ function People() {
     }
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading"><LoadingSpinner/></div>;
   if (error) return <div className="error">{error}</div>;
 
   return (

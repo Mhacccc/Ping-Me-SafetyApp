@@ -7,6 +7,7 @@ import logo from '../assets/logo.png';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../config/firebaseConfig';
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -80,10 +81,7 @@ const NotificationsPage = () => {
 
       <main className="notifications-content">
         {loading ? (
-          <div className="loading-container">
-            <div className="cool-spinner"></div>
-            <p>Loading updates...</p>
-          </div>
+          <LoadingSpinner message="Loading updates..." />
         ) : notifications.length === 0 ? (
           <div className="notifications-empty">No notifications</div>
         ) : (

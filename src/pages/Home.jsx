@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import * as mapHelpers from '../utils/mapHelpers';
 import { reverseGeocode } from '../utils/geocode';
 import { useBraceletUsers } from '../hooks/useUsers';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 /* ---------------------- Component ---------------------- */
 
@@ -42,7 +43,7 @@ function Home() {
   };
   
 
-  if (loading) return <div className="loading">Loading map...</div>;
+  if (loading) return <div className="loading"><LoadingSpinner /></div>;
 
   const getInitialCenter = () => {
     // First, try to find an online user with SOS

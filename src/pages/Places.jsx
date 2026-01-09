@@ -30,7 +30,7 @@ const LOCAL_STORAGE_KEY = "pingme_geofences";
 
 const Places = () => {
   const [map, setMap] = useState(null);
-  const { braceletUsers, loading } = useBraceletUsers();
+  const { braceletUsers } = useBraceletUsers();
   const [activeAlerts, setActiveAlerts] = useState([]);
   const [geofences, setGeofences] = useState(() => {
     const savedZones = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -201,7 +201,7 @@ const Places = () => {
     pendingLayerRef.current = null;
   };
 
-  if (loading) return <div className="loading">Loading map and users...</div>;
+  
   
     // Find a user with a valid position to center the map on.
   const initialCenterUser = braceletUsers.find(u => u.position && u.position.length === 2);
