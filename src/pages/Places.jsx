@@ -57,6 +57,7 @@ const Places = () => {
       const fetchedZones = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
+          appUserName: currentUser.displayName,
           id: doc.id,
           name: data.name,
           radius: data.radius,
@@ -74,7 +75,7 @@ const Places = () => {
   useEffect(() => {
     const currentAlerts = [];
     const newlyDetected = [];
-    const activeKeys = new Set();
+
 
     braceletUsers.forEach((user) => {
       if (!Array.isArray(user.position) || user.position.length !== 2) return;
@@ -150,7 +151,6 @@ const Places = () => {
             }
 
             await addDoc(collection(db, 'notifications'), {
-              appUserName: currentUser.displayName,
               appUserId: currentUser.uid,
               braceletUserId: user.id,
               title: 'Geofence Alert',
@@ -159,7 +159,7 @@ const Places = () => {
               type: 'Geofence',
               time: serverTimestamp(),
               icon: user.avatar || null,
-            });
+            });    
 
             // Update deviceStatus to persist "Inside Zone" state
             if (user.deviceStatusId) {
@@ -238,6 +238,7 @@ const Places = () => {
     try {
       const newDocRef = doc(collection(db, "geofences"));
       await setDoc(newDocRef, {
+        appUserName: currentUser.displayName,        
         appUserId: currentUser.uid,
         coordinates: { lat: latLng.lat, lng: latLng.lng },
         id: newDocRef.id,
