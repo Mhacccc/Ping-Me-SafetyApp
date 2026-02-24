@@ -121,6 +121,10 @@
   box-shadow: 0 0 0 3px rgba(164, 38, 44, 0.1);
 }
 
+.admin-toolbar {
+  margin-bottom: 24px;
+}
+
 .admin-table-wrap {
   border: 1px solid var(--pm-border);
   border-radius: 14px;
@@ -162,6 +166,29 @@
   color: var(--pm-text-muted);
   font-size: 12px;
   margin-top: 2px;
+}
+
+.u-role-text {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--pm-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.u-status-text {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.u-status-text.active {
+  color: var(--pm-success);
+}
+
+.u-status-text.banned {
+  color: var(--pm-danger);
 }
 
 .pill {

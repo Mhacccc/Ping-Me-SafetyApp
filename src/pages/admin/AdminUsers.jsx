@@ -63,13 +63,13 @@ export default function AdminUsers() {
                 </td>
 
                 <td>
-                  <span className={`pill ${u.role === "admin" ? "pill-primary" : "pill-muted"}`}>
+                  <span className="u-role-text">
                     {u.role}
                   </span>
                 </td>
 
                 <td>
-                  <span className={`pill ${u.banned ? "pill-danger" : "pill-success"}`}>
+                  <span className={`u-status-text ${u.banned ? "banned" : "active"}`}>
                     {u.banned ? "banned" : "active"}
                   </span>
                 </td>
