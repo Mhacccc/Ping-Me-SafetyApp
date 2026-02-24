@@ -89,16 +89,19 @@
   cursor: pointer;
 }
 
-/* Ghost Button (Log in) - Light style */
+/* Login Button (Red Outline / Stroke variant) */
 .pm-btn-ghost {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  color: #1f2937 !important;
+  background: transparent !important;
+  color: var(--pm-primary, #A4262C) !important;
+  border: 2px solid var(--pm-primary, #A4262C) !important;
+  box-shadow: none !important;
 }
 
 .pm-btn-ghost:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
-  border-color: rgba(0, 0, 0, 0.2) !important;
+  background: rgba(164, 38, 44, 0.05) !important;
+  border-color: #C4363C !important;
+  color: #C4363C !important;
+  transform: translateY(-1px);
 }
 
 /* Primary Button (Sign up) - Neon style */

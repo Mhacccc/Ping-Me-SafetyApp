@@ -20,6 +20,22 @@
   position: relative;
 }
 
+/* --- Red Outline (Stroke) Button Overrides for Login --- */
+.landing .pm-btn--ghost,
+.landing .pm-btn--secondary {
+  background: transparent !important;
+  color: var(--pm-primary) !important;
+  border: 2px solid var(--pm-primary) !important;
+  box-shadow: none !important;
+}
+
+.landing .pm-btn--ghost:hover,
+.landing .pm-btn--secondary:hover {
+  background: rgba(164, 38, 44, 0.05) !important;
+  border-color: #C4363C !important;
+  color: #C4363C !important;
+}
+
 /* Circuit Traces Overlay */
 .landing::before {
   content: "";
