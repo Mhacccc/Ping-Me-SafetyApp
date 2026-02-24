@@ -60,21 +60,19 @@ const UserProfile = () => {
 
   return (
     <div className="profile-page-container">
+      <button
+        className="page-back-btn floating"
+        onClick={() => navigate(-1)}
+        title="Back"
+      >
+        <ChevronLeft size={24} />
+      </button>
 
       <div className="profile-content">
 
         {/* --- LEFT SIDEBAR (IDENTITY) --- */}
         <aside className="profile-sidebar">
-          {/* Back Button positioned nicely in sidebar */}
-          <div className="sidebar-back-wrapper">
-            <button
-              className="page-back-btn"
-              onClick={() => navigate(-1)}
-              title="Back"
-            >
-              <ChevronLeft size={24} />
-            </button>
-          </div>
+          {/* Back button moved out */}
 
           <div className="profile-sidebar-header">
             <img
@@ -90,11 +88,36 @@ const UserProfile = () => {
             </div>
           </div>
 
+          {/* New consolidated Vitals section within the card */}
+          <div className="sidebar-vitals">
+            <div className="vital-item">
+              <Heart size={16} className="text-red" />
+              <div className="vital-info">
+                <span className="vital-label">Heart Rate</span>
+                <span className="vital-value" style={{ color: 'var(--pm-danger)' }}>89 BPM</span>
+              </div>
+            </div>
+
+            <div className="vital-item">
+              <Battery size={16} className={batteryColorClass} />
+              <div className="vital-info">
+                <span className="vital-label">Battery Level</span>
+                <span className={`vital-value ${batteryColorClass}`}>{batteryLevel}%</span>
+              </div>
+            </div>
+
+            <div className="vital-item">
+              <Wifi size={16} className={isOnline ? 'text-green' : 'text-red'} />
+              <div className="vital-info">
+                <span className="vital-label">Signal Status</span>
+                <span className={`vital-value ${isOnline ? 'text-green' : 'text-red'}`}>
+                  {isOnline ? 'Strong' : 'Weak'}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="sidebar-actions">
-            <button className="sidebar-btn primary">
-              <Phone size={20} />
-              <span>Call Now</span>
-            </button>
             <button className="sidebar-btn secondary">
               <MessageSquare size={20} />
               <span>Message</span>
@@ -104,35 +127,7 @@ const UserProfile = () => {
 
         {/* --- RIGHT MAIN CONTENT (DATA) --- */}
         <main className="profile-main">
-
-          {/* 1. Stats Row */}
-          <div className="dashboard-stats-row">
-            <div className="dash-stat-card">
-              <div className="stat-header">
-                <Heart size={16} />
-                <span>Heart Rate</span>
-              </div>
-              <span className="stat-value-large" style={{ color: 'var(--pm-danger)' }}>89 BPM</span>
-            </div>
-
-            <div className="dash-stat-card">
-              <div className="stat-header">
-                <Battery size={16} />
-                <span>Battery Level</span>
-              </div>
-              <span className={`stat-value-large ${batteryColorClass}`}>{batteryLevel}%</span>
-            </div>
-
-            <div className="dash-stat-card">
-              <div className="stat-header">
-                <Wifi size={16} />
-                <span>Signal Status</span>
-              </div>
-              <span className={`stat-value-large ${isOnline ? 'text-green' : 'text-red'}`}>
-                {isOnline ? 'Strong' : 'Weak'}
-              </span>
-            </div>
-          </div>
+          {/* Stats row removed, moved to sidebar card */}
 
           {/* 2. Large Map Canvas */}
           <section className="dashboard-map-section">

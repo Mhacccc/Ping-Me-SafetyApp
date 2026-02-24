@@ -45,11 +45,11 @@
   min-height: 100%;
 }
 
-/* Back Button Styling */
-.sidebar-back-wrapper {
-  align-self: flex-start;
-  margin-bottom: 24px;
-  width: 100%;
+/* Back Button Styling (Now outside card) */
+.page-back-btn.floating {
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
 }
 
 .page-back-btn {
@@ -167,6 +167,66 @@
   background-color: var(--pm-text-muted);
 }
 
+/* Sidebar Vitals (Consolidated inside card) */
+.sidebar-vitals {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: var(--pm-bg);
+  border-radius: 18px;
+  border: 1px solid var(--pm-border);
+}
+
+.vital-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vital-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.vital-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--pm-text-muted);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.vital-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--pm-text);
+}
+
+.text-red {
+  color: var(--pm-danger);
+}
+
+.text-green {
+  color: var(--pm-success);
+}
+
+.red-text {
+  color: var(--pm-danger);
+}
+
+.orange-text {
+  color: #f59e0b;
+}
+
+.green-text {
+  color: var(--pm-success);
+}
+
 
 /* Sidebar Actions */
 .sidebar-actions {
@@ -218,17 +278,13 @@
 .profile-main {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   height: 100%;
+  min-height: 500px;
   /* Fill the grid cell */
 }
 
-/* Stats Cards Row */
-.dashboard-stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
+/* Stats Row Removed */
 
 .dash-stat-card {
   background: var(--pm-surface);
