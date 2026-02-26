@@ -1,0 +1,152 @@
+.about-container {
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+    color: var(--color-text-primary);
+    line-height: 1.6;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.about-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 16px;
+}
+
+.about-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+    color: var(--color-primary);
+}
+
+.about-subtitle {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.about-section {
+    background: var(--color-bg-main);
+    border: 1px solid var(--pm-border, #e2e8f0);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.about-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--pm-border, #e2e8f0);
+    padding-bottom: 12px;
+}
+
+.about-section p {
+    margin-bottom: 16px;
+    font-size: 14.5px;
+}
+
+.about-section ul {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.about-section li {
+    margin-bottom: 8px;
+    font-size: 14.5px;
+}
+
+/* Tech Stack Pills */
+.tech-stack-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tech-pill {
+    background: rgba(164, 38, 44, 0.08);
+    color: var(--color-primary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(164, 38, 44, 0.2);
+}
+
+/* Researchers List */
+.researcher-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.researcher-card {
+    padding: 12px;
+    background: var(--color-bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--pm-border, #e2e8f0);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.university-text {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+/* Responsiveness (iPhone SE - 320px) */
+@media (max-width: 400px) {
+    .about-container {
+        padding: 16px;
+    }
+
+    .about-title {
+        font-size: 24px;
+    }
+
+    .about-section {
+        padding: 16px;
+    }
+
+    .researcher-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark Mode Overrides */
+html.pm-dark .about-section {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+html.pm-dark .about-section h3 {
+    border-bottom-color: #333;
+}
+
+html.pm-dark .tech-pill {
+    background: rgba(164, 38, 44, 0.15);
+    color: #ff8a8f;
+    border-color: rgba(164, 38, 44, 0.3);
+}
+
+html.pm-dark .researcher-card {
+    background: #121212;
+    border-color: #444;
+}

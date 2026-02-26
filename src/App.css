@@ -1,31 +1,6 @@
 /* src/App.css */
 
-/* --- NEW: Define our app-wide color palette --- */
-:root {
-  --color-primary: #A4262C;
-  /* PingMe Maroon from logo */
-  --color-primary-dark: #6b1519;
-  /* Darker maroon from splash */
 
-  --color-bg-main: #FFFFFF;
-  /* New main background (was #f9f9f9) */
-  --color-bg-secondary: #F9F9F9;
-  /* Light gray for cards/inputs */
-
-  --color-text-primary: #222222;
-  /* Near black for titles */
-  --color-text-secondary: #777777;
-  /* Medium gray for subs */
-
-  --color-alert-red: #e74c3c;
-  /* Panic Red */
-  --color-alert-green: #4CAF50;
-  /* Safe Green */
-  --color-alert-orange: #f5a623;
-  /* Warning Orange */
-}
-
-/* --- END NEW --- */
 
 a {
   text-decoration: none;
