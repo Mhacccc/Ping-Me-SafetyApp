@@ -1,5 +1,5 @@
 .profile-page-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 160px);
   background-color: var(--pm-bg);
   padding: 24px;
   box-sizing: border-box;
@@ -430,5 +430,11 @@
 
   .vital-value {
     font-size: 0.85rem;
+  }
+}
+
+@media (min-width: 901px) {
+  .profile-page-container {
+    min-height: calc(100vh - 60px);
   }
 }

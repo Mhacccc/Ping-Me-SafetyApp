@@ -1,15 +1,11 @@
 .chat-support-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 80px);
-    /* Fill most of the screen minus header */
-    max-width: 800px;
+    height: calc(100vh - 60px);
+    width: 100%;
     margin: 0 auto;
     background: var(--color-bg-main);
-    border: 1px solid var(--pm-border, #e2e8f0);
-    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .chat-header {
@@ -148,13 +144,10 @@
     transform: none;
 }
 
-/* Responsiveness (iPhone SE - 320px) */
-@media (max-width: 400px) {
+/* Responsiveness (Mobile) */
+@media (max-width: 767px) {
     .chat-support-container {
-        height: calc(100vh - 60px);
-        border-radius: 0;
-        border-left: none;
-        border-right: none;
+        height: calc(100vh - 160px);
     }
 
     .chat-bubble {

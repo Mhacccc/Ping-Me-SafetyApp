@@ -3,8 +3,8 @@
 .places-page-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 60px);
-  /* Adjust for top bar height (60px) */
+  height: calc(100vh - 160px);
+  /* Adjust for top bar height (60px) + bottom navbar (100px) */
   width: 100%;
   background-color: var(--pm-bg);
   /* Ensure background is set */
@@ -197,6 +197,7 @@
 @media (min-width: 768px) {
   .places-page-container {
     flex-direction: row;
+    height: calc(100vh - 60px);
   }
 
   .places-info-panel {

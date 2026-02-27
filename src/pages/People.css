@@ -1,5 +1,5 @@
 .page-frame {
-  min-height: 100vh;
+  min-height: calc(100vh - 160px);
   background-color: var(--pm-surface);
   display: flex;
   flex-direction: column;
@@ -359,3 +359,9 @@
 /* Dark Mode Overrides specific to Modal if global vars aren't enough */
 /* Note: Since we use var(--pm-surface) etc, it should adapt automatically IF variables are set correctly in theme.css */
 /* However, user mentioned "hardcoded white", so we fix that by using variables above. */
+
+@media (min-width: 768px) {
+  .page-frame {
+    min-height: calc(100vh - 60px);
+  }
+}

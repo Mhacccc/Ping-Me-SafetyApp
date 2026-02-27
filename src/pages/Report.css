@@ -2,8 +2,8 @@
 
 /* Base Styles */
 .report-page-frame {
-  min-height: 100vh;
-  /* Restore min-height */
+  min-height: calc(100vh - 160px);
+  /* Restore min-height, account for mobile nav */
   background-color: var(--pm-bg);
   /* Use page background code */
   display: flex;
@@ -387,3 +387,9 @@
 }
 
 /* --- END NEW MODAL STYLES --- */
+
+@media (min-width: 768px) {
+  .report-page-frame {
+    min-height: calc(100vh - 60px);
+  }
+}
