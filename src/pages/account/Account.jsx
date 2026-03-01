@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { updateProfile, deleteUser } from "firebase/auth";
-import { useToast } from "../context/ToastContext";
+import { useToast } from "../../context/ToastContext";
 import { Camera, Save, AlertTriangle } from "lucide-react";
 import "./Account.css";
 

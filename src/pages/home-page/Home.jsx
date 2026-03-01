@@ -3,11 +3,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import "./Home.css";
 import { Link } from "react-router-dom";
-import * as mapHelpers from "../utils/mapHelpers";
-import { reverseGeocode } from "../utils/geocode";
-import { useBraceletUsers } from "../hooks/useUsers";
-import LoadingSpinner from "../components/LoadingSpinner";
-import HomeSidePanel from "../components/HomeSidePanel";
+import * as mapHelpers from "../../utils/mapHelpers";
+import { reverseGeocode } from "../../utils/geocode";
+import { useBraceletUsers } from "../../hooks/useUsers";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import HomeSidePanel from "../../components/HomeSidePanel";
 
 import L from "leaflet";
 

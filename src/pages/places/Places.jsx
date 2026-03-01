@@ -7,12 +7,12 @@ import "leaflet-draw/dist/leaflet.draw.css";
 import "./Places.css";
 import { useState, useRef, useEffect } from "react";
 import L from "leaflet";
-import * as mapHelpers from "../utils/mapHelpers";
-import { useBraceletUsers } from "../hooks/useUsers";
-import { useAuth } from "../context/AuthContext";
-import { db } from "../config/firebaseConfig";
+import * as mapHelpers from "../../utils/mapHelpers";
+import { useBraceletUsers } from "../../hooks/useUsers";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../config/firebaseConfig";
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, onSnapshot, deleteDoc, updateDoc, doc, setDoc } from "firebase/firestore";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({

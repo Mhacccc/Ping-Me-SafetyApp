@@ -2,12 +2,12 @@
 import './People.css';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { useBraceletUsers } from '../hooks/useUsers';
+import { useBraceletUsers } from '../../hooks/useUsers';
 import { getAuth } from "firebase/auth";
 import { collection, addDoc, doc, updateDoc, arrayUnion, serverTimestamp, deleteDoc, arrayRemove, query, where, getDocs } from "firebase/firestore";
-import { db } from "../config/firebaseConfig";
+import { db } from "../../config/firebaseConfig";
 import { Plus, X, Trash2 } from "lucide-react";
-import LoadingSpinner from '../components/LoadingSpinner';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 /**
  * Simple Search Icon component used in the search input field.

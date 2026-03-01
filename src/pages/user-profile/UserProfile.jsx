@@ -6,7 +6,7 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect } from 'react';
-import { createCustomIcon } from '../utils/mapHelpers';
+import { createCustomIcon } from '../../utils/mapHelpers';
 
 // Fix for Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;

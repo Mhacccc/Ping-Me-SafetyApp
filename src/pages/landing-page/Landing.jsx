@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MapPin, Bell, Shield, Battery, Radio, Watch } from 'lucide-react';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import useIsMobile from '../hooks/useIsMobile';
-import MobileSplashScreen from '../components/MobileSplashScreen';
+import Button from '../../ui/Button';
+import Card from '../../ui/Card';
+import useIsMobile from '../../hooks/useIsMobile';
+import MobileSplashScreen from '../../components/MobileSplashScreen';
 import './Landing.css';
 
 import logo from '../assets/logo.png';

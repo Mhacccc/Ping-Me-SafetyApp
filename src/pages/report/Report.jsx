@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, ShieldAlert } from 'lucide-react';
 import { collection, query, onSnapshot, where } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
-import { useBraceletUsers } from '../hooks/useUsers';
-import { useAuth } from '../context/AuthContext';
-import ReportDetailModal from '../components/ReportDetailModal';
-import LoadingSpinner from '../components/LoadingSpinner'
+import { db } from '../../config/firebaseConfig';
+import { useBraceletUsers } from '../../hooks/useUsers';
+import { useAuth } from '../../context/AuthContext';
+import ReportDetailModal from '../../components/ReportDetailModal';
+import LoadingSpinner from '../../components/LoadingSpinner'
 import './Report.css';
 
 const Report = () => {
