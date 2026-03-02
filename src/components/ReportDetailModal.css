@@ -1,6 +1,6 @@
 /* Report Detail Modal Styles */
 
-.modal-backdrop {
+.report-detail-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -12,30 +12,34 @@
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(4px);
-    padding: 40px;
-    /* Force spacing from edges */
+    padding: 24px;
 }
 
-.modal-content {
+@media (min-width: 900px) {
+    .report-detail-backdrop {
+        padding-left: 250px;
+        /* Offset by typical sidebar width to perfectly center the modal in the workspace */
+    }
+}
+
+.report-detail-content {
     background-color: var(--pm-bg);
     border-radius: 20px;
     box-shadow: var(--pm-shadow-md);
     width: 100%;
-    max-width: 480px;
-    /* Slightly smaller width */
+    max-width: 1000px;
+    /* Wider for landscape layout */
     overflow: hidden;
     color: var(--pm-text);
     border: 1px solid var(--pm-border);
     display: flex;
     flex-direction: column;
-    max-height: 75vh;
+    max-height: 85vh;
     /* Significantly constrained height */
     box-shadow: var(--pm-shadow-lg);
-    margin: 40px;
-    /* Ensure margin from screen edges */
 }
 
-.modal-header {
+.report-detail-header {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -45,7 +49,7 @@
     background: var(--pm-surface);
 }
 
-.modal-header h2 {
+.report-detail-header h2 {
     font-size: 0.95rem;
     font-weight: 700;
     margin: 0;
@@ -54,7 +58,7 @@
     color: var(--pm-text-muted);
 }
 
-.modal-close-button {
+.report-detail-close {
     position: absolute;
     right: 18px;
     background: var(--pm-bg);
@@ -67,26 +71,30 @@
     transition: all 0.2s;
 }
 
-.modal-close-button:hover {
+.report-detail-close:hover {
     background-color: var(--pm-surface-2);
     transform: rotate(90deg);
 }
 
 .report-detail-modal-body {
     flex: 1;
-    /* Take remaining height */
-    overflow-y: auto;
-    /* Allow scrolling content */
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow-y: hidden;
     min-height: 0;
-    /* Firefox flex fix */
 }
 
 /* User Profile Section */
 .profile-hero {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 30px 24px 10px;
+    justify-content: center;
+    padding: 30px 24px;
+    background-color: var(--pm-surface);
+    border-right: 1px solid var(--pm-border);
 }
 
 .profile-avatar-wrapper {
@@ -143,7 +151,9 @@
 
 /* Incident Details Grid */
 .profile-section {
-    padding: 20px 24px 30px;
+    flex: 1.5;
+    padding: 30px 24px;
+    overflow-y: auto;
 }
 
 .profile-section-title {
@@ -170,12 +180,6 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: transform 0.2s ease;
-}
-
-.detail-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--pm-primary);
 }
 
 .detail-card-full {
@@ -186,7 +190,7 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: var(--pm-bg);
+    background: transparent;
     color: var(--pm-primary);
     display: flex;
     align-items: center;
@@ -214,25 +218,34 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
-    .modal-backdrop {
-        padding: 16px;
-        /* Reduce outer padding */
-    }
-
-    .modal-content {
-        margin: 0;
-        /* Remove extra margin as backdrop padding handles it */
-        max-height: 80vh;
-        /* Allow slightly more height on mobile */
-        width: 100%;
+    .report-detail-modal-body {
+        flex-direction: column;
+        overflow-y: auto;
     }
 
     .profile-hero {
+        border-right: none;
+        border-bottom: 1px solid var(--pm-border);
+        padding-bottom: 24px;
+        background-color: transparent;
         padding: 24px 20px 10px;
     }
 
     .profile-section {
-        padding: 16px 20px 24px;
+        overflow-y: visible;
+        padding-top: 24px;
+        padding: 16px 20px 16px;
+    }
+
+    .report-detail-backdrop {
+        padding: 16px;
+    }
+
+    .report-detail-content {
+        margin: 0;
+        max-height: 70vh;
+        /* Decreased height on mobile */
+        width: 100%;
     }
 
     .profile-grid-container {

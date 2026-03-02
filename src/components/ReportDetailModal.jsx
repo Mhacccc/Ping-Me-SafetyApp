@@ -20,11 +20,11 @@ const ReportDetailModal = ({ incident, onClose }) => {
   );
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="report-detail-backdrop" onClick={onClose}>
+      <div className="report-detail-content" onClick={(e) => e.stopPropagation()}>
+        <div className="report-detail-header">
           <h2>Incident Report</h2>
-          <button className="modal-close-button" onClick={onClose}>
+          <button className="report-detail-close" onClick={onClose}>
             <X size={24} />
           </button>
         </div>
