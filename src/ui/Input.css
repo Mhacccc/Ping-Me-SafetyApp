@@ -41,6 +41,12 @@
   font-size: 14px;
 }
 
+.pm-input:focus,
+.pm-input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
+}
+
 .pm-input::placeholder {
   color: rgba(119, 119, 119, 0.7);
 }
