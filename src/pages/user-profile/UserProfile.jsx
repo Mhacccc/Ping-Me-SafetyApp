@@ -59,107 +59,86 @@ const UserProfile = () => {
 
 
   return (
-    <div className="profile-page-container">
+    <div className="up-page-container">
       <button
-        className="page-back-btn floating"
+        className="up-back-btn"
         onClick={() => navigate(-1)}
         title="Back"
       >
         <ChevronLeft size={24} />
       </button>
 
-      <div className="profile-content">
-
-        {/* --- LEFT SIDEBAR (IDENTITY) --- */}
-        <aside className="profile-sidebar">
-          {/* Back button moved out */}
-
-          <div className="profile-sidebar-header">
-            <img
-              src={person.avatar}
-              alt={person.name}
-              className="profile-avatar-large"
-            />
-            <h1 className="profile-name-large">{person.name}</h1>
-
-            <div className={`profile-status-inline ${isBraceletOn ? 'online' : 'offline'}`}>
-              <div className={`status-dot-pulse ${isBraceletOn ? 'online' : 'offline'}`}></div>
-              <span>{isBraceletOn ? 'Bracelet Online' : 'Bracelet Offline'}</span>
+      <div className="up-content-grid">
+        {/* Left Section: Identity & Vitals */}
+        <div className="up-left-section">
+          <div className="up-identity-header">
+            <div className="up-avatar-wrapper">
+              <img src={person.avatar} alt={person.name} className="up-avatar-img" />
+              <div className={`up-status-dot ${isBraceletOn ? 'online' : 'offline'}`} />
+            </div>
+            <div className="up-name-info">
+              <h1 className="up-name">{person.name}</h1>
+              <p className="up-status-label">{isBraceletOn ? 'Bracelet Online' : 'Bracelet Offline'}</p>
             </div>
           </div>
 
-          {/* New consolidated Vitals section within the card */}
-          <div className="sidebar-vitals">
-            <div className="vital-item">
-              <Heart size={16} className="text-red" />
-              <div className="vital-info">
-                <span className="vital-label">Heart Rate</span>
-                <span className="vital-value" style={{ color: 'var(--pm-danger)' }}>89 BPM</span>
+          <div className="up-vitals-list">
+            <div className="up-vital-row">
+              <div className="up-vital-icon"><Heart size={20} /></div>
+              <div className="up-vital-content">
+                <span className="up-vital-label">Heart Rate</span>
+                <span className="up-vital-value danger">89 BPM</span>
               </div>
             </div>
 
-            <div className="vital-item">
-              <Battery size={16} className={batteryColorClass} />
-              <div className="vital-info">
-                <span className="vital-label">Battery Level</span>
-                <span className={`vital-value ${batteryColorClass}`}>{batteryLevel}%</span>
+            <div className="up-vital-row">
+              <div className="up-vital-icon"><Battery size={20} /></div>
+              <div className="up-vital-content">
+                <span className="up-vital-label">Battery Level</span>
+                <span className={`up-vital-value ${batteryColorClass.split('-')[0]}`}>{batteryLevel}%</span>
               </div>
             </div>
 
-            <div className="vital-item">
-              <Wifi size={16} className={isOnline ? 'text-green' : 'text-red'} />
-              <div className="vital-info">
-                <span className="vital-label">Signal Status</span>
-                <span className={`vital-value ${isOnline ? 'text-green' : 'text-red'}`}>
+            <div className="up-vital-row">
+              <div className="up-vital-icon"><Wifi size={20} /></div>
+              <div className="up-vital-content">
+                <span className="up-vital-label">Signal Status</span>
+                <span className={`up-vital-value ${isOnline ? 'success' : 'danger'}`}>
                   {isOnline ? 'Strong' : 'Weak'}
                 </span>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="sidebar-actions">
-            <button className="sidebar-btn secondary">
-              <MessageSquare size={20} />
-              <span>Message</span>
-            </button>
+        {/* Right Section: Map */}
+        <div className="up-right-section">
+          <div className="up-map-header">
+            <h2 className="up-map-title">Live Location</h2>
+            <div className="up-map-coords">
+              {userPosition[0].toFixed(6)}, {userPosition[1].toFixed(6)}
+            </div>
           </div>
-        </aside>
 
-        {/* --- RIGHT MAIN CONTENT (DATA) --- */}
-        <main className="profile-main">
-          {/* Stats row removed, moved to sidebar card */}
-
-          {/* 2. Large Map Canvas */}
-          <section className="dashboard-map-section">
-            <div className="map-header-overlay">
-              <h2 className="map-title">Live Location</h2>
-              <span className="map-coords">
-                {userPosition[0].toFixed(4)}, {userPosition[1].toFixed(4)}
-              </span>
-            </div>
-
-            <div className="dashboard-map-wrapper">
-              <MapContainer
-                center={userPosition}
-                zoom={18}
-                scrollWheelZoom={false}
-                style={{ width: '100%', height: '100%' }}
-              >
-                <ResizeMap />
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <Marker
-                  position={userPosition}
-                  icon={createCustomIcon(person)}
-                />
-              </MapContainer>
-            </div>
-          </section>
-
-        </main>
-
+          <div className="up-map-container">
+            <MapContainer
+              center={userPosition}
+              zoom={15}
+              scrollWheelZoom={true}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <ResizeMap />
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker
+                position={userPosition}
+                icon={createCustomIcon(person)}
+              />
+            </MapContainer>
+          </div>
+        </div>
       </div>
     </div>
   );

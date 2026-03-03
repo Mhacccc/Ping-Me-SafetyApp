@@ -1,455 +1,291 @@
-.page-frame {
-  min-height: calc(100vh - 160px);
-  background-color: var(--pm-surface);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+/* src/pages/people/People.css */
+
+.people-page-container {
+  padding: 50px 20px 20px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.app-header {
+.people-header-section {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  color: var(--pm-primary);
-  /* Deep red color for title */
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.people-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 15px 0 45px;
+  border: 1px solid var(--pm-border);
+  border-radius: 12px;
+  background-color: var(--pm-surface);
+  color: var(--pm-text);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.people-search-input:focus {
+  outline: none;
+  border-color: var(--pm-primary);
+  box-shadow: 0 0 0 3px rgba(var(--pm-primary-rgb), 0.1);
+}
+
+.search-icon-wrapper {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.add-people-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--pm-danger);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
-.app-header h1 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.app-main {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 16px;
-  /* bottom padding to avoid fixed footer */
-}
-
-.search-container {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 16px 12px 20px;
-  border-radius: 25px;
-  border: 1px solid var(--pm-border);
-  font-size: 1rem;
-  background-color: var(--pm-bg);
-  color: var(--pm-text);
-  box-sizing: border-box;
-}
-
-.search-input::placeholder {
-  color: var(--pm-text-muted);
-}
-
-.search-icon {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--pm-text-muted);
+.add-people-btn:hover {
+  background-color: var(--pm-danger-hover);
+  transform: translateY(-2px);
 }
 
 .people-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.person-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-  background-color: var(--pm-bg);
-  /* White */
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid var(--pm-border);
-  box-shadow: var(--pm-shadow-sm);
-}
-
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 15px;
-  object-fit: cover;
-}
-
-.person-details {
-  flex-grow: 1;
-}
-
-.person-name {
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin: 0;
-  color: var(--pm-text);
-}
-
-.person-status {
-  text-align: right;
-}
-
-.percentage {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0;
-  color: var(--pm-text);
-}
-
-.bracelet-status {
-  font-size: 0.8rem;
-  color: var(--pm-text-muted);
-  margin: 0;
-}
-
-
-
-
-.app-footer {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background-color: var(--pm-bg);
-  border-top: 1px solid var(--pm-border);
-  padding: 10px 0 20px 0;
-  /* Extra padding for home indicator space */
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
-}
-
-.nav-item {
   display: flex;
   flex-direction: column;
+}
+
+.person-row-item {
+  display: flex;
   align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--pm-border);
+  transition: background-color 0.2s ease;
+}
+
+.person-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  flex: 1;
+}
+
+.person-main-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+
+.person-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--pm-surface);
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--pm-bg);
+}
+
+.status-dot.online {
+  background-color: #34A853;
+}
+
+.status-dot.offline {
+  background-color: #9ca3af;
+}
+
+.name-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.person-row-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--pm-text);
+  margin: 0;
+}
+
+.person-row-status {
+  font-size: 0.85rem;
   color: var(--pm-text-muted);
-  font-size: 0.7rem;
+  margin: 0;
 }
 
-.nav-item.active {
-  color: var(--pm-primary);
+.status-on {
+  color: #34A853;
+  font-weight: 500;
 }
 
+.status-off {
+  color: var(--pm-text-muted);
+}
 
-/* Modal Styles */
+.person-battery-info {
+  text-align: right;
+  margin-right: 20px;
+}
+
+.battery-percentage {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.delete-person-btn {
+  background: none;
+  border: none;
+  color: var(--pm-text-muted);
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.delete-person-btn:hover {
+  color: var(--pm-danger);
+  background-color: rgba(var(--pm-danger-rgb), 0.1);
+}
+
+/* --- Responsive Adjustments --- */
+
+@media (min-width: 768px) {
+  .people-page-container {
+    padding: 50px 40px 40px 40px;
+  }
+}
+
+/* iPhone SE (375px and below) */
+@media (max-width: 375px) {
+  .people-page-container {
+    padding: 50px 15px 80px 15px;
+  }
+
+  .person-row-name {
+    font-size: 1rem;
+  }
+
+  .avatar-wrapper {
+    width: 45px;
+    height: 45px;
+  }
+
+  .battery-percentage {
+    font-size: 0.9rem;
+  }
+}
+
+/* Modal Specific Styles (Ensuring consistency with current theme) */
 .add-bracelet-backdrop {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-}
-
-@media (min-width: 900px) {
-  .add-bracelet-backdrop {
-    padding-left: 250px;
-    /* Offset by sidebar width to center modal in the main workspace */
-  }
+  z-index: 2000;
+  backdrop-filter: blur(4px);
 }
 
 .add-bracelet-modal-content {
-  background: var(--pm-surface);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 850px;
-  max-height: 85vh;
-  position: relative;
-  box-shadow: var(--pm-shadow-md);
-  border: 1px solid var(--pm-border);
-  display: flex;
-  flex-direction: column;
+  background-color: var(--pm-bg);
+  width: 90%;
+  max-width: 700px;
+  border-radius: 24px;
   overflow: hidden;
-  padding: 0;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* New Header/Body/Footer Structure */
-
-.modal-header {
-  padding: 20px 24px;
+.add-bracelet-modal-header {
+  padding: 25px 30px;
   border-bottom: 1px solid var(--pm-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-  background: var(--pm-surface);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--pm-text);
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--pm-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 50%;
-  transition: background 0.2s;
-  /* Not absolute anymore */
-}
-
-.modal-close:hover {
-  background: var(--pm-bg);
-  color: var(--pm-text);
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  overflow: hidden;
-  /* Contains the scrollable body */
-}
-
-.modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  flex-grow: 1;
-}
-
-.modal-footer {
-  padding: 20px 24px;
-  border-top: 1px solid var(--pm-border);
-  background: var(--pm-surface);
-  flex-shrink: 0;
-}
-
-/* Adjustments for inputs inside body */
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: var(--pm-text);
-  font-size: 0.9rem;
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid var(--pm-border);
-  background: var(--pm-bg);
-  color: var(--pm-text);
-  font-family: inherit;
-  box-sizing: border-box;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--pm-primary);
-  box-shadow: 0 0 0 3px rgba(164, 38, 44, 0.1);
-}
-
-.emergency-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  /* Fix overflow on small screens */
-  align-items: stretch;
-  /* Ensure equal height */
-}
-
-.emergency-row .form-input {
-  flex: 1;
-  min-width: 120px;
-  /* Prevent shrinking too much */
-}
-
-.btn-add-contact {
-  padding: 0 16px;
-  border-radius: 10px;
-  background: var(--pm-text);
-  /* Black in light, White in dark usually, but lets stick to branding */
-  color: var(--pm-bg);
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.2s;
-}
-
-.btn-add-contact:hover {
-  opacity: 0.9;
-}
-
-.contact-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  background: var(--pm-bg);
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--pm-border);
-}
-
-.contact-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--pm-border);
-  font-size: 0.9rem;
-  color: var(--pm-text);
-}
-
-.contact-item:last-child {
-  border-bottom: none;
-}
-
-.btn-submit {
-  width: 100%;
-  padding: 14px;
-  background: var(--pm-primary);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  /* Match inputs */
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  margin-top: 8px;
-  /* Extra separation */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.btn-submit:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Dark Mode Overrides specific to Modal if global vars aren't enough */
-/* Note: Since we use var(--pm-surface) etc, it should adapt automatically IF variables are set correctly in theme.css */
-/* However, user mentioned "hardcoded white", so we fix that by using variables above. */
-
-@media (min-width: 768px) {
-  .page-frame {
-    min-height: calc(100vh - 60px);
-  }
-}
-
-/* ========================================================
-   ADD NEW BRACELET MODAL - REDESIGN STYLES
-   ======================================================== */
-
-.add-bracelet-modal-header {
-  background-color: #7c0f16;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  border-bottom: none;
-}
-
-.add-bracelet-modal-header .modal-title {
-  color: #ffffff;
   font-size: 1.5rem;
   font-weight: 700;
-  margin: 0;
-}
-
-.add-bracelet-form {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  color: var(--pm-text);
 }
 
 .add-bracelet-body {
+  padding: 30px;
   display: flex;
-  flex-direction: column;
-  padding: 20px;
-  gap: 20px;
-  overflow-y: auto;
-}
-
-@media (min-width: 768px) {
-  .add-bracelet-body {
-    flex-direction: row;
-    gap: 40px;
-    padding: 30px;
-  }
+  gap: 40px;
 }
 
 .add-bracelet-column {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 20px;
 }
 
 .form-section-header {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #7c0f16;
-  margin-bottom: 24px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--pm-text-muted);
+  letter-spacing: 0.1em;
   display: flex;
   align-items: center;
-  gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  gap: 10px;
+  margin-bottom: 5px;
 }
 
 .section-slash {
-  color: #7c0f16;
-  font-weight: 900;
+  color: var(--pm-danger);
   font-size: 1.2rem;
 }
 
 .form-group-custom {
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-label-custom {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--pm-text);
-  margin-bottom: 10px;
 }
 
 .req-asterisk {
-  color: #7c0f16;
-  margin-left: 2px;
+  color: var(--pm-danger);
 }
 
 .input-with-icon {
@@ -460,143 +296,69 @@
 
 .input-icon-wrapper {
   position: absolute;
-  left: 14px;
+  left: 12px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  pointer-events: none;
 }
 
 .form-input-custom {
   width: 100%;
-  padding: 14px 14px 14px 44px;
-  /* Space for absolute icon */
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  font-size: 1rem;
+  height: 48px;
+  padding: 0 15px 0 42px;
+  border: 1px solid var(--pm-border);
+  border-radius: 12px;
+  background-color: var(--pm-surface);
   color: var(--pm-text);
-  background-color: var(--pm-bg);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.2s;
-  box-sizing: border-box;
+  font-size: 1rem;
 }
 
 .form-input-custom:focus {
   outline: none;
-  border-color: #7c0f16;
-  box-shadow: 0 0 0 2px rgba(124, 15, 22, 0.1);
+  border-color: var(--pm-primary);
 }
 
 .form-hint {
-  font-size: 0.8rem;
-  color: #7c0f16;
-  margin: 6px 0 0 5px;
+  font-size: 0.75rem;
+  color: var(--pm-text-muted);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
 }
 
 .add-bracelet-footer {
   padding: 20px 30px;
-  border-top: 1px solid var(--pm-border);
+  background-color: var(--pm-surface);
   display: flex;
   justify-content: flex-end;
-  align-items: center;
-  gap: 20px;
-  background: var(--pm-surface);
+  gap: 15px;
+  border-top: 1px solid var(--pm-border);
 }
 
 .btn-cancel {
-  background: transparent;
-  border: none;
-  color: var(--pm-text);
+  padding: 12px 24px;
+  border: 1px solid var(--pm-border);
+  background: white;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 1rem;
   cursor: pointer;
-  padding: 10px 20px;
-}
-
-.btn-cancel:hover {
-  text-decoration: underline;
 }
 
 .btn-next {
-  background-color: #7c0f16;
-  color: #ffffff;
+  padding: 12px 30px;
+  background-color: #000;
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 1rem;
-  padding: 12px 40px;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s;
 }
 
-.btn-next:hover {
-  background-color: #5c0a10;
-}
-
-.btn-next:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ========================================================
-   Mobile Responsiveness for Add Bracelet
-   ======================================================== */
-@media (max-width: 767px) {
-  .add-bracelet-backdrop {
-    padding: 16px;
-  }
-
-  .add-bracelet-modal-content {
-    width: 92%;
-    /* Prevent touching the screen edges */
-    max-height: 75vh;
-    /* Tighter vertical limit to enforce clean scrolling */
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .add-bracelet-modal-header {
-    padding: 16px 20px;
-    flex-shrink: 0;
-  }
-
-  .add-bracelet-modal-header .modal-title {
-    font-size: 1.25rem;
-  }
-
-  .add-bracelet-form {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
+/* Mobile Modal Adjustments */
+@media (max-width: 768px) {
   .add-bracelet-body {
+    flex-direction: column;
+    gap: 30px;
     padding: 20px;
-    gap: 20px;
+    max-height: 70vh;
     overflow-y: auto;
-    flex-grow: 1;
-  }
-
-  .form-section-header {
-    font-size: 0.9rem;
-    margin-bottom: 12px;
-  }
-
-  .form-group-custom {
-    margin-bottom: 16px;
-  }
-
-  .add-bracelet-footer {
-    padding: 16px 20px;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-
-  .btn-next,
-  .btn-cancel {
-    padding: 10px 20px;
-    font-size: 0.95rem;
   }
 }

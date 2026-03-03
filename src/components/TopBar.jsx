@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import "./TopBar.css";
 import { Bell, Menu } from "lucide-react";
 import avatar from "../assets/red.webp";
+import logo from "../assets/logo.png"; // Fixed logo path
 import NotificationModal from "./NotificationModal";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../config/firebaseConfig";
@@ -20,6 +22,22 @@ const TopBar = ({ onProfileClick }) => {
   const { currentUser } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  console.log("TopBar rendered for path:", location.pathname);
+
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path === "/app" || path === "/app/home") return "Home";
+    if (path.includes("/app/people")) return "People";
+    if (path.includes("/app/places")) return "Places";
+    if (path.includes("/app/report")) return "Report";
+    if (path.includes("/app/myBracelet")) return "My Bracelet";
+    if (path.includes("/app/account")) return "Account Settings";
+    if (path.includes("/app/help")) return "Help Articles";
+    if (path.includes("/app/about")) return "About PingMe";
+    if (path.includes("/app/userProfile")) return "User Profile";
+    return "";
+  };
 
   useEffect(() => {
     if (!currentUser) {
@@ -79,18 +97,22 @@ const TopBar = ({ onProfileClick }) => {
   return (
     <>
       <header className="app-topbar">
-        {/* Mobile menu (sidebar/profile) */}
-        <button
-          className="topbar-mobile-menu-btn"
-          onClick={onProfileClick}
-        >
-          <Menu size={26} />
-        </button>
+        {/* Left: Mobile Menu button or Desktop Logo */}
+        <div className="topbar-left">
+          <button className="topbar-mobile-menu-btn" onClick={onProfileClick}>
+            <Menu size={24} />
+          </button>
+          <div className="topbar-logo-desktop">
+            <img src={logo} alt="PingMe Logo" />
+          </div>
+        </div>
 
-        {/* Center placeholder (keeps spacing consistent) */}
-        <div className="topbar-spacer" />
+        {/* Center: Dynamic Title */}
+        <div className="topbar-title-container">
+          <h2 className="topbar-page-title">{getPageTitle()}</h2>
+        </div>
 
-        {/* Actions */}
+        {/* Right: Actions */}
         <div className="topbar-actions">
           <button
             className="topbar-icon-btn"

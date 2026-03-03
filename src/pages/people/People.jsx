@@ -204,17 +204,22 @@ function People() {
   if (error) return <div className="error">{error}</div>;
 
   return (
-    <main className="app-main page-frame">
-      <div className="search-container" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <input type="text" placeholder="Search Name" className="search-input" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%' }} />
-          <div className="search-icon">
+    <main className="people-page-container">
+      <div className="people-header-section">
+        <div className="search-wrapper">
+          <input
+            type="text"
+            placeholder="Search Name"
+            className="people-search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="search-icon-wrapper">
             <SearchIcon />
           </div>
         </div>
 
-        {/* Add Bracelet Button */}
-        <button onClick={() => setIsModalOpen(true)} style={{ backgroundColor: '#000', color: '#fff', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        <button className="add-people-btn" onClick={() => setIsModalOpen(true)}>
           <Plus size={24} />
         </button>
       </div>
@@ -324,44 +329,42 @@ function People() {
         </div>
       )}
 
-      <ul className="people-list">
+      <div className="people-list">
         {filteredUsers.map((person) => (
-          <Link key={person.id} to={`/app/userProfile/${person.id}`} state={{ personData: person }}>
-            <li
-              className={`person-item ${person.sos ? 'sos' : ''}`}
-            >
-              <div className={`status-indicator ${person.online ? 'online' : 'offline'}`} />
-              <img src={person.avatar} alt={person.name} className="avatar" />
-              <div className="person-details">
-                <p className="person-name">{person.name}</p>
-
-              </div>
-              <div className="person-status">
-                <p className="percentage" style={person.online ? { color: '#34A853' } : { color: "#000000" }}>{person.battery}%</p>
-                <div className="safety-status-wrapper">
-                  <p className="bracelet-status">
-                    Bracelet: {person.online && person.braceletOn ? 'ON' : 'OFF'}
+          <div key={person.id} className="person-row-item">
+            <Link to={`/app/userProfile/${person.id}`} state={{ personData: person }} className="person-link">
+              <div className="person-main-info">
+                <div className="avatar-wrapper">
+                  <img src={person.avatar} alt={person.name} className="person-avatar-img" />
+                  <div className={`status-dot ${person.online ? 'online' : 'offline'}`} />
+                </div>
+                <div className="name-status-info">
+                  <p className="person-row-name">{person.name}</p>
+                  <p className="person-row-status">
+                    Bracelet: <span className={person.online && person.braceletOn ? 'status-on' : 'status-off'}>
+                      {person.online && person.braceletOn ? 'ON' : 'OFF'}
+                    </span>
                   </p>
                 </div>
               </div>
-              <button
-                onClick={(e) => handleDeleteBracelet(e, person.id)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginLeft: '10px',
-                  color: '#ef4444',
-                  padding: '5px'
-                }}
-                aria-label="Delete"
-              >
-                <Trash2 size={20} />
-              </button>
-            </li>
-          </Link>
+
+              <div className="person-battery-info">
+                <p className="battery-percentage" style={person.online ? { color: '#34A853' } : { color: "var(--pm-text-muted)" }}>
+                  {person.battery}%
+                </p>
+              </div>
+            </Link>
+
+            <button
+              className="delete-person-btn"
+              onClick={(e) => handleDeleteBracelet(e, person.id)}
+              aria-label="Delete"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
         ))}
-      </ul>
+      </div>
     </main>
   );
 }
