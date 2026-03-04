@@ -1,0 +1,88 @@
+.pm-field {
+  display: grid;
+  gap: 8px;
+}
+
+.pm-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pm-text);
+}
+
+.pm-inputWrap {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  transition: box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.pm-inputWrap:focus-within {
+  border-color: rgba(164, 38, 44, 0.45);
+  box-shadow: var(--pm-focus);
+  background: #fff;
+}
+
+.pm-inputWrap--error {
+  border-color: rgba(231, 76, 60, 0.65);
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.18);
+}
+
+.pm-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--pm-text);
+  padding: 14px 4px;
+  font-size: 14px;
+}
+
+.pm-input:focus,
+.pm-input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
+}
+
+.pm-input::placeholder {
+  color: rgba(119, 119, 119, 0.7);
+}
+
+/* Override default browser autofill styling */
+.pm-input:-webkit-autofill,
+.pm-input:-webkit-autofill:hover,
+.pm-input:-webkit-autofill:focus,
+.pm-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--pm-surface, #fff) inset !important;
+  -webkit-text-fill-color: var(--pm-text) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.pm-leftSlot,
+.pm-rightSlot {
+  display: inline-flex;
+  align-items: center;
+  color: var(--pm-text-muted);
+  font-size: 18px;
+}
+
+.pm-leftSlot {
+  padding-left: 4px;
+}
+
+.pm-rightSlot {
+  padding-right: 4px;
+}
+
+.pm-helper {
+  font-size: 12px;
+  color: var(--pm-text-muted);
+}
+
+.pm-helper--error {
+  color: var(--pm-danger);
+  font-weight: 600;
+}

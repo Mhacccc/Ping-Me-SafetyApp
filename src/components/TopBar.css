@@ -6,8 +6,8 @@
   left: 0;
   right: 0;
   height: 60px;
-  background-color: var(--color-bg-main);
-  border-bottom: 1px solid #e0e0e0;
+  background-color: var(--pm-bg);
+  border-bottom: 1px solid var(--pm-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -15,77 +15,103 @@
   z-index: 900;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  /* Match right side to keep title centered */
+}
+
+.topbar-title-container {
+  flex: 2;
+  /* Take up more space for title */
+  display: flex;
+  justify-content: center;
+}
+
+.topbar-page-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--pm-text);
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
+  flex: 1;
+  /* Match left side */
 }
 
 .topbar-icon-btn {
   background: none;
   border: none;
   padding: 5px;
-  color: var(--color-text-secondary);
+  color: var(--pm-text-muted);
   cursor: pointer;
-  position: relative; /* Add this */
+  position: relative;
 }
 
-/* Add this new rule for the badge */
 .notification-badge {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: red;
+  background-color: #e74c3c;
   color: white;
   border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 0.7rem;
+  padding: 2px 5px;
+  font-size: 0.65rem;
   font-weight: bold;
-  border: 1px solid white;
+  border: 1px solid var(--pm-bg);
 }
+
 .topbar-icon-btn:hover {
-  color: var(--color-primary);
+  color: var(--pm-primary);
 }
 
 /* --- MOBILE STYLES (default) --- */
 .topbar-logo-desktop,
 .topbar-desktop-profile-btn {
-  display: none; /* Hide desktop elements on mobile */
+  display: none;
 }
 
 .topbar-mobile-menu-btn {
   background: none;
   border: none;
   padding: 5px;
-  color: var(--color-text-primary);
+  color: var(--pm-text);
   cursor: pointer;
 }
 
-.topbar-mobile-search {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  /* This is a placeholder for the search bar from Figma */
-}
-
-/* --- DESKTOP STYLES (matches image_18b042.jpg) --- */
+/* --- DESKTOP STYLES --- */
 @media (min-width: 768px) {
   .app-topbar {
-    left: 240px; /* Make room for the sidebar */
+    left: 240px;
+    padding: 0 25px;
   }
-  
-  .topbar-mobile-menu-btn,
-  .topbar-mobile-search {
-    display: none; /* Hide mobile elements on desktop */
+
+  .topbar-mobile-menu-btn {
+    display: none;
   }
 
   .topbar-logo-desktop {
     display: block;
     height: 30px;
   }
+
   .topbar-logo-desktop img {
     height: 100%;
     width: auto;
+    /* Brand color fix for dark mode if needed in People.css or global */
+  }
+
+  /* Invert logo in dark mode */
+  html.pm-dark .topbar-logo-desktop img {
+    filter: brightness(0) invert(1);
   }
 
   .topbar-desktop-profile-btn {
@@ -99,9 +125,21 @@
     cursor: pointer;
     overflow: hidden;
   }
+
   .topbar-desktop-profile-btn img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  .topbar-page-title {
+    font-size: 1.3rem;
+  }
+}
+
+/* iPhone SE Adjustment */
+@media (max-width: 375px) {
+  .topbar-page-title {
+    font-size: 1rem;
   }
 }

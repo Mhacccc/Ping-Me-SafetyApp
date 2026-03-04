@@ -1,0 +1,80 @@
+@import "../../styles/MenuLayout.css";
+
+/* Account Page Styling - Specific Overrides */
+
+.account-danger-section .br-section-title {
+    color: var(--pm-danger);
+    /* Keep danger red */
+}
+
+.br-danger-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid rgba(164, 38, 44, 0.3);
+    border-radius: var(--radius);
+}
+
+.br-danger-icon {
+    color: var(--pm-danger);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.br-danger-content {
+    flex: 1;
+}
+
+.br-danger-text {
+    font-size: 13px;
+    color: var(--text);
+    opacity: 0.7;
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+}
+
+.br-btn-delete {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--pm-danger);
+    color: var(--pm-danger);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.br-btn-delete:hover {
+    background: var(--pm-danger);
+    color: #fff;
+}
+
+.br-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.br-avatar-section .br-avatar-wrapper {
+    cursor: pointer;
+}
+
+.br-avatar-section .br-avatar-wrapper:hover .br-avatar-circle {
+    opacity: 0.9;
+}
+
+/* Dark Mode Overrides for Account */
+html.pm-dark .br-danger-card {
+    background: rgba(164, 38, 44, 0.1);
+    border-color: rgba(164, 38, 44, 0.4);
+}
+
+@media (min-width: 900px) {
+    .account-danger-section {
+        grid-column: span 1;
+    }
+}

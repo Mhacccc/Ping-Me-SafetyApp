@@ -1,0 +1,364 @@
+/* src/pages/people/People.css */
+
+.people-page-container {
+  padding: 50px 20px 20px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.people-header-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.people-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 15px 0 45px;
+  border: 1px solid var(--pm-border);
+  border-radius: 12px;
+  background-color: var(--pm-surface);
+  color: var(--pm-text);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.people-search-input:focus {
+  outline: none;
+  border-color: var(--pm-primary);
+  box-shadow: 0 0 0 3px rgba(var(--pm-primary-rgb), 0.1);
+}
+
+.search-icon-wrapper {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.add-people-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--pm-danger);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.add-people-btn:hover {
+  background-color: var(--pm-danger-hover);
+  transform: translateY(-2px);
+}
+
+.people-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.person-row-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--pm-border);
+  transition: background-color 0.2s ease;
+}
+
+.person-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  flex: 1;
+}
+
+.person-main-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+
+.person-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--pm-surface);
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--pm-bg);
+}
+
+.status-dot.online {
+  background-color: #34A853;
+}
+
+.status-dot.offline {
+  background-color: #9ca3af;
+}
+
+.name-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.person-row-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--pm-text);
+  margin: 0;
+}
+
+.person-row-status {
+  font-size: 0.85rem;
+  color: var(--pm-text-muted);
+  margin: 0;
+}
+
+.status-on {
+  color: #34A853;
+  font-weight: 500;
+}
+
+.status-off {
+  color: var(--pm-text-muted);
+}
+
+.person-battery-info {
+  text-align: right;
+  margin-right: 20px;
+}
+
+.battery-percentage {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.delete-person-btn {
+  background: none;
+  border: none;
+  color: var(--pm-text-muted);
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.delete-person-btn:hover {
+  color: var(--pm-danger);
+  background-color: rgba(var(--pm-danger-rgb), 0.1);
+}
+
+/* --- Responsive Adjustments --- */
+
+@media (min-width: 768px) {
+  .people-page-container {
+    padding: 50px 40px 40px 40px;
+  }
+}
+
+/* iPhone SE (375px and below) */
+@media (max-width: 375px) {
+  .people-page-container {
+    padding: 50px 15px 80px 15px;
+  }
+
+  .person-row-name {
+    font-size: 1rem;
+  }
+
+  .avatar-wrapper {
+    width: 45px;
+    height: 45px;
+  }
+
+  .battery-percentage {
+    font-size: 0.9rem;
+  }
+}
+
+/* Modal Specific Styles (Ensuring consistency with current theme) */
+.add-bracelet-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.add-bracelet-modal-content {
+  background-color: var(--pm-bg);
+  width: 90%;
+  max-width: 700px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.add-bracelet-modal-header {
+  padding: 25px 30px;
+  border-bottom: 1px solid var(--pm-border);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--pm-text);
+}
+
+.add-bracelet-body {
+  padding: 30px;
+  display: flex;
+  gap: 40px;
+}
+
+.add-bracelet-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section-header {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--pm-text-muted);
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.section-slash {
+  color: var(--pm-danger);
+  font-size: 1.2rem;
+}
+
+.form-group-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label-custom {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--pm-text);
+}
+
+.req-asterisk {
+  color: var(--pm-danger);
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-wrapper {
+  position: absolute;
+  left: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.form-input-custom {
+  width: 100%;
+  height: 48px;
+  padding: 0 15px 0 42px;
+  border: 1px solid var(--pm-border);
+  border-radius: 12px;
+  background-color: var(--pm-surface);
+  color: var(--pm-text);
+  font-size: 1rem;
+}
+
+.form-input-custom:focus {
+  outline: none;
+  border-color: var(--pm-primary);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--pm-text-muted);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+}
+
+.add-bracelet-footer {
+  padding: 20px 30px;
+  background-color: var(--pm-surface);
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  border-top: 1px solid var(--pm-border);
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  border: 1px solid var(--pm-border);
+  background: white;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-next {
+  padding: 12px 30px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Mobile Modal Adjustments */
+@media (max-width: 768px) {
+  .add-bracelet-body {
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}

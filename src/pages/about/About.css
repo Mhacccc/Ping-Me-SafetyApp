@@ -1,0 +1,91 @@
+@import "../../styles/MenuLayout.css";
+
+/* About Page Specific Overrides */
+
+.about-text-content p {
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.9;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.about-list {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.about-list li {
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.9;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.about-list li::marker {
+    color: var(--maroon);
+}
+
+.about-section-desc {
+    font-size: 13px;
+    color: var(--text);
+    opacity: 0.7;
+    margin-bottom: 16px;
+}
+
+.about-tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tech-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.about-researcher-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.researcher-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text);
+}
+
+.about-university {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.5;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+@media (min-width: 900px) {
+    .about-full-width {
+        grid-column: span 2;
+    }
+}
+
+/* Dark Mode Overrides */
+html.pm-dark .tech-pill,
+html.pm-dark .researcher-card {
+    background: var(--surface);
+    border-color: var(--border);
+}

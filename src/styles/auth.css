@@ -1,0 +1,239 @@
+/* Auth layout matching Mobile design (iPhone SE) & Desktop Rectangular Layout */
+
+.authPage {
+  --pm-bg: #FAF9F6;
+  --pm-surface: #FFFFFF;
+  --pm-text: #222222;
+  --pm-text-muted: #777777;
+  --pm-primary: #800E0E;
+  /* Dark Maroon */
+  --pm-border: rgba(34, 34, 34, 0.1);
+  --pm-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #FAF9F6 0%, #FCF9EE 46%, #D85C4F 100%);
+  position: relative;
+  overflow-x: hidden;
+  color: var(--pm-text);
+}
+
+.authMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+/* Side-by-Side Desktop View (Rectangular Form) */
+@media (min-width: 900px) {
+  .authCard {
+    max-width: 900px;
+    flex-direction: row;
+    background: #FFFFFF;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    /* Round corners for children */
+  }
+
+  .authLeft {
+    flex: 1;
+    background-color: #FCF9EE;
+    /* Light cream base */
+    background-image: url("../assets/bg logsign.png");
+    background-size: cover;
+    background-position: center;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    text-align: left;
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Balanced cream overlay - lower opacity to make image "clearly visible" */
+  .authLeft::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(243, 242, 239, 0.564);
+    /* Lower opacity for better image visibility */
+    z-index: 1;
+  }
+
+  /* Content above the overlay */
+  .authLeft>* {
+    position: relative;
+    z-index: 2;
+  }
+
+  .authRight {
+    flex: 1.2;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .authLogoContainer {
+    justify-content: flex-start;
+    margin-bottom: 40px;
+  }
+
+  .authHeader {
+    text-align: left;
+    margin-bottom: 0;
+  }
+
+  .authHeader h1 {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .authHeader p {
+    font-size: 17px;
+    max-width: 300px;
+  }
+}
+
+/* Default Mobile/Tablet Header Style */
+.authLogoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.authLogo {
+  height: 60px;
+  object-fit: contain;
+}
+
+.authHeader {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.authHeader h1 {
+  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--pm-text);
+  line-height: 1.2;
+}
+
+.authHeader p {
+  margin: 0;
+  color: var(--pm-text-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.authForm {
+  display: grid;
+  gap: 16px;
+}
+
+.authForm .pm-field {
+  gap: 8px;
+}
+
+.authForm .pm-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+.authForm .pm-inputWrap {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+.forgotPwdLink {
+  text-align: right;
+  margin-top: -8px;
+}
+
+.forgotPwdLink a {
+  font-size: 14px;
+  color: #3B82F6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.authBtnContainer {
+  margin-top: 12px;
+}
+
+.authBtnMaroon {
+  width: 100%;
+  padding: 16px;
+  background-color: #800E0E;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.authBtnMaroon:hover {
+  background-color: #6D0C0C;
+  transform: translateY(-1px);
+}
+
+.authBtnMaroon:disabled {
+  opacity: 0.6;
+}
+
+.authFooter {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 15px;
+  color: #333;
+}
+
+.authFooter a {
+  color: #3B82F6;
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+/* Specific iPhone SE adjustments */
+@media (max-width: 375px) {
+  .authMain {
+    padding: 30px 20px;
+  }
+
+  .authHeader h1 {
+    font-size: 24px;
+  }
+
+  .authLogo {
+    height: 50px;
+  }
+}
