@@ -49,6 +49,17 @@
   font-size: 0.7rem;
   /* 10px */
   font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: #8c2025;
+}
+
+.nav-item.active {
+  font-weight: 700;
 }
 
 
