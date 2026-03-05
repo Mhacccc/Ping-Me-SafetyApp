@@ -9,6 +9,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 .notification-modal {
@@ -24,16 +25,21 @@
 
 .notification-modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 1rem;
   border-bottom: 1px solid var(--pm-border);
+  position: relative;
 }
 
 .notification-modal-title {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--pm-text);
+  font-weight: 650;
+  /* color: var(--pm-text); */
+  color: #6D0C0C;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .notification-modal-close-btn {
