@@ -17,6 +17,7 @@
   position: relative;
   overflow-x: hidden;
   color: var(--pm-text);
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 .authMain {
@@ -56,7 +57,7 @@
     flex: 1;
     background-color: #FCF9EE;
     /* Light cream base */
-    background-image: url("../assets/bg logsign.png");
+    /* background-image: url("../assets/bg logsign.png"); */
     background-size: cover;
     background-position: center;
     padding: 60px;
@@ -98,7 +99,8 @@
   }
 
   .authLogoContainer {
-    justify-content: flex-start;
+    justify-content: center;
+    width: 100%;
     margin-bottom: 40px;
   }
 
@@ -140,11 +142,13 @@
   font-size: 26px;
   font-weight: 800;
   color: var(--pm-text);
+  /* color: #6D0C0C; */
+  /* color: #7D0A0A; */
   line-height: 1.2;
 }
 
 .authHeader p {
-  margin: 0;
+  margin: 10;
   color: var(--pm-text-muted);
   font-size: 15px;
   line-height: 1.5;
