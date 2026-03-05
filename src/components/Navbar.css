@@ -30,6 +30,7 @@
   border: 1px solid var(--pm-border);
   box-shadow: var(--pm-shadow-md);
   z-index: 1000;
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 .nav-items-container {

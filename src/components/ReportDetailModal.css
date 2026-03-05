@@ -13,6 +13,7 @@
     z-index: 1000;
     backdrop-filter: blur(4px);
     padding: 24px;
+    font-family: 'SF Pro Display', sans-serif;
 }
 
 @media (min-width: 900px) {
@@ -37,6 +38,7 @@
     max-height: 85vh;
     /* Significantly constrained height */
     box-shadow: var(--pm-shadow-lg);
+    font-family: 'SF Pro Display', sans-serif;
 }
 
 .report-detail-header {

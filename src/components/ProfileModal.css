@@ -16,6 +16,7 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 .profile-modal-backdrop.open {
