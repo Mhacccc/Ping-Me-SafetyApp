@@ -1,7 +1,7 @@
 /* src/pages/people/People.css */
 
 .people-page-container {
-  padding: 50px 20px 20px 20px;
+  padding: 35px 20px 20px 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -50,7 +50,7 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background-color: var(--pm-danger);
+  background-color: #8c2025;
   color: white;
   border: none;
   display: flex;
@@ -62,7 +62,7 @@
 }
 
 .add-people-btn:hover {
-  background-color: var(--pm-danger-hover);
+  background-color: #b31119;
   transform: translateY(-2px);
 }
 
@@ -175,7 +175,7 @@
 }
 
 .delete-person-btn:hover {
-  color: var(--pm-danger);
+  color: #8c2025;
   background-color: rgba(var(--pm-danger-rgb), 0.1);
 }
 
