@@ -74,7 +74,6 @@
 }
 
 /* --- MOBILE STYLES (default) --- */
-.topbar-logo-desktop,
 .topbar-desktop-profile-btn {
   display: none;
 }
@@ -98,21 +97,7 @@
     display: none;
   }
 
-  .topbar-logo-desktop {
-    display: block;
-    height: 30px;
-  }
 
-  .topbar-logo-desktop img {
-    height: 100%;
-    width: auto;
-    /* Brand color fix for dark mode if needed in People.css or global */
-  }
-
-  /* Invert logo in dark mode */
-  html.pm-dark .topbar-logo-desktop img {
-    filter: brightness(0) invert(1);
-  }
 
   .topbar-desktop-profile-btn {
     display: block;
