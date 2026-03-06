@@ -7,6 +7,7 @@ import * as mapHelpers from "../../utils/mapHelpers";
 import { reverseGeocode } from "../../utils/geocode";
 import { useBraceletUsers } from "../../hooks/useUsers";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import MapLoader from "../../components/loading/MapLoader";
 import HomeSidePanel from "../../components/HomeSidePanel";
 
 function Home() {
@@ -115,7 +116,7 @@ function Home() {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <MapLoader />;
 
   return (
     <div className="home-layout">
