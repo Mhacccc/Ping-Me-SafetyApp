@@ -22,7 +22,6 @@ const TopBar = ({ onProfileClick }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  console.log("TopBar rendered for path:", location.pathname);
 
   const getPageTitle = () => {
     const path = location.pathname;

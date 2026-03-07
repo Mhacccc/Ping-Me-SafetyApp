@@ -116,7 +116,13 @@ function Home() {
     }
   };
 
-  if (loading) return <MapLoader />;
+  if (loading) {
+    return (
+      <div className="home-layout" style={{ position: 'relative' }}>
+        <MapLoader text="Fetching Map Data..." fullScreen={false} lightTheme={true} />
+      </div>
+    );
+  }
 
   return (
     <div className="home-layout">
