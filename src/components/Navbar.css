@@ -30,6 +30,7 @@
   border: 1px solid var(--pm-border);
   box-shadow: var(--pm-shadow-md);
   z-index: 1000;
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 .nav-items-container {
@@ -49,6 +50,17 @@
   font-size: 0.7rem;
   /* 10px */
   font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: #8c2025;
+}
+
+.nav-item.active {
+  font-weight: 700;
 }
 
 

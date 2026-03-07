@@ -13,6 +13,7 @@
   justify-content: space-between;
   padding: 0 15px;
   z-index: 900;
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 .topbar-left {
@@ -32,7 +33,7 @@
 .topbar-page-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--pm-text);
+  color: #8c2025;
   margin: 0;
   text-align: center;
   white-space: nowrap;
@@ -74,17 +75,28 @@
 }
 
 /* --- MOBILE STYLES (default) --- */
-.topbar-logo-desktop,
-.topbar-desktop-profile-btn {
+.topbar-desktop-profile-btn,
+.topbar-spacer-desktop {
   display: none;
 }
 
 .topbar-mobile-menu-btn {
   background: none;
   border: none;
-  padding: 5px;
-  color: var(--pm-text);
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+.topbar-mobile-menu-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* --- DESKTOP STYLES --- */
@@ -98,21 +110,14 @@
     display: none;
   }
 
-  .topbar-logo-desktop {
+  /* Maintain layout width on desktop */
+  .topbar-spacer-desktop {
     display: block;
-    height: 30px;
+    width: 36px;
+    height: 36px;
   }
 
-  .topbar-logo-desktop img {
-    height: 100%;
-    width: auto;
-    /* Brand color fix for dark mode if needed in People.css or global */
-  }
 
-  /* Invert logo in dark mode */
-  html.pm-dark .topbar-logo-desktop img {
-    filter: brightness(0) invert(1);
-  }
 
   .topbar-desktop-profile-btn {
     display: block;

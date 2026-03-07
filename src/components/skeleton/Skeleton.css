@@ -1,0 +1,99 @@
+/* Base Skeleton Container (Light Mode Default) */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    /* Visible grey shape against light/white backgrounds */
+    background-color: rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    /* This prevents the shimmer from bleeding outside the rounded corners */
+    isolation: isolate;
+}
+
+/* Dark Mode Override */
+html.pm-dark .skeleton {
+    /* Visible frosted white shape against dark surface backgrounds */
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* The Shimmering Red "Laser Scanner" Effect */
+.skeleton::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    /* Start completely off-screen to the left */
+    right: 0;
+    bottom: 0;
+    width: 100%;
+
+    /* Sci-Fi Shimmer Gradient */
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(164, 38, 44, 0.05) 20%,
+            /* Faint PingMe Maroon */
+            rgba(164, 38, 44, 0.4) 40%,
+            /* Stronger Red */
+            rgba(255, 60, 60, 0.8) 50%,
+            /* Bright Laser Center */
+            rgba(164, 38, 44, 0.4) 60%,
+            /* Stronger Red */
+            rgba(164, 38, 44, 0.05) 80%,
+            /* Faint PingMe Maroon */
+            transparent 100%);
+    /* The shimmering animation: Slower but more frequent straight sweep */
+    animation: shimmerLaser 2.2s infinite linear;
+    z-index: 1;
+}
+
+@keyframes shimmerLaser {
+    0% {
+        transform: translateX(0%);
+    }
+
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+/* ─── Skeleton Shape Modifiers ─── */
+
+/* 1. Text Lines */
+.skeleton-text {
+    border-radius: 4px;
+    /* Harder edges for text blocks */
+    margin-bottom: 8px;
+}
+
+/* 2. Titles (Bolder/Thicker Text) */
+.skeleton-title {
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+/* 3. Avatars (Perfect Circles) */
+.skeleton-avatar {
+    border-radius: 50%;
+}
+
+/* 4. Thumbnails/Cards (Large Rectangles) */
+.skeleton-thumbnail {
+    border-radius: 12px;
+    /* Smoother edges for cards */
+}
+
+/* ─── Light Mode Override ─── */
+/* If the user ever wants this skeleton on a white background */
+.skeleton-light {
+    background-color: rgba(0, 0, 0, 0.15);
+    /* Darker gray base for light mode visibility */
+}
+
+/* The light mode shimmer is a softer red/pink laser so it's not blinding */
+.skeleton-light::after {
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(164, 38, 44, 0.05) 30%,
+            rgba(164, 38, 44, 0.25) 50%,
+            rgba(164, 38, 44, 0.05) 70%,
+            transparent 100%);
+}

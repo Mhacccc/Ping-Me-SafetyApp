@@ -4,6 +4,7 @@
   color: var(--pm-text);
   display: grid;
   grid-template-columns: 260px 1fr;
+  font-family: 'SF Pro Display', sans-serif;
 }
 
 /* Light Sidebar Theme (Lighter Red) */

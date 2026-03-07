@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "./TopBar.css";
-import { Bell, Menu } from "lucide-react";
+import { Bell } from "lucide-react";
 import avatar from "../assets/red.webp";
-import logo from "../assets/logo.png"; // Fixed logo path
 import NotificationModal from "./NotificationModal";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../config/firebaseConfig";
@@ -23,7 +22,6 @@ const TopBar = ({ onProfileClick }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  console.log("TopBar rendered for path:", location.pathname);
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -60,6 +58,7 @@ const TopBar = ({ onProfileClick }) => {
           const tb = b.time?.seconds ?? b.time ?? 0;
           return tb - ta;
         });
+
         setNotifications(items);
         setLoading(false);
       },
@@ -97,14 +96,12 @@ const TopBar = ({ onProfileClick }) => {
   return (
     <>
       <header className="app-topbar">
-        {/* Left: Mobile Menu button or Desktop Logo */}
         <div className="topbar-left">
           <button className="topbar-mobile-menu-btn" onClick={onProfileClick}>
-            <Menu size={24} />
+            <img src={avatar} alt="Profile" />
           </button>
-          <div className="topbar-logo-desktop">
-            <img src={logo} alt="PingMe Logo" />
-          </div>
+          {/* Spacer to maintain balance on desktop after logo removal */}
+          <div className="topbar-spacer-desktop"></div>
         </div>
 
         {/* Center: Dynamic Title */}

@@ -1,0 +1,282 @@
+/* ─── Shared Base Container ─── */
+.loader-container-base {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(5, 5, 8, 0.9);
+    /* Darker, almost black for high contrast */
+    backdrop-filter: blur(8px);
+    pointer-events: all;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* ─── Light Theme Modifier ─── */
+.loader-container-base.loader-light {
+    background-color: rgba(245, 245, 248, 0.85);
+    /* Frosted light gray/white */
+}
+
+/* ─── Positioning Modes ─── */
+.loader-container-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+}
+
+.loader-container-local {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    /* Ensure child is contained by rounded corners if parent has them */
+    border-radius: inherit;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ─── Circular Progress Wrapper ─── */
+.circular-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Base style for all SVG rings */
+.progress-ring {
+    fill: none;
+    transform-origin: center;
+}
+
+/* 1. Outer Glowing Target Ring */
+.progress-ring-outer {
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 2;
+}
+
+.progress-ring-fg {
+    stroke: var(--pm-primary, #A4262C);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 10px rgba(164, 38, 44, 0.8));
+}
+
+.progress-ring-spinner {
+    animation: rotateRing 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* 2. Middle Dashed Ring (Reverse Spin) */
+.progress-ring-middle {
+    stroke: rgba(164, 38, 44, 0.4);
+    stroke-width: 1.5;
+    stroke-dasharray: 4, 12;
+    animation: rotateRingReverse 8s linear infinite;
+}
+
+/* 3. Inner Dotted Ring (Fast Spin) */
+.progress-ring-inner {
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 1;
+    stroke-dasharray: 2, 6;
+    animation: rotateRing 4s linear infinite;
+}
+
+/* Base Rotations */
+@keyframes rotateRing {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rotateRingReverse {
+    100% {
+        transform: rotate(-360deg);
+    }
+}
+
+/* ─── Orbiting Data Nodes ─── */
+.orbit-group {
+    animation: orbitSpin 4s linear infinite;
+    transform-origin: center;
+}
+
+.orbit-node {
+    fill: #ffffff;
+    filter: drop-shadow(0 0 4px #ffffff);
+}
+
+.orbit-node-secondary {
+    fill: var(--pm-primary, #A4262C);
+    filter: drop-shadow(0 0 6px var(--pm-primary, #A4262C));
+}
+
+@keyframes orbitSpin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── Inner Logo (Bouncing Pin) ─── */
+.inner-logo {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    z-index: 10;
+}
+
+.pin-wrap {
+    animation: bounce 1.6s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+    transform-origin: 50% 50%;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+/* ─── Double Pulse/Signal Vibe ─── */
+.pulse-base {
+    transform-origin: 50% 50%;
+    opacity: 0;
+    fill: none;
+    stroke-width: 1.5;
+}
+
+.pulse-1 {
+    stroke: #ffffff;
+    animation: pingBase 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.pulse-2 {
+    stroke: var(--pm-primary, #A4262C);
+    /* Delay the second pulse to create a ripple effect matching the bounce return */
+    animation: pingBase 1.6s cubic-bezier(0, 0, 0.2, 1) 0.3s infinite;
+}
+
+@keyframes pingBase {
+    0% {
+        transform: scale(0.3);
+        opacity: 0.9;
+        stroke-width: 2;
+    }
+
+    80% {
+        transform: scale(3.5);
+        opacity: 0;
+        stroke-width: 0.5;
+    }
+
+    100% {
+        transform: scale(3.5);
+        opacity: 0;
+    }
+}
+
+/* Grid subtle breathing */
+.grid-base {
+    animation: gridBreathe 3.2s ease-in-out infinite;
+    transform-origin: center;
+}
+
+@keyframes gridBreathe {
+
+    0%,
+    100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+/* ─── Dynamic Typography ─── */
+.loader-text-wrapper {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+/* Techy scanning line over text area */
+.loader-text-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -16px;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--pm-primary, #A4262C), transparent);
+    border-radius: 50%;
+    opacity: 0.8;
+}
+
+.loader-text {
+    color: #f0f0f0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    animation: textPulse 2s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 16px rgba(255, 255, 255, 0.6);
+    }
+}
+
+.loader-progress-text {
+    color: var(--pm-primary, #A4262C);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    font-family: monospace;
+    /* Gives it a data-crunching feel */
+    filter: drop-shadow(0 0 6px rgba(164, 38, 44, 0.7));
+}
+
+/* ─── Light Mode Text Overrides ─── */
+.loader-light .loader-text {
+    color: #333333;
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.loader-light .progress-ring-outer {
+    stroke: rgba(0, 0, 0, 0.08);
+}
+
+.loader-light .progress-ring-inner {
+    stroke: rgba(0, 0, 0, 0.15);
+}
+
+.loader-light .pulse-1 {
+    stroke: #333333;
+}

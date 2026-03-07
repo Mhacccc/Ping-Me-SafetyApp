@@ -7,7 +7,7 @@ import { getAuth } from "firebase/auth";
 import { collection, addDoc, doc, updateDoc, arrayUnion, serverTimestamp, deleteDoc, arrayRemove, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
 import { Plus, X, Trash2, User, CreditCard } from "lucide-react";
-import LoadingSpinner from '../../components/LoadingSpinner';
+import Skeleton from '../../components/skeleton/Skeleton';
 
 /**
  * Simple Search Icon component used in the search input field.
@@ -200,7 +200,6 @@ function People() {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
   if (error) return <div className="error">{error}</div>;
 
   return (
@@ -330,40 +329,62 @@ function People() {
       )}
 
       <div className="people-list">
-        {filteredUsers.map((person) => (
-          <div key={person.id} className="person-row-item">
-            <Link to={`/app/userProfile/${person.id}`} state={{ personData: person }} className="person-link">
-              <div className="person-main-info">
-                <div className="avatar-wrapper">
-                  <img src={person.avatar} alt={person.name} className="person-avatar-img" />
-                  <div className={`status-dot ${person.online ? 'online' : 'offline'}`} />
+        {loading ? (
+          /* Render Skeleton Rows while loading */
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="person-row-item" style={{ border: 'none', background: 'transparent' }}>
+              <div className="person-link" style={{ pointerEvents: 'none', display: 'flex', width: '100%', padding: '0px' }}>
+                <div className="person-main-info" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                  <div className="avatar-wrapper" style={{ marginRight: '16px' }}>
+                    <Skeleton type="avatar" width="48px" height="48px" />
+                  </div>
+                  <div className="name-status-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+                    <Skeleton type="text" width="60%" height="16px" />
+                    <Skeleton type="text" width="40%" height="12px" />
+                  </div>
                 </div>
-                <div className="name-status-info">
-                  <p className="person-row-name">{person.name}</p>
-                  <p className="person-row-status">
-                    Bracelet: <span className={person.online && person.braceletOn ? 'status-on' : 'status-off'}>
-                      {person.online && person.braceletOn ? 'ON' : 'OFF'}
-                    </span>
+                <div className="person-battery-info" style={{ display: 'flex', alignItems: 'center' }}>
+                  <Skeleton type="text" width="32px" height="16px" />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          filteredUsers.map((person) => (
+            <div key={person.id} className="person-row-item">
+              <Link to={`/app/userProfile/${person.id}`} state={{ personData: person }} className="person-link">
+                <div className="person-main-info">
+                  <div className="avatar-wrapper">
+                    <img src={person.avatar} alt={person.name} className="person-avatar-img" />
+                    <div className={`status-dot ${person.online ? 'online' : 'offline'}`} />
+                  </div>
+                  <div className="name-status-info">
+                    <p className="person-row-name">{person.name}</p>
+                    <p className="person-row-status">
+                      Bracelet: <span className={person.online && person.braceletOn ? 'status-on' : 'status-off'}>
+                        {person.online && person.braceletOn ? 'ON' : 'OFF'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="person-battery-info">
+                  <p className="battery-percentage" style={person.online ? { color: '#34A853' } : { color: "var(--pm-text-muted)" }}>
+                    {person.battery}%
                   </p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="person-battery-info">
-                <p className="battery-percentage" style={person.online ? { color: '#34A853' } : { color: "var(--pm-text-muted)" }}>
-                  {person.battery}%
-                </p>
-              </div>
-            </Link>
-
-            <button
-              className="delete-person-btn"
-              onClick={(e) => handleDeleteBracelet(e, person.id)}
-              aria-label="Delete"
-            >
-              <Trash2 size={20} />
-            </button>
-          </div>
-        ))}
+              <button
+                className="delete-person-btn"
+                onClick={(e) => handleDeleteBracelet(e, person.id)}
+                aria-label="Delete"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+          ))
+        )}
       </div>
     </main>
   );
