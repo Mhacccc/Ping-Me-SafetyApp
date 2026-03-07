@@ -11,8 +11,9 @@ import { useBraceletUsers } from "../../hooks/useUsers";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../config/firebaseConfig";
 import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
-import LoadingSpinner from "../../components/LoadingSpinner";
+// import LoadingSpinner from "../../components/LoadingSpinner";
 import { Layers, X } from "lucide-react";
+import MapLoader from "../../components/loading/MapLoader";
 
 // New decoupled modules
 import * as geofenceService from "../../services/geofenceService";
@@ -252,9 +253,16 @@ const Places = () => {
     setIsMonitorOpen(false); // Close the monitor after canceling
   };
 
-  if (loading) return <LoadingSpinner />;
+  // if (loading) return <LoadingSpinner />;
 
 
+  if (loading) {
+    return (
+      <div className="home-layout" style={{ position: 'relative' }}>
+        <MapLoader text="Fetching Map Data..." fullScreen={true} lightTheme={false} />
+      </div>
+    );
+  }
   // Determine the default center of the map based on the first active user position
   const initialCenterUser = braceletUsers.find(u => u.position && u.position.length === 2);
   const initialCenter = initialCenterUser ? initialCenterUser.position : [14.5921, 120.9755];
