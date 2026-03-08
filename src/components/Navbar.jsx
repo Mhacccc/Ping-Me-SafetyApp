@@ -5,12 +5,12 @@ import { Home, Users, Map, FileText } from 'lucide-react';
 
 // Helper component for nav icons
 const NavIcon = ({ to, activePath, icon: Icon, label }) => {
-  const isActive = to === '/app' 
-    ? activePath === '/app' 
+  const isActive = to === '/app'
+    ? activePath === '/app'
     : activePath.startsWith(to);
 
   return (
-    <Link to={to} className={`nav-item ${isActive ? 'active' : ''}`}>
+    <Link to={to} className={`nav-item ${isActive ? 'active' : ''}`} onContextMenu={(e) => e.preventDefault()} draggable="false">
       <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
       <span>{label}</span>
     </Link>
@@ -29,7 +29,7 @@ function Navbar() {
         <NavIcon to="/app/places" activePath={path} icon={Map} label="Places" />
         <NavIcon to="/app/report" activePath={path} icon={FileText} label="Report" />
       </div>
-      
+
     </footer>
   );
 }

@@ -21,6 +21,11 @@
 }
 
 
+/* To change the hue (e.g., to red): */
+/* filter: hue-rotate(45deg) !important; */
+
+
+
 .leaflet-container {
   width: 100%;
   height: 100%;
@@ -165,7 +170,7 @@
   background: rgba(164, 38, 44, 0.1);
   border: 1.5px solid var(--pm-primary);
   padding: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   border-radius: 16px;
   animation: soft-pulse 2s infinite ease-in-out;
 }
@@ -272,12 +277,13 @@
 }
 
 .geofence-list h3 {
+  text-align: center;
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--pm-text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .zone-items-list {
@@ -307,7 +313,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: 10px 12px;
   background: white;
   border-radius: 14px;
   margin-bottom: 8px;
@@ -400,6 +406,8 @@
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   background-image: none !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+  -webkit-tap-highlight-color: transparent !important;
+  outline: none !important;
 }
 
 .leaflet-draw-draw-circle {
@@ -420,8 +428,9 @@
 .leaflet-draw-toolbar a.leaflet-disabled {
   background-color: var(--pm-border) !important;
   box-shadow: none !important;
-  cursor: default;
-  opacity: 0.6;
+  cursor: default !important;
+  opacity: 0.5 !important;
+  pointer-events: none !important;
 }
 
 /* Custom White SVG Icons for Toolbar Buttons */
@@ -452,45 +461,455 @@
 
 /* --- Styling for the Actions (Save/Cancel sub-menus) --- */
 .leaflet-draw-actions {
-  left: auto !important;
-  right: 65px !important;
-  /* Positioned to the left of the new larger buttons */
-  top: 10px !important;
-  background-color: var(--pm-surface-2) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
-  padding: 8px !important;
-  border: 1px solid var(--pm-border) !important;
+  /* Exit animation: slowly fade out when Leaflet hides it */
+  position: fixed !important;
+  top: auto !important;
+  bottom: 80px !important;
+  /* Matches slightly above animation finish */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  display: flex !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+  transition: opacity 0.25s ease, z-index 0s 0.25s !important;
+}
+
+/* Leaflet-draw adds .leaflet-draw-actions-top when it's actively shown */
+.leaflet-draw-actions-top,
+.leaflet-draw-actions-bottom,
+.active-drawing-actions .leaflet-draw-actions {
+  /* Fallback for active state */
+  /* Positioning it floating at the bottom center of the screen above the navbar */
+  position: fixed !important;
+  top: auto !important;
+  bottom: 100px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+
+  /* Fancy Glassmorphism Pill Design - Single line layout */
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  /* Prevent wrapping onto multiple lines */
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  /* Spacing between items */
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 999px !important;
+  /* Fully rounded pill shape */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+  padding: 6px 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  z-index: 2000 !important;
+  /* Ensure it stays above everything */
+  margin: 0 !important;
+
+  /* Ensure it doesn't overflow mobile width, but allow horizontal scroll if absolutely necessary */
+  max-width: 90vw !important;
+  overflow-x: auto !important;
+  /* Hide scrollbar for a cleaner look */
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+
+  /* Smooth animation when it appears from the bottom */
+  animation: slide-up-fade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 2000 !important;
+  transition: none !important;
+}
+
+.active-drawing-actions .leaflet-draw-actions::-webkit-scrollbar {
+  display: none !important;
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    bottom: 65px;
+  }
+
+  to {
+    opacity: 1;
+    bottom: 85px;
+  }
 }
 
 .leaflet-draw-actions li {
-  margin: 0 5px !important;
+  margin: 0 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Remove the dot separator since items might wrap now */
+.leaflet-draw-actions li:not(:last-child)::after {
+  display: none !important;
 }
 
 .leaflet-draw-actions a {
   background-color: transparent !important;
   color: var(--pm-text) !important;
   border: none !important;
-  border-radius: 10px !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  border-radius: 999px !important;
+  height: 32px !important;
+  line-height: 32px !important;
   font-weight: 700 !important;
   font-size: 13px !important;
-  padding: 0 15px !important;
+  padding: 0 16px !important;
   box-shadow: none !important;
-  transition: all 0.2s !important;
+  transition: all 0.2s ease !important;
+  margin: 0 4px !important;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center !important;
+  -webkit-tap-highlight-color: transparent !important;
+  outline: none !important;
+}
+
+/* Specific Semantic Colors for Actions */
+/* Save / Finish - Using your brand primary color */
+.leaflet-draw-actions a[title^="Save"],
+.leaflet-draw-actions a[title^="Finish"] {
+  background-color: var(--pm-primary) !important;
+  color: white !important;
+}
+
+/* Cancel - Muted Gray */
+.leaflet-draw-actions a[title^="Cancel"] {
+  background-color: #ddd8d8 !important;
+  color: #666 !important;
+}
+
+/* Delete / Clear - Danger Red (darker) */
+.leaflet-draw-actions a[title^="Delete"],
+.leaflet-draw-actions a[title^="Clear"] {
+  background-color: #c9302c !important;
+  color: white !important;
 }
 
 .leaflet-draw-actions a:hover {
-  background-color: var(--pm-surface) !important;
-  color: var(--pm-primary) !important;
-  transform: none !important;
+  filter: brightness(1.1) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Ensure icons/text behave well inside */
+.leaflet-draw-actions a::before {
+  margin-right: 4px;
+}
+
+.zone-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zone-radius-badge {
+  background: rgba(164, 38, 44, 0.08);
+  color: #A4262C;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-rename-ghost {
+  background: transparent;
+  border: none;
+  color: #A4262C;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.btn-rename-ghost:hover {
+  background: rgba(164, 38, 44, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+html.pm-dark .zone-radius-badge {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+}
+
+html.pm-dark .btn-rename-ghost {
+  color: #ccc;
+}
+
+/* --- Rename Geofence Modal --- */
+.rename-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  /* Above the save overlay */
+  animation: status-fade-in 0.3s ease-out forwards;
+}
+
+.rename-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 32px;
+  border-radius: 28px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 420px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  animation: status-pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.rename-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.rename-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--pm-text);
+  letter-spacing: -0.5px;
+}
+
+.close-rename-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--pm-text-muted);
+  transition: all 0.2s ease;
+}
+
+.close-rename-btn:hover {
+  background: rgba(164, 38, 44, 0.1);
+  color: var(--pm-primary);
+  transform: rotate(90deg);
+}
+
+.rename-body p {
+  color: var(--pm-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.rename-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  color: var(--pm-text);
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.rename-input:focus {
+  outline: none;
+  background: white;
+  border-color: var(--pm-primary);
+  box-shadow: 0 0 0 4px rgba(164, 38, 44, 0.1);
+}
+
+.rename-input.input-error {
+  border-color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.rename-error-text {
+  color: #ff4d4f;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.rename-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-save-rename {
+  padding: 16px;
+  background: var(--pm-primary);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(164, 38, 44, 0.3);
+}
+
+.btn-save-rename:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(164, 38, 44, 0.4);
+}
+
+.btn-cancel-rename {
+  padding: 14px;
+  background: transparent;
+  color: var(--pm-text-muted);
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel-rename:hover {
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--pm-text);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode Overrides */
+html.pm-dark .rename-card {
+  background: rgba(28, 28, 30, 0.96);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+html.pm-dark .rename-header h3 {
+  color: white;
+}
+
+html.pm-dark .rename-input {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+html.pm-dark .rename-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.pm-dark .btn-cancel-rename {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+}
+
+html.pm-dark .btn-cancel-rename:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+html.pm-dark .close-rename-btn {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+/* --- Empty State Styling --- */
+.empty-geofence-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+
+
+
+}
+
+.empty-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: rgba(164, 38, 44, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pm-primary);
+  margin-bottom: 16px;
+  border: 1px dashed rgba(164, 38, 44, 0.2);
+}
+
+.empty-geofence-state h4 {
+  margin: 0 0 8px 0;
+  color: var(--pm-text);
+  font-weight: 600;
+}
+
+.empty-geofence-state p {
+  font-size: 14px;
+  color: var(--pm-text-muted);
+  line-height: 1.5;
+  max-width: 200px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
 }
 
 /* Ensure the Map occupies full space */
 .leaflet-container {
   width: 100%;
   height: 100%;
+}
+
+/* --- Hide Leaflet Draw Tooltips --- */
+/* This specific class targets the annoying floating mouse tooltip */
+.leaflet-draw-tooltip {
+  display: none !important;
 }
 
 /* --- DARK MODE OVERRIDES --- */
@@ -528,11 +947,17 @@ html.pm-dark .zone-items-list::-webkit-scrollbar-thumb {
 }
 
 html.pm-dark .leaflet-draw-actions {
-  background-color: var(--pm-surface-2) !important;
+  background-color: rgba(30, 30, 30, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.pm-dark .leaflet-draw-actions a[title^="Cancel"] {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ccc !important;
 }
 
 html.pm-dark .leaflet-draw-actions a:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  filter: brightness(1.2) !important;
 }
 
 html.pm-dark .monitor-toggle-btn,
@@ -545,4 +970,239 @@ html.pm-dark .leaflet-draw-draw-circle {
 html.pm-dark .monitor-toggle-btn:hover,
 html.pm-dark .leaflet-draw-draw-circle:hover {
   background-color: var(--pm-surface) !important;
+}
+
+/* --- Fancy Save/Success Overlay --- */
+.save-status-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: status-fade-in 0.3s ease-out forwards;
+}
+
+.status-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 40px;
+  border-radius: 28px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 380px;
+  min-height: 320px;
+  /* Stable height for transitions */
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  animation: status-pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-content {
+  width: 100%;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+/* Visibility Toggles */
+.status-card.is-loading .loading-state {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  position: relative;
+  /* Take up space when active */
+}
+
+.status-card.is-success .success-state {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  position: relative;
+  /* Take up space when active */
+}
+
+/* Hide the inactive state completely from layout if needed, 
+   but 'absolute' already handles most of it. 
+   Using relative on the active one ensures the card 
+   grows correctly if needed, though we set a min-height. */
+.status-card.is-loading .success-state,
+.status-card.is-success .loading-state {
+  display: none;
+}
+
+.status-content h3 {
+  margin: 24px 0 12px;
+  font-size: 1.6rem;
+  color: var(--pm-text);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.status-content p {
+  color: var(--pm-text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+/* Loading State Specifics */
+.loader-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-icon-large {
+  color: var(--pm-primary);
+  animation: status-spin 1s linear infinite;
+  z-index: 2;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--pm-primary);
+  border-radius: 50%;
+  opacity: 0;
+  animation: status-pulse-out 2s infinite;
+}
+
+/* Success State Specifics */
+.checkmark-wrapper {
+  width: 90px;
+  height: 90px;
+  background: #e6f7f0;
+  color: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+}
+
+.checkmark-icon {
+  animation: status-scale-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.btn-ok {
+  width: 100%;
+  padding: 16px;
+  background: var(--pm-primary);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(164, 38, 44, 0.3);
+}
+
+.btn-ok:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(164, 38, 44, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-ok:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Animations */
+@keyframes status-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes status-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes status-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes status-pulse-out {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes status-scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dark Mode Variants */
+html.pm-dark .status-card {
+  background: rgba(28, 28, 30, 0.96);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+
+html.pm-dark .status-content h3 {
+  color: white;
+}
+
+html.pm-dark .status-content p {
+  color: #9ca3af;
+}
+
+html.pm-dark .checkmark-wrapper {
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
