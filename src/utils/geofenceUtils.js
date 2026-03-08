@@ -28,7 +28,7 @@ export const checkGeofenceTransitions = (braceletUsers, geofences, alertedUsersS
             if (distance <= zone.radius + avatarVisualRadius) {
                 insideZoneId = zone.id;
                 insideZoneName = zone.name;
-                currentAlerts.push(`${user.name} entered ${zone.name}`);
+                currentAlerts.push(user.name,zone.name);
                 break;
             }
         }

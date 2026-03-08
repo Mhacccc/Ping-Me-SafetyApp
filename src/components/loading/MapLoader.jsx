@@ -1,7 +1,7 @@
 import React from 'react';
 import './MapLoader.css';
 
-const MapLoader = ({ size = 260, text = "Loading...", progress = null, fullScreen = true, lightTheme = false }) => {
+const MapLoader = ({ size = 260, text = "Loading...", progress = null, fullScreen = true }) => {
     // Math for the Outer Progress Ring
     const strokeWidth = 4;
     const center = size / 2;
@@ -18,8 +18,7 @@ const MapLoader = ({ size = 260, text = "Loading...", progress = null, fullScree
     const innerRadius = middleRadius - 12;
 
     const basePositionClass = fullScreen ? 'loader-container-fullscreen' : 'loader-container-local';
-    const themeClass = lightTheme ? 'loader-light' : '';
-    const containerClass = `loader-container-base ${basePositionClass} ${themeClass}`.trim();
+    const containerClass = `loader-container-base ${basePositionClass}`.trim();
 
     return (
         <div className={containerClass}>
@@ -60,9 +59,9 @@ const MapLoader = ({ size = 260, text = "Loading...", progress = null, fullScree
                     {/* Rotates the entire group to make nodes orbit the center */}
                     <g className="orbit-group">
                         {/* Primary white/gray orbit node tracking the outer ring */}
-                        <circle cx={center} cy={center - outerRadius} r={4} className="orbit-node" style={{ fill: lightTheme ? '#333' : '#fff' }} />
+                        <circle cx={center} cy={center - outerRadius} r={4} className="orbit-node" />
                         {/* Secondary trailing node */}
-                        <circle cx={center + outerRadius * 0.4} cy={center - outerRadius * 0.91} r={2} className="orbit-node" style={{ fill: lightTheme ? '#333' : '#fff', opacity: 0.5 }} />
+                        <circle cx={center + outerRadius * 0.4} cy={center - outerRadius * 0.91} r={2} className="orbit-node-trailing" />
 
                         {/* Red orbit node tracking the middle ring */}
                         <circle cx={center} cy={center + middleRadius} r={3} className="orbit-node-secondary" />
@@ -74,7 +73,10 @@ const MapLoader = ({ size = 260, text = "Loading...", progress = null, fullScree
                     width={size}
                     height={size}
                     className={progress === null ? "progress-ring-spinner" : ""}
-                    style={{ transform: "rotate(-90deg)", position: 'absolute' }} // Start top
+                    style={{
+                        transform: progress !== null ? "rotate(-90deg)" : "none",
+                        position: 'absolute'
+                    }} // Start top
                 >
                     <circle
                         className="progress-ring progress-ring-fg"

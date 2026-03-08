@@ -4,20 +4,15 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: rgba(5, 5, 8, 0.9);
-    /* Darker, almost black for high contrast */
-    backdrop-filter: blur(8px);
+    background-color: var(--pm-bg);
+    opacity: 0.98;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     pointer-events: all;
     animation: fadeIn 0.5s ease-out;
 }
 
-/* ─── Light Theme Modifier ─── */
-.loader-container-base.loader-light {
-    background-color: rgba(245, 245, 248, 0.85);
-    /* Frosted light gray/white */
-}
-
-/* ─── Positioning Modes ─── */
+/* Base Positionings */
 .loader-container-fullscreen {
     position: fixed;
     inset: 0;
@@ -28,7 +23,6 @@
     position: absolute;
     inset: 0;
     z-index: 50;
-    /* Ensure child is contained by rounded corners if parent has them */
     border-radius: inherit;
 }
 
@@ -50,16 +44,18 @@
     align-items: center;
 }
 
-/* Base style for all SVG rings */
 .progress-ring {
     fill: none;
     transform-origin: center;
 }
 
-/* 1. Outer Glowing Target Ring */
 .progress-ring-outer {
-    stroke: rgba(255, 255, 255, 0.05);
+    stroke: rgba(164, 38, 44, 0.1);
     stroke-width: 2;
+}
+
+html.pm-dark .progress-ring-outer {
+    stroke: rgba(255, 255, 255, 0.05);
 }
 
 .progress-ring-fg {
@@ -71,10 +67,10 @@
 }
 
 .progress-ring-spinner {
-    animation: rotateRing 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation: rotateRingSeamless 3s linear infinite;
+    transform-origin: center;
 }
 
-/* 2. Middle Dashed Ring (Reverse Spin) */
 .progress-ring-middle {
     stroke: rgba(164, 38, 44, 0.4);
     stroke-width: 1.5;
@@ -82,23 +78,44 @@
     animation: rotateRingReverse 8s linear infinite;
 }
 
-/* 3. Inner Dotted Ring (Fast Spin) */
 .progress-ring-inner {
-    stroke: rgba(255, 255, 255, 0.3);
+    stroke: rgba(0, 0, 0, 0.2);
     stroke-width: 1;
     stroke-dasharray: 2, 6;
     animation: rotateRing 4s linear infinite;
 }
 
+html.pm-dark .progress-ring-inner {
+    stroke: rgba(255, 255, 255, 0.3);
+}
+
 /* Base Rotations */
 @keyframes rotateRing {
-    100% {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
         transform: rotate(360deg);
     }
 }
 
+@keyframes rotateRingSeamless {
+    from {
+        transform: rotate(-90deg);
+    }
+
+    to {
+        transform: rotate(270deg);
+    }
+}
+
 @keyframes rotateRingReverse {
-    100% {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
         transform: rotate(-360deg);
     }
 }
@@ -110,6 +127,17 @@
 }
 
 .orbit-node {
+    fill: #333333;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.1));
+}
+
+.orbit-node-trailing {
+    fill: #333333;
+    opacity: 0.5;
+}
+
+html.pm-dark .orbit-node,
+html.pm-dark .orbit-node-trailing {
     fill: #ffffff;
     filter: drop-shadow(0 0 4px #ffffff);
 }
@@ -135,7 +163,6 @@
 
 .pin-wrap {
     animation: bounce 1.6s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
-    transform-origin: 50% 50%;
 }
 
 @keyframes bounce {
@@ -150,7 +177,6 @@
     }
 }
 
-/* ─── Double Pulse/Signal Vibe ─── */
 .pulse-base {
     transform-origin: 50% 50%;
     opacity: 0;
@@ -159,13 +185,16 @@
 }
 
 .pulse-1 {
-    stroke: #ffffff;
+    stroke: #333333;
     animation: pingBase 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+html.pm-dark .pulse-1 {
+    stroke: #ffffff;
 }
 
 .pulse-2 {
     stroke: var(--pm-primary, #A4262C);
-    /* Delay the second pulse to create a ripple effect matching the bounce return */
     animation: pingBase 1.6s cubic-bezier(0, 0, 0.2, 1) 0.3s infinite;
 }
 
@@ -188,7 +217,6 @@
     }
 }
 
-/* Grid subtle breathing */
 .grid-base {
     animation: gridBreathe 3.2s ease-in-out infinite;
     transform-origin: center;
@@ -218,25 +246,13 @@
     position: relative;
 }
 
-/* Techy scanning line over text area */
-.loader-text-wrapper::before {
-    content: '';
-    position: absolute;
-    top: -16px;
-    width: 40px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--pm-primary, #A4262C), transparent);
-    border-radius: 50%;
-    opacity: 0.8;
-}
-
 .loader-text {
-    color: #f0f0f0;
+    color: var(--pm-text);
     font-size: 1.15rem;
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    text-shadow: 0 0 12px rgba(var(--pm-text-rgb), 0.2);
     animation: textPulse 2s ease-in-out infinite;
 }
 
@@ -249,7 +265,7 @@
 
     50% {
         opacity: 1;
-        text-shadow: 0 0 16px rgba(255, 255, 255, 0.6);
+        text-shadow: 0 0 16px rgba(var(--pm-text-rgb), 0.4);
     }
 }
 
@@ -259,24 +275,5 @@
     font-weight: 800;
     letter-spacing: 1px;
     font-family: monospace;
-    /* Gives it a data-crunching feel */
     filter: drop-shadow(0 0 6px rgba(164, 38, 44, 0.7));
-}
-
-/* ─── Light Mode Text Overrides ─── */
-.loader-light .loader-text {
-    color: #333333;
-    text-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-}
-
-.loader-light .progress-ring-outer {
-    stroke: rgba(0, 0, 0, 0.08);
-}
-
-.loader-light .progress-ring-inner {
-    stroke: rgba(0, 0, 0, 0.15);
-}
-
-.loader-light .pulse-1 {
-    stroke: #333333;
 }

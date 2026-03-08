@@ -329,27 +329,29 @@ function People() {
       )}
 
       <div className="people-list">
-        {loading ? (
-          /* Render Skeleton Rows while loading */
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={`skeleton-${i}`} className="person-row-item" style={{ border: 'none', background: 'transparent' }}>
-              <div className="person-link" style={{ pointerEvents: 'none', display: 'flex', width: '100%', padding: '0px' }}>
-                <div className="person-main-info" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                  <div className="avatar-wrapper" style={{ marginRight: '16px' }}>
+        {loading ? (Array.from({ length: 4 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="person-row-item" style={{ border: 'none', background: 'transparent'  }}>
+              <div className="person-link">
+                <div className="person-main-info">
+                  <div className="avatar-wrapper" >
                     <Skeleton type="avatar" width="48px" height="48px" />
                   </div>
-                  <div className="name-status-info" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
-                    <Skeleton type="text" width="60%" height="16px" />
-                    <Skeleton type="text" width="40%" height="12px" />
+                  <div className="name-status-info" >
+                    <Skeleton type="text" width="120px" height="16px" />
+                    <Skeleton type="text" width="80px" height="12px" />
                   </div>
                 </div>
-                <div className="person-battery-info" style={{ display: 'flex', alignItems: 'center' }}>
-                  <Skeleton type="text" width="32px" height="16px" />
+                <div className="person-battery-info" >
+                  <Skeleton type="text" width="25px" height="16px" />
                 </div>
+              </div>
+              <div className="delete-person-btn">
+                <Skeleton type="text" width="16px" height="20px" />
               </div>
             </div>
           ))
         ) : (
+          
           filteredUsers.map((person) => (
             <div key={person.id} className="person-row-item">
               <Link to={`/app/userProfile/${person.id}`} state={{ personData: person }} className="person-link">

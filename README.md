@@ -5,7 +5,6 @@ An **IoT-based personal safety system** that combines a **smart bracelet** and a
 This project is developed as part of a **Bachelor of Science in Information Technology** thesis at the **Technological University of the Philippines (TUP)**.
 
 ---
-//test mary
 
 
 ## 📌 Project Overview

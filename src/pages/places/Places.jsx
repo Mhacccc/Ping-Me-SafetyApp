@@ -2,8 +2,46 @@
 
 import { MapContainer, TileLayer, FeatureGroup, Marker, Popup, Circle, } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
+
+// Monkey-patch Leaflet Draw Circle resize bug
+// This fixes the "ReferenceError: radius is not defined" in strict mode
+if (L.Edit && L.Edit.Circle) {
+  L.Edit.Circle.prototype._resize = function (latlng) {
+    var moveLatLng = this._moveMarker.getLatLng();
+    var radius; // Correctly declare radius variable
+
+    if (L.GeometryUtil.isVersion07x()) {
+      radius = moveLatLng.distanceTo(latlng);
+    } else {
+      radius = this._map.distance(moveLatLng, latlng);
+    }
+    this._shape.setRadius(radius);
+
+    if (this._map._editTooltip) {
+      this._map._editTooltip.updateContent({
+        text:
+          L.drawLocal.edit.handlers.edit.tooltip.subtext +
+          "<br />" +
+          L.drawLocal.edit.handlers.edit.tooltip.text,
+        subtext:
+          L.drawLocal.draw.handlers.circle.radius +
+          ": " +
+          L.GeometryUtil.readableDistance(
+            radius,
+            true,
+            this.options.feet,
+            this.options.nautic
+          ),
+      });
+    }
+
+    this._shape.setRadius(radius);
+    this._map.fire(L.Draw.Event.EDITRESIZE, { layer: this._shape });
+  };
+}
 import "./Places.css";
 import { useState, useRef, useEffect } from "react";
 import * as mapHelpers from "../../utils/mapHelpers";
@@ -12,7 +50,7 @@ import { useAuth } from "../../context/AuthContext";
 import { db } from "../../config/firebaseConfig";
 import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore";
 // import LoadingSpinner from "../../components/LoadingSpinner";
-import { Layers, X } from "lucide-react";
+import { Layers, X, ShieldCheck, Loader2, CheckCircle2, Pencil } from "lucide-react";
 import MapLoader from "../../components/loading/MapLoader";
 
 // New decoupled modules
@@ -54,18 +92,39 @@ const Places = () => {
 
   // State to toggle the Monitor Popup
   const [isMonitorOpen, setIsMonitorOpen] = useState(false);
+  // State for the fancy saving/success overlay after the form is submitted
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // States for the Rename Modal
+  const [renamingZone, setRenamingZone] = useState(null); // Stores the zone object being renamed
+  const [newZoneName, setNewZoneName] = useState("");
+  const [renameError, setRenameError] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+
 
   /**
    * Effect: Invalidates map size when the map instance is ready.
    * This is a workaround for Leaflet rendering issues where the map might not
    * occupy the full container until a resize occurs.
+   * Includes safety checks for component unmounts and hot reloads.
    */
   useEffect(() => {
+    let timeoutId;
     if (map) {
-      setTimeout(() => {
-        map.invalidateSize();
+      timeoutId = setTimeout(() => {
+        // Ensure map and its DOM container still exist before forcing a resize
+        if (map && map._container) {
+          map.invalidateSize();
+        }
       }, 200);
     }
+
+    // Cleanup timeout if component unmounts before it fires
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [map]);
 
   /**
@@ -86,6 +145,7 @@ const Places = () => {
 
   // State for the name of a new zone being created
   const [zoneName, setZoneName] = useState("");
+  const [zoneNameError, setZoneNameError] = useState("");
   // Local loading state while saving to Firestore
   const [isSaving, setIsSaving] = useState(false);
   // Leaflet ID of a temporary layer being drawn but not yet saved
@@ -187,6 +247,7 @@ const Places = () => {
     }
     pendingLayerRef.current = layer;
     setPendingLayerId(layer._leaflet_id);
+
     setIsMonitorOpen(true); // Open the monitor to show the save form
   };
 
@@ -219,13 +280,56 @@ const Places = () => {
   };
 
   /**
+   * Opens the Rename Modal for a specific geofence.
+   */
+  const handleRename = (e, zone) => {
+    e.stopPropagation(); // Prevent clicking the row
+    setRenamingZone(zone);
+    setNewZoneName(zone.name);
+    setRenameError("");
+  };
+
+  /**
+   * Submits the new name to Firestore.
+   */
+  const confirmRename = async () => {
+    if (!newZoneName.trim()) {
+      setRenameError("Please enter a name.");
+      return;
+    }
+    if (newZoneName.trim() === renamingZone.name) {
+      setRenamingZone(null);
+      return;
+    }
+
+    setIsRenaming(true);
+    try {
+      await geofenceService.renameGeofence(renamingZone.id, newZoneName.trim());
+      setRenamingZone(null);
+    } catch (err) {
+      console.error("Error renaming geofence:", err);
+      alert("Failed to rename zone.");
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  /**
    * Saves the newly drawn zone to the database.
    */
   const handleSaveZone = async () => {
+    if (!zoneName.trim()) {
+      setZoneNameError("Please enter a name for this zone.");
+      return;
+    }
+    setZoneNameError("");
     if (!zoneName || !pendingLayerRef.current || !currentUser) return;
 
     setIsSaving(true);
     const layer = pendingLayerRef.current;
+
+    // Close the monitor sidebar immediately so the user can see the field/overlay
+    setIsMonitorOpen(false);
 
     try {
       await geofenceService.saveGeofence(currentUser, zoneName, layer.getLatLng(), layer.getRadius());
@@ -233,7 +337,9 @@ const Places = () => {
       setPendingLayerId(null);
       setZoneName("");
       pendingLayerRef.current = null;
-      setIsMonitorOpen(false);
+
+      // Show success screen
+      setShowSuccess(true);
     } catch (err) {
       console.error("Error saving geofence:", err);
       alert("Failed to save zone.");
@@ -249,8 +355,10 @@ const Places = () => {
     if (pendingLayerRef.current) pendingLayerRef.current.remove();
     setPendingLayerId(null);
     setZoneName("");
+    setZoneNameError("");
     pendingLayerRef.current = null;
-    setIsMonitorOpen(false); // Close the monitor after canceling
+    setIsMonitorOpen(false);
+    setShowSuccess(false);
   };
 
   // if (loading) return <LoadingSpinner />;
@@ -259,14 +367,14 @@ const Places = () => {
   if (loading) {
     return (
       <div className="home-layout" style={{ position: 'relative' }}>
-        <MapLoader text="Fetching Map Data..." fullScreen={true} lightTheme={false} />
+        <MapLoader text="Syncing Safety Zones..." fullScreen={true} lightTheme={false} />
       </div>
     );
   }
   // Determine the default center of the map based on the first active user position
   const initialCenterUser = braceletUsers.find(u => u.position && u.position.length === 2);
   const initialCenter = initialCenterUser ? initialCenterUser.position : [14.5921, 120.9755];
-
+  console.log(activeAlerts)
 
 
   return (
@@ -305,8 +413,8 @@ const Places = () => {
             {/* Display active "Hit" alerts (who is inside what zone right now) */}
             {activeAlerts.length > 0 && (
               <div className="alert-box">
-                <strong>⚠️ Boundary Hit!</strong>
-                <p>{activeAlerts.join(", ")}</p>
+                <strong>Boundary Hit!⚠️</strong>
+                <p><b>{activeAlerts[0]}</b> entered <b><i>{activeAlerts[1]}</i></b></p>
               </div>
             )}
 
@@ -316,11 +424,20 @@ const Places = () => {
                 <h3>New Safe Zone</h3>
                 <input
                   type="text"
-                  className="zone-name-input"
+                  className={`zone-name-input ${zoneNameError ? 'input-error' : ''}`}
                   value={zoneName}
-                  onChange={(e) => setZoneName(e.target.value)}
+                  onChange={(e) => {
+                    setZoneName(e.target.value);
+                    if (zoneNameError) setZoneNameError("");
+                  }}
                   placeholder="e.g. Home / School"
+                  required
                 />
+                {zoneNameError && (
+                  <span className="error-text" style={{ color: '#c9302c', fontSize: '12px', marginTop: '-8px', marginBottom: '8px', display: 'block' }}>
+                    {zoneNameError}
+                  </span>
+                )}
                 <div className="form-buttons">
                   <button onClick={handleSaveZone} className="btn-save" disabled={isSaving}>
                     {isSaving ? "Saving..." : "Save Zone"}
@@ -336,7 +453,13 @@ const Places = () => {
                 <h3>Active Zones</h3>
                 <ul className="zone-items-list">
                   {geofences.length === 0 ? (
-                    <p className="no-zones-text">No safe zones defined yet.</p>
+                    <div className="empty-geofence-state">
+                      <div className="empty-icon-wrapper">
+                        <ShieldCheck size={40} strokeWidth={1.5} />
+                      </div>
+                      <h4>No Zones Active</h4>
+                      <p>Draw a circle on the map to define a safe boundary for your users.</p>
+                    </div>
                   ) : (
                     geofences.map((z) => (
                       <li
@@ -359,7 +482,16 @@ const Places = () => {
                           </div>
                           <span className="zone-name">{z.name}</span>
                         </div>
-                        <span className="zone-type">{z.type}</span>
+                        <div className="zone-meta-actions">
+                          <span className="zone-radius-badge">{Math.round(z.radius)}m</span>
+                          <button
+                            className="btn-rename-ghost"
+                            onClick={(e) => handleRename(e, z)}
+                            title="Rename Zone"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        </div>
                       </li>
                     ))
                   )}
@@ -414,6 +546,7 @@ const Places = () => {
           {/* Leaflet Draw functionality group */}
           <FeatureGroup ref={featureGroupRef}>
             <EditControl
+              key={`edit-control-${geofences.length}-${isMonitorOpen}`}
               position="topright"
               onCreated={_onCreate}
               onEdited={_onEdited}
@@ -425,6 +558,10 @@ const Places = () => {
                 marker: false,
                 circlemarker: false,
                 circle: { shapeOptions: { color: "#aa262dff" } }, // Red boundary for safety zones
+              }}
+              edit={{
+                edit: {},
+                remove: {},
               }}
             />
 
@@ -445,6 +582,96 @@ const Places = () => {
           </FeatureGroup>
         </MapContainer>
       </div>
+
+      {/* Fancy Save/Success Overlay */}
+      {(isSaving || showSuccess) && (
+        <div
+          className="save-status-overlay"
+          onClick={showSuccess ? () => setShowSuccess(false) : undefined}
+        >
+          <div className={`status-card ${isSaving ? 'is-loading' : ''} ${showSuccess ? 'is-success' : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className="status-content loading-state">
+              <div className="loader-wrapper">
+                <div className="pulse-ring"></div>
+                <Loader2 className="spinner-icon-large" size={48} />
+              </div>
+              <h3>Securing Boundary</h3>
+              <p>Registering your safe zone with the safety grid...</p>
+            </div>
+
+            <div className="status-content success-state">
+              <div className="checkmark-wrapper">
+                <CheckCircle2 className="checkmark-icon" size={64} />
+              </div>
+              <h3>Zone Activated!</h3>
+              <p>Safety zone <strong>{zoneName}</strong> is now live.</p>
+              <button
+                className="btn-ok"
+                onClick={() => setShowSuccess(false)}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Geofence Modal */}
+      {renamingZone && (
+        <div className="rename-modal-overlay" onClick={() => !isRenaming && setRenamingZone(null)}>
+          <div className="rename-card" onClick={(e) => e.stopPropagation()}>
+            <div className="rename-header">
+              <h3>Rename Zone</h3>
+              <button
+                className="close-rename-btn"
+                onClick={() => setRenamingZone(null)}
+                disabled={isRenaming}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="rename-body">
+              <p>Update the identification for this boundary.</p>
+              <input
+                type="text"
+                className={`rename-input ${renameError ? 'input-error' : ''}`}
+                value={newZoneName}
+                onChange={(e) => {
+                  setNewZoneName(e.target.value);
+                  if (renameError) setRenameError("");
+                }}
+                placeholder="Zone Name"
+                autoFocus
+                disabled={isRenaming}
+              />
+              {renameError && <span className="rename-error-text">{renameError}</span>}
+            </div>
+
+            <div className="rename-actions">
+              <button
+                className="btn-save-rename"
+                onClick={confirmRename}
+                disabled={isRenaming}
+              >
+                {isRenaming ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} />
+                    Updating...
+                  </>
+                ) : "Save Changes"}
+              </button>
+              <button
+                className="btn-cancel-rename"
+                onClick={() => setRenamingZone(null)}
+                disabled={isRenaming}
+              >
+                Keep Current
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

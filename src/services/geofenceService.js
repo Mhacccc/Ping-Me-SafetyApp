@@ -40,3 +40,13 @@ export const deleteGeofence = async (id) => {
     if (!id || typeof id !== 'string') return;
     await deleteDoc(doc(db, "geofences", id));
 };
+/**
+ * Renames an existing geofence.
+ */
+export const renameGeofence = async (id, newName) => {
+    if (!id || !newName) return;
+    const zoneRef = doc(db, "geofences", id);
+    await updateDoc(zoneRef, {
+        name: newName
+    });
+};
