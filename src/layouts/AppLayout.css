@@ -22,3 +22,10 @@
 .app-content-main.no-navigation {
   padding: 0 !important;
 }
+
+/* --- NO SIDEBAR OVERRIDE --- */
+@media (min-width: 768px) {
+  .app-content-main.no-sidebar {
+    padding-left: 0 !important;
+  }
+}

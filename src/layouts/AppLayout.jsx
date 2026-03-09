@@ -16,9 +16,10 @@ const AppLayout = () => {
   const isUserProfile = currentPath.startsWith('/app/userprofile');
   const hideNavigation = ['/app/my-bracelet', '/app/account', '/app/tips', '/app/about'].some(path => currentPath.startsWith(path));
 
-  // Hide all for specific pages, but keep TopBar for UserProfile (only hide Sidebar/Navbar)
+  // Define visibility for each component
   const shouldHideAll = hideNavigation;
-  const shouldHideSidebarNavbar = shouldHideAll || isUserProfile;
+  const shouldHideSidebar = shouldHideAll;
+  const shouldHideNavbar = shouldHideAll || isUserProfile;
   const shouldHideTopBar = shouldHideAll;
 
   // Handle opening profile modal from navigation state
@@ -33,7 +34,7 @@ const AppLayout = () => {
       {/* --- RENDER ALL LAYOUT COMPONENTS --- */}
 
       {/* Desktop-only Sidebar */}
-      {!shouldHideSidebarNavbar && <Sidebar />}
+      {!shouldHideSidebar && <Sidebar />}
 
       {/* Top bar (is responsive inside) */}
       {!shouldHideTopBar && (
@@ -41,12 +42,12 @@ const AppLayout = () => {
       )}
 
       {/* Main page content */}
-      <main className={`app-content-main ${shouldHideTopBar ? 'no-navigation' : ''}`}>
+      <main className={`app-content-main ${shouldHideTopBar ? 'no-navigation' : ''} ${shouldHideSidebar && !shouldHideTopBar ? 'no-sidebar' : ''}`}>
         <Outlet />
       </main>
 
       {/* Mobile-only Bottom Navbar */}
-      {!shouldHideSidebarNavbar && <Navbar />}
+      {!shouldHideNavbar && <Navbar />}
 
       {/* Profile Modal - Always available for trigger */}
       <ProfileModal
