@@ -374,7 +374,7 @@ const Places = () => {
   // Determine the default center of the map based on the first active user position
   const initialCenterUser = braceletUsers.find(u => u.position && u.position.length === 2);
   const initialCenter = initialCenterUser ? initialCenterUser.position : [14.5921, 120.9755];
-  console.log(activeAlerts)
+
 
 
   return (
