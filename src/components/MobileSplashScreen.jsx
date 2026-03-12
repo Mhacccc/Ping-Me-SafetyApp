@@ -8,7 +8,12 @@ export default function MobileSplashScreen() {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            navigate('/login');
+            const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+            if (hasCompletedOnboarding === 'true') {
+                navigate('/login');
+            } else {
+                navigate('/onboarding');
+            }
         }, 2000); // 2 second display
 
         return () => clearTimeout(timer);
