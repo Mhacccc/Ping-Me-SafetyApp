@@ -12,6 +12,7 @@ import Places from "./pages/places/Places";
 import Report from "./pages/report/Report";
 import Home from "./pages/home-page/Home";
 import Landing from "./pages/landing-page/Landing";
+import Onboarding from "./pages/onboarding/Onboarding";
 
 import "./App.css";
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/onboarding" element={<Onboarding />} />
 
           {/*Admin mock login (public, no Firebase) */}
           <Route path="/admin-login" element={<AdminLogin />} />
