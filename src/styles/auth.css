@@ -17,7 +17,8 @@
   position: relative;
   overflow-x: hidden;
   color: var(--pm-text);
-  font-family: 'SF Pro Display', sans-serif;
+  font-family: 'Inter', sans-serif;
+  /* font-family: 'Inter', 'Poppins'; */
 }
 
 .authMain {

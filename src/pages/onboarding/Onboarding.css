@@ -14,7 +14,7 @@
     overflow: hidden;
     position: relative;
     color: var(--pm-text);
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 /* --- Content Wrapper --- */
