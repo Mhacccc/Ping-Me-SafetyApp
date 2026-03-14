@@ -8,8 +8,6 @@ import {
     Users,
     MapPin,
     FileText,
-    Menu,
-    X,
     Zap,
     Circle,
     Pencil,
@@ -127,13 +125,10 @@ const sections = [
 export default function Tips() {
     const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState(sections[0].id);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleBack = () => {
         navigate('/app', { state: { openProfile: true } });
     };
-
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
         <div className="br-page tips-page">
@@ -142,49 +137,31 @@ export default function Tips() {
                     <ChevronLeft size={24} color="#444" />
                 </button>
                 <h1 className="br-nav-title">Tips & Guide</h1>
-                <div className="br-nav-spacer">
-                    <button className="tips-menu-toggle" onClick={toggleSidebar}>
-                        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
-                </div>
+                <div className="br-nav-spacer"></div>
             </header>
+
+            <div className="tips-horizontal-nav-container">
+                <div className="tips-horizontal-nav">
+                    {sections.map((sec) => (
+                        <button
+                            key={sec.id}
+                            className={`tips-tab-btn ${activeSection === sec.id ? "active" : ""}`}
+                            onClick={() => setActiveSection(sec.id)}
+                        >
+                            {sec.title}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <div className="tips-layout">
                 <main className="br-main tips-main-content">
                     <div className="tips-content-wrapper">
-                        <h2 className="tips-section-heading">{sections.find(s => s.id === activeSection).title}</h2>
                         <div className="tips-dynamic-content">
                             {sections.find(s => s.id === activeSection).content}
                         </div>
                     </div>
                 </main>
-
-                {/* Sidebar Overlay for Mobile */}
-                <div className={`tips-sidebar-overlay ${isSidebarOpen ? "show" : ""}`} onClick={toggleSidebar}></div>
-
-                <aside className={`tips-sidebar ${isSidebarOpen ? "open" : ""}`}>
-                    <div className="tips-sidebar-header">
-                        <h2 className="br-section-title">
-                            <span className="br-indicator"></span>
-                            USER GUIDE
-                        </h2>
-                    </div>
-                    <nav className="tips-sidebar-nav">
-                        {sections.map((sec) => (
-                            <button
-                                key={sec.id}
-                                className={`tips-sidebar-item ${activeSection === sec.id ? "active" : ""}`}
-                                onClick={() => {
-                                    setActiveSection(sec.id);
-                                    setIsSidebarOpen(false);
-                                }}
-                            >
-                                <sec.icon size={20} className="tips-sidebar-icon" />
-                                <span>{sec.title}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
             </div>
         </div>
     );
