@@ -40,10 +40,6 @@ function People() {
   const [newBraceletName, setNewBraceletName] = useState('');
   const [newBraceletSerial, setNewBraceletSerial] = useState('');
 
-  // Emergency Contact
-  const [emergencyName, setEmergencyName] = useState('');
-  const [emergencyContact, setEmergencyContact] = useState('');
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
@@ -130,63 +126,39 @@ function People() {
       const user = auth.currentUser;
 
       if (!user) {
-
         alert("You must be logged in to add a bracelet.");
         setIsSubmitting(false);
         return;
       }
 
-      /**
-       * 1. Create the braceletUser document.
-       * This stores the static profile information of the bracelet wearer.
-       */
-      const newBraceletUser = {
-        name: newBraceletName,
-        ownerAppUserId: user.uid,
-        serialNumber: newBraceletSerial,
-        emergencyContacts: [{
-          name: emergencyName,
-          contactNo: emergencyContact
-        }],
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newBraceletName}`,
-      };
+      // 1. Search for the bracelet by Serial Number
+      const q = query(collection(db, 'braceletUsers'), where('serialNumber', '==', newBraceletSerial));
+      const querySnapshot = await getDocs(q);
 
-      const docRef = await addDoc(collection(db, 'braceletUsers'), newBraceletUser);
-
-      /**
-       * 2. Create initial deviceStatus document for this bracelet user.
-       * This collection tracks dynamic data like battery, location, and SOS status.
-       */
-      const deviceData = {
-        battery: 100,
-        isBraceletOn: true,
-        lastSeen: serverTimestamp(),
-        location: [0, 0],
-        pulseRate: null,
-        sos: { active: false, timestamp: null },
-        userId: docRef.id,
-      };
-
-      try {
-        await addDoc(collection(db, 'deviceStatus'), deviceData);
-      } catch (devErr) {
-        console.error('Failed to create deviceStatus for new bracelet:', devErr);
+      if (querySnapshot.empty) {
+        alert("Bracelet not found or not registered. Please ensure the serial number is correct or register it first.");
+        setIsSubmitting(false);
+        return;
       }
 
-      /**
-       * 3. Link to the appUser.
-       * Updates the logged-in user's document to include the new bracelet's ID.
-       */
-      const appUserRef = doc(db, 'appUsers', user.uid);
-      await updateDoc(appUserRef, {
-        linkedBraceletsID: arrayUnion(docRef.id)
+      // 2. Get the existing bracelet document
+      const braceletDoc = querySnapshot.docs[0];
+      const braceletId = braceletDoc.id;
+
+      // 3. Update the bracelet's name (nickname) to what the user entered
+      await updateDoc(doc(db, 'braceletUsers', braceletId), {
+        name: newBraceletName
       });
 
-      alert("Bracelet added successfully!");
+      // 4. Link to the appUser's account
+      const appUserRef = doc(db, 'appUsers', user.uid);
+      await updateDoc(appUserRef, {
+        linkedBraceletsID: arrayUnion(braceletId)
+      });
+
+      alert("Bracelet linked successfully!");
       setNewBraceletName('');
       setNewBraceletSerial('');
-      setEmergencyName('');
-      setEmergencyContact('');
       setIsModalOpen(false);
 
       // Reload to fetch the new list (since useBraceletUsers uses getDocs once)
@@ -226,34 +198,18 @@ function People() {
       {/* Add Bracelet Modal */}
       {isModalOpen && (
         <div className="add-bracelet-backdrop">
-          <div className="add-bracelet-modal-content">
+          <div className="add-bracelet-modal-content" style={{ maxWidth: '500px' }}>
             <div className="add-bracelet-modal-header">
-              <h2 className="modal-title">Add New Bracelet</h2>
+              <h2 className="modal-title">Link a Bracelet</h2>
             </div>
 
             <form onSubmit={handleAddBracelet} className="add-bracelet-form">
               <div className="add-bracelet-body">
 
-                {/* Left Column: Bracelet Information */}
-                <div className="add-bracelet-column">
+                {/* Single Column: Bracelet Linking Information */}
+                <div className="add-bracelet-column" style={{ width: '100%', borderRight: 'none', paddingRight: 0 }}>
                   <div className="form-section-header">
-                    <span className="section-slash">|</span> BRACELET INFORMATION
-                  </div>
-
-                  <div className="form-group-custom">
-                    <label className="form-label-custom">Name of Bracelet <span className="req-asterisk">*</span></label>
-                    <div className="input-with-icon">
-                      <div className="input-icon-wrapper">
-                        <User size={18} strokeWidth={1.5} color="#9ca3af" />
-                      </div>
-                      <input
-                        type="text"
-                        className="form-input-custom"
-                        value={newBraceletName}
-                        onChange={(e) => setNewBraceletName(e.target.value)}
-                        required
-                      />
-                    </div>
+                    <span className="section-slash">|</span> TRACKER DETAILS
                   </div>
 
                   <div className="form-group-custom">
@@ -268,20 +224,14 @@ function People() {
                         value={newBraceletSerial}
                         onChange={(e) => setNewBraceletSerial(e.target.value)}
                         required
+                        placeholder="e.g. 123456MNL"
                       />
                     </div>
-                    <p className="form-hint">You can find the serial number on the back of the bracelet</p>
-                  </div>
-                </div>
-
-                {/* Right Column: Emergency Contact */}
-                <div className="add-bracelet-column">
-                  <div className="form-section-header">
-                    <span className="section-slash">|</span> EMERGENCY CONTACT
+                    <p className="form-hint">Enter the serial number of a registered bracelet to link it.</p>
                   </div>
 
                   <div className="form-group-custom">
-                    <label className="form-label-custom">Name <span className="req-asterisk">*</span></label>
+                    <label className="form-label-custom">Nickname (Optional) <span className="req-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <div className="input-icon-wrapper">
                         <User size={18} strokeWidth={1.5} color="#9ca3af" />
@@ -289,25 +239,10 @@ function People() {
                       <input
                         type="text"
                         className="form-input-custom"
-                        value={emergencyName}
-                        onChange={(e) => setEmergencyName(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group-custom">
-                    <label className="form-label-custom">Contact Number <span className="req-asterisk">*</span></label>
-                    <div className="input-with-icon">
-                      <div className="input-icon-wrapper">
-                        <CreditCard size={18} strokeWidth={1.5} color="#9ca3af" />
-                      </div>
-                      <input
-                        type="tel"
-                        className="form-input-custom"
-                        value={emergencyContact}
-                        onChange={(e) => setEmergencyContact(e.target.value)}
-                        required
+                        value={newBraceletName}
+                        onChange={(e) => setNewBraceletName(e.target.value)}
+                    
+                        placeholder="e.g. Grandma's Bracelet"
                       />
                     </div>
                   </div>

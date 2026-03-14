@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ChevronLeft, Plus, Pencil, User, CreditCard, Phone } from 'lucide-react';
+import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../config/firebaseConfig';
 import './MyBracelet.css';
 
 const MyBracelet = () => {
@@ -9,12 +11,13 @@ const MyBracelet = () => {
     const { currentUser } = useAuth();
 
     const [step, setStep] = useState('add'); // 'add' or 'confirm'
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
-        braceletName: 'ABCD E. FG',
-        serialNumber: '123456MNL',
-        emergencyName: 'Juan Dela Cruz',
-        emergencyNumber: '0912345678'
+        braceletName: '',
+        serialNumber: '',
+        emergencyName: '',
+        emergencyNumber: ''
     });
 
     const handleChange = (e) => {
@@ -25,7 +28,66 @@ const MyBracelet = () => {
     const handleNext = () => setStep('confirm');
     const handleBack = () => {
         if (step === 'confirm') setStep('add');
-        else navigate('/app', { state: { openProfile: true } });
+        else navigate(-1); // Go back to previous page
+    };
+
+    const handleRegister = async () => {
+        if (!formData.braceletName || !formData.serialNumber || !formData.emergencyName || !formData.emergencyNumber) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            // 1. Check if Serial Number already exists
+            const q = query(collection(db, 'braceletUsers'), where('serialNumber', '==', formData.serialNumber));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+                alert("A bracelet with this Serial Number is already registered.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            // 2. Create the braceletUser document
+            // If the user already has an Account photo, use it, otherwise use a fallback
+            const finalAvatar = currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.braceletName}`;
+
+            const newBraceletUser = {
+                name: formData.braceletName,
+                serialNumber: formData.serialNumber,
+                ownerAppUserId: currentUser.uid, // The person registering IS the owner
+                emergencyContacts: [{
+                    name: formData.emergencyName,
+                    contactNo: formData.emergencyNumber
+                }],
+                avatar: finalAvatar,
+            };
+
+            const docRef = await addDoc(collection(db, 'braceletUsers'), newBraceletUser);
+
+            // 3. Create initial deviceStatus document
+            const deviceData = {
+                battery: 100,
+                isBraceletOn: true,
+                lastSeen: serverTimestamp(),
+                location: [0, 0], // Default location, will be updated by the actual device
+                pulseRate: null,
+                sos: { active: false, timestamp: null },
+                userId: docRef.id,
+            };
+
+            await addDoc(collection(db, 'deviceStatus'), deviceData);
+
+            alert("Bracelet Registered Successfully!");
+            navigate('/app', { state: { openProfile: true } });
+
+        } catch (error) {
+            console.error("Error registering bracelet:", error);
+            alert("Failed to register bracelet. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const isConfirm = step === 'confirm';
@@ -43,27 +105,13 @@ const MyBracelet = () => {
             </header>
 
             <main className="br-main">
-                <div className="br-avatar-section">
-                    <div className="br-avatar-wrapper">
-                        <div className="br-avatar-circle">
-                            <Plus size={48} color="#fff" strokeWidth={2.5} />
-                            {isConfirm && (
-                                <button className="br-avatar-edit" onClick={() => setStep('add')}>
-                                    <Pencil size={12} color="#A4262C" />
-                                </button>
-                            )}
-                        </div>
-                        <p className="br-avatar-label">Upload Profile Photo</p>
-                    </div>
-                </div>
-
                 <div className="br-form-container">
                     {/* Bracelet Information Section */}
                     <div className="br-section">
                         <div className="br-section-header">
                             <h2 className="br-section-title">
                                 <span className="br-indicator"></span>
-                                BRACELET INFORMATION
+                                BRACELET CONFIGURATION
                             </h2>
                             {isConfirm && <button className="br-edit-link" onClick={() => setStep('add')}>Edit</button>}
                         </div>
@@ -145,9 +193,11 @@ const MyBracelet = () => {
             </main>
 
             <footer className="br-footer">
-                <button className="br-btn-secondary" onClick={() => navigate('/app', { state: { openProfile: true } })}>Cancel</button>
+                <button className="br-btn-secondary" onClick={() => navigate('/app')}>Cancel</button>
                 {isConfirm ? (
-                    <button className="br-btn-primary" onClick={() => navigate('/app', { state: { openProfile: true } })}>Confirm & Save</button>
+                    <button className="br-btn-primary" onClick={handleRegister} disabled={isSubmitting}>
+                        {isSubmitting ? 'Registering...' : 'Confirm & Save'}
+                    </button>
                 ) : (
                     <button className="br-btn-primary" onClick={handleNext}>Next</button>
                 )}
