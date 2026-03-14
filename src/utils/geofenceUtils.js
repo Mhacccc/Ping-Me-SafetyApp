@@ -22,13 +22,10 @@ export const checkGeofenceTransitions = (braceletUsers, geofences, alertedUsersS
             const circleCenter = L.latLng(zone.latlngs.lat, zone.latlngs.lng);
             const distance = userLatLng.distanceTo(circleCenter);
 
-            // Buffer for visual overlap
-            const avatarVisualRadius = 10;
-
-            if (distance <= zone.radius + avatarVisualRadius) {
+            if (distance <= zone.radius + 1) {
                 insideZoneId = zone.id;
                 insideZoneName = zone.name;
-                currentAlerts.push(user.name,zone.name);
+                currentAlerts.push(user.name, zone.name);
                 break;
             }
         }

@@ -32,6 +32,33 @@
   z-index: 1;
 }
 
+/* --- Leaflet Draw Edit Handles --- */
+.leaflet-editing-icon {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid var(--pm-primary) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: -6px !important;
+  margin-top: -6px !important;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.leaflet-editing-icon:hover {
+  transform: scale(1.4) !important;
+  background: #fff !important;
+}
+
+.leaflet-edit-move {
+  background: var(--pm-primary) !important;
+  border-color: #fff !important;
+}
+
+.leaflet-edit-resize {
+  cursor: nwse-resize !important;
+}
+
 /* --- Floating Toggle Button --- */
 .monitor-toggle-btn {
   position: absolute;

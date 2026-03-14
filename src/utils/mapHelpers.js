@@ -80,14 +80,17 @@ export const createCustomIcon = (person) =>
   L.divIcon({
     className: 'custom-marker-icon',
     html: `
-      <div class="marker-content">
-        <img src="${person.avatar}" alt="${person.name}" class="marker-image" />
-        <div class="marker-status ${person.online && person.braceletOn ? 'online' : 'offline'}"></div>
+      <div class="marker-pin">
+        <img src="/mark-container.svg" class="marker-bg" />
+        <div class="marker-content">
+          <img src="${person.avatar}" alt="${person.name}" class="marker-image" />
+          <div class="marker-status ${person.online && person.braceletOn ? 'online' : 'offline'}"></div>
+        </div>
       </div>
     `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -40],
+    iconSize: [52, 60],
+    iconAnchor: [26.5, 60],
+    popupAnchor: [0, -60],
   });
 
 // Helper to determine if user is online based on lastSeen

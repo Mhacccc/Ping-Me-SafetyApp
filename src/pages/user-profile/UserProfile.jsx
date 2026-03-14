@@ -122,14 +122,14 @@ const UserProfile = () => {
 
           <div className="up-map-container">
             <MapContainer
+
+              attributionControl={false}
               center={userPosition}
               zoom={15}
-              scrollWheelZoom={true}
               style={{ width: '100%', height: '100%' }}
             >
               <ResizeMap />
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <Marker
