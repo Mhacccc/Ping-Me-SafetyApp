@@ -274,6 +274,6 @@ html.pm-dark .pulse-1 {
     font-size: 1.1rem;
     font-weight: 800;
     letter-spacing: 1px;
-    font-family: monospace;
+    font-family: 'Inter', monospace;
     filter: drop-shadow(0 0 6px rgba(164, 38, 44, 0.7));
 }

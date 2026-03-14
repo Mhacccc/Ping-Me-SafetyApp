@@ -39,6 +39,33 @@ body {
   /* Subtract header height */
 }
 
+/* --- Leaflet Draw Edit Handles --- */
+.leaflet-editing-icon {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #A4262C !important; /* Custom primary color */
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: -6px !important;
+  margin-top: -6px !important;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.leaflet-editing-icon:hover {
+  transform: scale(1.4) !important;
+  background: #fff !important;
+}
+
+.leaflet-edit-move {
+  background: #A4262C !important;
+  border-color: #fff !important;
+}
+
+.leaflet-edit-resize {
+  cursor: nwse-resize !important;
+}
+
 /* Override Leaflet default styles */
 .leaflet-container {
   width: 100%;
@@ -52,14 +79,32 @@ body {
   border: none;
 }
 
+.marker-pin {
+  position: relative;
+  width: 51px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.marker-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .marker-content {
   position: relative;
-  width: 40px;
-  height: 40px;
+  top: 2px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  border: 2px solid white;
+  z-index: 2;
 }
 
 .marker-image {
@@ -71,17 +116,17 @@ body {
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
-  /* Prevents long-press 'Save Image' */
 }
 
 .marker-status {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 12px;
-  height: 12px;
+  bottom: 0px;
+  right: 0px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   border: 2px solid white;
+  z-index: 3;
 }
 
 .marker-status.online {

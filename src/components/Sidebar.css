@@ -14,7 +14,7 @@
   flex-direction: column;
   z-index: 1001;
   /* Above navbar, just in case */
-  font-family: 'SF Pro Display', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .sidebar-header {

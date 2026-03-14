@@ -33,8 +33,7 @@
   --pm-radius-lg: 18px;
 
   /* Typography */
-  --pm-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji",
-    "Segoe UI Emoji";
+  --pm-font: 'Inter', sans-serif;
 
   /* Focus ring */
   --pm-focus: 0 0 0 3px rgba(164, 38, 44, 0.25);

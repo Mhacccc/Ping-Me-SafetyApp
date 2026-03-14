@@ -12,7 +12,7 @@ const NavIcon = ({ to, activePath, icon: Icon, label }) => {
   return (
     <Link to={to} className={`nav-item ${isActive ? 'active' : ''}`} onContextMenu={(e) => e.preventDefault()} draggable="false">
       <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-      <span>{label}</span>
+      <span data-text={label} className="nav-label">{label}</span>
     </Link>
   );
 };

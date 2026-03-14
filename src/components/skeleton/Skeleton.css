@@ -28,18 +28,21 @@ html.pm-dark .skeleton {
 
     /* Sci-Fi Shimmer Gradient */
     background: linear-gradient(90deg,
-            transparent 0%,
+            /* transparent 0%,
             rgba(164, 38, 44, 0.05) 20%,
             /* Faint PingMe Maroon */
-            rgba(164, 38, 44, 0.4) 40%,
+            /* rgba(164, 38, 44, 0.4) 40%, */
             /* Stronger Red */
-            rgba(255, 60, 60, 0.8) 50%,
+            /* rgba(255, 60, 60, 0.8) 50%, */
             /* Bright Laser Center */
-            rgba(164, 38, 44, 0.4) 60%,
+            /* rgba(164, 38, 44, 0.4) 60%, */
             /* Stronger Red */
-            rgba(164, 38, 44, 0.05) 80%,
+            /* rgba(164, 38, 44, 0.05) 80%, */
             /* Faint PingMe Maroon */
-            transparent 100%);
+            /* transparent 100%); */ 
+            #e8edf2 25%,
+            #f2f5f8 50%,
+            #e8edf2 75%);
     /* The shimmering animation: Slower but more frequent straight sweep */
     animation: shimmerLaser 2.2s infinite linear;
     z-index: 1;

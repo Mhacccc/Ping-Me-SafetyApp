@@ -12,7 +12,7 @@
   color: var(--pm-text);
   background-color: var(--pm-bg);
   padding: 20px;
-  font-family: 'SF Pro Display', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .cool-spinner {

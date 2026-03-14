@@ -57,6 +57,7 @@ import MapLoader from "../../components/loading/MapLoader";
 import * as geofenceService from "../../services/geofenceService";
 import * as geofenceUtils from "../../utils/geofenceUtils";
 import * as notificationService from "../../services/notificationService";
+import GeofenceGradient from "../../components/map/GeofenceGradient";
 
 // Initialize Leaflet icons (Boilerplate moved to mapHelpers)
 mapHelpers.setupLeafletIcons();
@@ -374,11 +375,12 @@ const Places = () => {
   // Determine the default center of the map based on the first active user position
   const initialCenterUser = braceletUsers.find(u => u.position && u.position.length === 2);
   const initialCenter = initialCenterUser ? initialCenterUser.position : [14.5921, 120.9755];
-  console.log(activeAlerts)
+
 
 
   return (
     <div className="places-page-container">
+      <GeofenceGradient />
       {/* Floating Toggle Button */}
       <button
         className={`monitor-toggle-btn ${isMonitorOpen ? 'active' : ''}`}
@@ -557,7 +559,7 @@ const Places = () => {
                 polyline: false,
                 marker: false,
                 circlemarker: false,
-                circle: { shapeOptions: { color: "#aa262dff" } }, // Red boundary for safety zones
+                circle: { shapeOptions: { stroke: true, color: "#A4262C", weight: 2, opacity: 0.5, fillColor: "url(#geofenceGradient)", fillOpacity: 0.5 } }, // Red boundary for safety zones
               }}
               edit={{
                 edit: {},
@@ -573,9 +575,9 @@ const Places = () => {
                 center={zone.latlngs}
                 radius={zone.radius}
                 pathOptions={{
-                  color: "#A4262C",
-                  fillColor: "#A4262C",
-                  fillOpacity: 0.2,
+                  stroke: false,
+                  fillColor: "url(#geofenceGradient)",
+                  fillOpacity: 1,
                 }}
               />
             ))}

@@ -13,7 +13,14 @@ const AppLayout = () => {
 
   // Normalize path and check if navigation should be hidden
   const currentPath = location.pathname.toLowerCase();
-  const hideNavigation = ['/app/my-bracelet', '/app/account', '/app/help', '/app/about'].some(path => currentPath.startsWith(path));
+  const isUserProfile = currentPath.startsWith('/app/userprofile');
+  const hideNavigation = ['/app/my-bracelet', '/app/account', '/app/tips', '/app/about'].some(path => currentPath.startsWith(path));
+
+  // Define visibility for each component
+  const shouldHideAll = hideNavigation;
+  const shouldHideSidebar = shouldHideAll;
+  const shouldHideNavbar = shouldHideAll || isUserProfile;
+  const shouldHideTopBar = shouldHideAll;
 
   // Handle opening profile modal from navigation state
   React.useEffect(() => {
@@ -27,20 +34,20 @@ const AppLayout = () => {
       {/* --- RENDER ALL LAYOUT COMPONENTS --- */}
 
       {/* Desktop-only Sidebar */}
-      {!hideNavigation && <Sidebar />}
+      {!shouldHideSidebar && <Sidebar />}
 
       {/* Top bar (is responsive inside) */}
-      {!hideNavigation && (
+      {!shouldHideTopBar && (
         <TopBar onProfileClick={() => setIsProfileModalOpen(true)} />
       )}
 
       {/* Main page content */}
-      <main className={`app-content-main ${hideNavigation ? 'no-navigation' : ''}`}>
+      <main className={`app-content-main ${shouldHideTopBar ? 'no-navigation' : ''} ${shouldHideSidebar && !shouldHideTopBar ? 'no-sidebar' : ''}`}>
         <Outlet />
       </main>
 
       {/* Mobile-only Bottom Navbar */}
-      {!hideNavigation && <Navbar />}
+      {!shouldHideNavbar && <Navbar />}
 
       {/* Profile Modal - Always available for trigger */}
       <ProfileModal

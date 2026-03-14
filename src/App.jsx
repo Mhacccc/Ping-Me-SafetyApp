@@ -12,12 +12,13 @@ import Places from "./pages/places/Places";
 import Report from "./pages/report/Report";
 import Home from "./pages/home-page/Home";
 import Landing from "./pages/landing-page/Landing";
+import Onboarding from "./pages/onboarding/Onboarding";
 
 import "./App.css";
 
 import Account from "./pages/account/Account";
 import MyBracelet from "./pages/my-bracelet/MyBracelet";
-import HelpArticles from "./pages/help-articles/HelpArticles";
+import Tips from "./pages/tips/Tips";
 import About from "./pages/about/About";
 
 // Mock Admin (NO Firebase)
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/onboarding" element={<Onboarding />} />
 
           {/*Admin mock login (public, no Firebase) */}
           <Route path="/admin-login" element={<AdminLogin />} />
@@ -65,7 +67,7 @@ function App() {
               {/* Profile modal routes */}
               <Route path="account" element={<Account />} />
               <Route path="my-bracelet" element={<MyBracelet />} />
-              <Route path="help" element={<HelpArticles />} />
+              <Route path="tips" element={<Tips />} />
               <Route path="about" element={<About />} />
             </Route>
           </Route>

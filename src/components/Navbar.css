@@ -2,55 +2,51 @@
 
 .app-navbar {
   position: fixed;
-  bottom: 5px;
+  bottom: 20px;
   left: 0;
   right: 0;
-  height: 90px;
-  /* Taller to accommodate floating design */
+  height: 70px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  /* Align icons to the top of the bar */
-  width: 95%;
-  /* This creates the floating effect */
+  align-items: center;
+  width: 92%;
   max-width: 400px;
-  /* Max width for larger screens */
-  margin: 0 auto 2px auto;
-  /* Center it and add space at bottom */
+  margin: 0 auto;
 
-  /* Filter for a subtle blur effect like in Figma */
-  background-color: var(--pm-bg);
-  /* Use theme bg */
-  /* For transparency we might need rgba, but theme var is simple for now */
-  /* opacity: 0.95; */
+  background-color: white;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 
-  border-radius: 25px;
-  border: 1px solid var(--pm-border);
-  box-shadow: var(--pm-shadow-md);
+  border-radius: 40px;
+  border: 1px solid var(--pm-primary);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Soft shadow */
   z-index: 1000;
-  font-family: 'SF Pro Display', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .nav-items-container {
   display: flex;
-  justify-content: space-evenly;
-  align-items: flex-start;
+  justify-content: space-around;
+  align-items: center;
   width: 100%;
-  padding-top: 20px;
+  height: 100%;
+  padding: 0 5px; 
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex-basis: 20%;
-  color: var(--pm-text-muted);
-  font-size: 0.7rem;
-  /* 10px */
-  font-weight: 500;
-  transition: all 0.2s ease;
+  justify-content: center;
+  padding: 8px 0;
+  width: 85px;
+  border-radius: 30px;
+  /* color: #444746; */
+  color: black;
+  font-size: 0.75rem;
+  font-weight: 400;
+  gap: 4px;
+  transition: all 0.3s ease;
   text-decoration: none;
 
   /* PWA Native Feel fixes for interactive elements */
@@ -67,22 +63,33 @@
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
-  /* Prevents long-press image save on icons */
 }
 
-.nav-item:hover,
+.nav-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nav-label::after {
+  content: attr(data-text);
+  font-weight: 500;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+}
+
+.nav-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
 .nav-item.active {
-  color: #8c2025;
+  background-color: var(--pm-primary); 
+  color: #ffffff;
+  font-weight: 600;
 }
-
-.nav-item.active {
-  font-weight: 700;
-}
-
-
-
-
-
 
 /* --- THIS IS THE RESPONSIVE MAGIC --- */
 /* Hide the mobile navbar on desktop */
@@ -94,15 +101,18 @@
 
 @media (max-width: 400px) {
   .app-navbar {
-    height: 70px;
-    /* Reduced from 90px */
+    height: 64px;
+    bottom: 15px;
+    width: 96%;
   }
 
   .nav-items-container {
-    padding-top: 15px;
+    padding: 0;
   }
 
   .nav-item {
     font-size: 0.65rem;
+    padding:7px 0;
+    width: 85px;
   }
 }

@@ -103,12 +103,12 @@ export default function About() {
       </main>
 
       <footer className="br-footer">
-        <button className="br-btn-secondary" onClick={handleBack}>
+        {/* <button className="br-btn-secondary" onClick={handleBack}>
           Go Back
         </button>
         <button className="br-btn-primary" onClick={() => navigate('/app')}>
           Return Home
-        </button>
+        </button> */}
       </footer>
     </div>
   );
