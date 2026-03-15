@@ -45,7 +45,9 @@ const UserProfile = () => {
   const isOnline = person.online;
   const isBraceletOn = person.braceletOn;
   const batteryLevel = person.battery;
-  const userPosition =
+  const 
+  
+  userPosition =
     person.position && Array.isArray(person.position)
       ? person.position
       : [14.5995, 120.9842]; // ✅ fallback to Manila if null

@@ -39,32 +39,8 @@ body {
   /* Subtract header height */
 }
 
-/* --- Leaflet Draw Edit Handles --- */
-.leaflet-editing-icon {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 2px solid #A4262C !important; /* Custom primary color */
-  border-radius: 50% !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  width: 12px !important;
-  height: 12px !important;
-  margin-left: -6px !important;
-  margin-top: -6px !important;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-}
 
-.leaflet-editing-icon:hover {
-  transform: scale(1.4) !important;
-  background: #fff !important;
-}
 
-.leaflet-edit-move {
-  background: #A4262C !important;
-  border-color: #fff !important;
-}
-
-.leaflet-edit-resize {
-  cursor: nwse-resize !important;
-}
 
 /* Override Leaflet default styles */
 .leaflet-container {
