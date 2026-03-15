@@ -2,17 +2,20 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile, deleteUser } from "firebase/auth";
+import { doc, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+import { db } from "../../config/firebaseConfig";
 import { useToast } from "../../context/ToastContext";
 import { Camera, Save, ChevronLeft, User, Mail, ShieldAlert, Plus } from "lucide-react";
 import "./Account.css";
 
 export default function Account() {
   const { currentUser } = useAuth();
-  const { openToast } = useToast();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const [displayName, setDisplayName] = useState(currentUser?.displayName || "");
   const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || "");
+  const [photoFile, setPhotoFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -23,10 +26,11 @@ export default function Account() {
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoURL(reader.result);
-        openToast("success", "Photo preview updated (local only).");
+        addToast("Photo preview updated (local only).", "success");
       };
       reader.readAsDataURL(file);
     }
@@ -36,15 +40,63 @@ export default function Account() {
     if (!currentUser) return;
     setSaving(true);
     try {
+      let finalPhotoURL = currentUser.photoURL;
+
+      if (photoFile) {
+        // Upload to Cloudinary
+        const formData = new FormData();
+        formData.append("file", photoFile);
+        formData.append("upload_preset", "pingme_avatars");
+
+        const response = await fetch("https://api.cloudinary.com/v1_1/djaved28z/image/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Cloudinary Error:", errorData);
+          throw new Error(errorData.error?.message || "Failed to upload image to Cloudinary");
+        }
+
+        const data = await response.json();
+        finalPhotoURL = data.secure_url;
+      }
+
       await updateProfile(currentUser, {
-        displayName: displayName
+        displayName: displayName,
+        photoURL: finalPhotoURL
       });
-      openToast("success", "Profile updated successfully!");
+
+      // Synchronize the new avatar/name directly to Firestore collections
+      try {
+        const batch = writeBatch(db);
+
+        // 1. Update the appUser document
+        const appUserRef = doc(db, 'appUsers', currentUser.uid);
+        batch.update(appUserRef, {
+          name: displayName,
+          avatar: finalPhotoURL
+        });
+
+        // 2. Query and update all bracelets owned by this wearer so the photo cascades
+        const q = query(collection(db, 'braceletUsers'), where('ownerAppUserId', '==', currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((docSnap) => {
+          batch.update(docSnap.ref, { avatar: finalPhotoURL });
+        });
+
+        await batch.commit();
+      } catch (dbError) {
+        console.error("Error cascading profile updates to Firestore:", dbError);
+      }
+
+      addToast("Profile updated successfully!", "success");
       // Navigate back to profile modal
       navigate('/app', { state: { openProfile: true } });
     } catch (error) {
       console.error("Error updating profile:", error);
-      openToast("error", "Failed to update profile.");
+      addToast("Failed to update profile.", "error");
     } finally {
       setSaving(false);
     }
@@ -57,11 +109,11 @@ export default function Account() {
     try {
       if (currentUser) {
         await deleteUser(currentUser);
-        openToast("success", "Account deleted.");
+        addToast("Account deleted.", "success");
       }
     } catch (error) {
       console.error("Error deleting user:", error);
-      openToast("error", "Failed to delete. You may need to log in again first.");
+      addToast("Failed to delete. You may need to log in again first.", "error");
     }
   };
 

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useBraceletUsers } from '../../hooks/useUsers';
 import { getAuth } from "firebase/auth";
-import { collection, addDoc, doc, updateDoc, arrayUnion, serverTimestamp, deleteDoc, arrayRemove, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
 import { Plus, X, Trash2, User, CreditCard } from "lucide-react";
 import Skeleton from '../../components/skeleton/Skeleton';
@@ -74,51 +74,35 @@ function People() {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!window.confirm("Are you sure you want to delete this person? This action cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to unlink this bracelet from your account?")) return;
 
     try {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) return;
 
-      // 1. Remove from appUsers linkedBraceletsID
+      // Only remove from the guardian's linkedBraceletsID and clear the nickname
       const appUserRef = doc(db, 'appUsers', user.uid);
       await updateDoc(appUserRef, {
-        linkedBraceletsID: arrayRemove(braceletId)
+        linkedBraceletsID: arrayRemove(braceletId),
+        [`braceletNicknames.${braceletId}`]: deleteField()
       });
 
-      // 2. Delete from braceletUsers collection
-      await deleteDoc(doc(db, 'braceletUsers', braceletId));
-
-      // 3. Delete from deviceStatus (cleanup)
-      const q = query(collection(db, 'deviceStatus'), where('userId', '==', braceletId));
-      const snapshot = await getDocs(q);
-      snapshot.forEach(async (docSnap) => {
-        await deleteDoc(docSnap.ref);
-      });
-
-      alert("Person deleted successfully.");
+      alert("Bracelet unlinked successfully.");
       window.location.reload();
     } catch (err) {
-      console.error("Error deleting person:", err);
-      alert("Failed to delete person.");
+      console.error("Error unlinking bracelet:", err);
+      alert("Failed to unlink bracelet.");
     }
   };
 
   /**
-   * Handles the submission of the "Add Bracelet" form.
-   * 
-   * Performs the following steps:
-   * 1. Validates the current user is authenticated.
-   * 2. Creates a new document in the `braceletUsers` collection.
-   * 3. Creates a corresponding initial document in the `deviceStatus` collection.
-   * 4. Updates the current `appUser` document to link the new bracelet ID.
-   * 
-   * @param {Event} e - The form submission event.
+   * Handles linking an existing registered bracelet to this guardian's account.
+   * Uses getDoc with the Serial Number as the Document ID.
    */
   const handleAddBracelet = async (e) => {
     e.preventDefault();
-    if (!newBraceletName.trim()) return;
+    if (!newBraceletSerial.trim()) return;
 
     setIsSubmitting(true);
     try {
@@ -126,47 +110,52 @@ function People() {
       const user = auth.currentUser;
 
       if (!user) {
-        alert("You must be logged in to add a bracelet.");
+        alert("You must be logged in to link a bracelet.");
         setIsSubmitting(false);
         return;
       }
 
-      // 1. Search for the bracelet by Serial Number
-      const q = query(collection(db, 'braceletUsers'), where('serialNumber', '==', newBraceletSerial));
-      const querySnapshot = await getDocs(q);
+      const serial = newBraceletSerial.trim();
 
-      if (querySnapshot.empty) {
-        alert("Bracelet not found or not registered. Please ensure the serial number is correct or register it first.");
+      // 1. Direct document lookup — Serial Number IS the Document ID
+      const braceletRef = doc(db, 'braceletUsers', serial);
+      const braceletSnap = await getDoc(braceletRef);
+
+      if (!braceletSnap.exists()) {
+        alert("Bracelet not found or not registered. Please ensure the serial number is correct, or ask the wearer to register it first.");
         setIsSubmitting(false);
         return;
       }
 
-      // 2. Get the existing bracelet document
-      const braceletDoc = querySnapshot.docs[0];
-      const braceletId = braceletDoc.id;
+      // 1b. Validation: Prevent linking your own created bracelet
+      if (braceletSnap.data().ownerAppUserId === user.uid) {
+        alert("You cannot add your own registered bracelet here. It is already configured to your account in 'My Bracelet'.");
+        setIsSubmitting(false);
+        return;
+      }
 
-      // 3. Update the bracelet's name (nickname) to what the user entered
-      await updateDoc(doc(db, 'braceletUsers', braceletId), {
-        name: newBraceletName
-      });
-
-      // 4. Link to the appUser's account
+      // 2. Link the Serial Number to the guardian's account and optionally set a local nickname
       const appUserRef = doc(db, 'appUsers', user.uid);
-      await updateDoc(appUserRef, {
-        linkedBraceletsID: arrayUnion(braceletId)
-      });
+      const updates = {
+        linkedBraceletsID: arrayUnion(serial)
+      };
+      
+      if (newBraceletName.trim()) {
+        updates[`braceletNicknames.${serial}`] = newBraceletName.trim();
+      }
+
+      await updateDoc(appUserRef, updates);
 
       alert("Bracelet linked successfully!");
       setNewBraceletName('');
       setNewBraceletSerial('');
       setIsModalOpen(false);
 
-      // Reload to fetch the new list (since useBraceletUsers uses getDocs once)
       window.location.reload();
 
     } catch (err) {
-      console.error("Error adding bracelet:", err);
-      alert("Failed to add bracelet. See console for details.");
+      console.error("Error linking bracelet:", err);
+      alert("Failed to link bracelet. See console for details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -224,7 +213,7 @@ function People() {
                         value={newBraceletSerial}
                         onChange={(e) => setNewBraceletSerial(e.target.value)}
                         required
-                        placeholder="e.g. 123456MNL"
+                        placeholder="PM-YYYYMMDD-XXX"
                       />
                     </div>
                     <p className="form-hint">Enter the serial number of a registered bracelet to link it.</p>
@@ -255,7 +244,7 @@ function People() {
                   Cancel
                 </button>
                 <button type="submit" className="btn-next" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : 'Next'}
+                  {isSubmitting ? 'Linking...' : 'Link Bracelet'}
                 </button>
               </div>
             </form>

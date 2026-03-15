@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ChevronLeft, Plus, Pencil, User, CreditCard, Phone } from 'lucide-react';
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { ChevronLeft, User, CreditCard, Phone } from 'lucide-react';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import './MyBracelet.css';
 
@@ -12,6 +12,7 @@ const MyBracelet = () => {
 
     const [step, setStep] = useState('add'); // 'add' or 'confirm'
     const [isSubmitting, setIsSubmitting] = useState(false);
+
 
     const [formData, setFormData] = useState({
         braceletName: '',
@@ -28,7 +29,7 @@ const MyBracelet = () => {
     const handleNext = () => setStep('confirm');
     const handleBack = () => {
         if (step === 'confirm') setStep('add');
-        else navigate(-1); // Go back to previous page
+        else navigate(-1);
     };
 
     const handleRegister = async () => {
@@ -39,45 +40,43 @@ const MyBracelet = () => {
 
         setIsSubmitting(true);
         try {
-            // 1. Check if Serial Number already exists
-            const q = query(collection(db, 'braceletUsers'), where('serialNumber', '==', formData.serialNumber));
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
+            const serial = formData.serialNumber.trim();
+
+            // 1. Check if Serial Number already exists (document ID = serial number)
+            const braceletRef = doc(db, 'braceletUsers', serial);
+            const existingDoc = await getDoc(braceletRef);
+
+            if (existingDoc.exists()) {
                 alert("A bracelet with this Serial Number is already registered.");
                 setIsSubmitting(false);
                 return;
             }
 
-            // 2. Create the braceletUser document
-            // If the user already has an Account photo, use it, otherwise use a fallback
-            const finalAvatar = currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.braceletName}`;
+            // 2. Avatar uses the wearer's Account profile photo
+            const avatarURL = currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.braceletName}`;
 
-            const newBraceletUser = {
+            // 3. Create braceletUsers document — Serial Number IS the Document ID
+            await setDoc(braceletRef, {
                 name: formData.braceletName,
-                serialNumber: formData.serialNumber,
-                ownerAppUserId: currentUser.uid, // The person registering IS the owner
+                serialNumber: serial,
+                ownerAppUserId: currentUser.uid,
                 emergencyContacts: [{
                     name: formData.emergencyName,
                     contactNo: formData.emergencyNumber
                 }],
-                avatar: finalAvatar,
-            };
+                avatar: avatarURL,
+            });
 
-            const docRef = await addDoc(collection(db, 'braceletUsers'), newBraceletUser);
-
-            // 3. Create initial deviceStatus document
-            const deviceData = {
+            // 4. Create deviceStatus document — Same Serial Number as Document ID
+            const deviceRef = doc(db, 'deviceStatus', serial);
+            await setDoc(deviceRef, {
                 battery: 100,
                 isBraceletOn: true,
                 lastSeen: serverTimestamp(),
-                location: [0, 0], // Default location, will be updated by the actual device
+                location: [0, 0],
                 pulseRate: null,
                 sos: { active: false, timestamp: null },
-                userId: docRef.id,
-            };
-
-            await addDoc(collection(db, 'deviceStatus'), deviceData);
+            });
 
             alert("Bracelet Registered Successfully!");
             navigate('/app', { state: { openProfile: true } });
@@ -99,7 +98,7 @@ const MyBracelet = () => {
                     <ChevronLeft size={24} color="#444" />
                 </button>
                 <h1 className="br-nav-title">
-                    {isConfirm ? "Confirm User Details" : "Add Bracelet User"}
+                    {isConfirm ? "Confirm Details" : "Register My Bracelet"}
                 </h1>
                 <div className="br-nav-spacer"></div>
             </header>
@@ -117,16 +116,17 @@ const MyBracelet = () => {
                         </div>
 
                         <div className="br-field">
-                            <label className="br-label">Name of Bracelet {!isConfirm && <span className="br-required">*</span>}</label>
+                            <label className="br-label">Name of Bracelet User {!isConfirm && <span className="br-required">*</span>}</label>
                             <div className="br-input-group">
                                 <User size={18} className="br-icon" />
                                 <input
                                     className="br-input"
                                     type="text"
                                     name="braceletName"
-                                    placeholder="Enter bracelet name"
+                                    placeholder="Enter your name"
                                     value={formData.braceletName}
                                     onChange={handleChange}
+                                    disabled={isConfirm}
                                 />
                             </div>
                         </div>
@@ -139,9 +139,10 @@ const MyBracelet = () => {
                                     className="br-input"
                                     type="text"
                                     name="serialNumber"
-                                    placeholder="Enter serial number"
+                                    placeholder="PM-YYYYMMDD-XXX"
                                     value={formData.serialNumber}
                                     onChange={handleChange}
+                                    disabled={isConfirm}
                                 />
                             </div>
                             <p className="br-hint">You can find the serial number on the back of the bracelet</p>
@@ -169,6 +170,7 @@ const MyBracelet = () => {
                                     placeholder="Enter contact name"
                                     value={formData.emergencyName}
                                     onChange={handleChange}
+                                    disabled={isConfirm}
                                 />
                             </div>
                         </div>
@@ -176,7 +178,7 @@ const MyBracelet = () => {
                         <div className="br-field">
                             <label className="br-label">Contact Number {!isConfirm && <span className="br-required">*</span>}</label>
                             <div className="br-input-group">
-                                <CreditCard size={18} className="br-icon" />
+                                <Phone size={18} className="br-icon" />
                                 <input
                                     className="br-input"
                                     type="text"
@@ -184,6 +186,7 @@ const MyBracelet = () => {
                                     placeholder="Enter contact number"
                                     value={formData.emergencyNumber}
                                     onChange={handleChange}
+                                    disabled={isConfirm}
                                 />
                             </div>
                             {isConfirm && <p className="br-hint br-hint-center">Please make sure the information is correct before proceeding</p>}

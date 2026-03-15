@@ -98,7 +98,7 @@ const TopBar = ({ onProfileClick }) => {
       <header className="app-topbar">
         <div className="topbar-left">
           <button className="topbar-mobile-menu-btn" onClick={onProfileClick}>
-            <img src={avatar} alt="Profile" />
+            <img src={currentUser?.photoURL || avatar} alt="Profile" />
           </button>
           {/* Spacer to maintain balance on desktop after logo removal */}
           <div className="topbar-spacer-desktop"></div>
@@ -125,7 +125,7 @@ const TopBar = ({ onProfileClick }) => {
             className="topbar-desktop-profile-btn"
             onClick={onProfileClick}
           >
-            <img src={avatar} alt="Profile" />
+            <img src={currentUser?.photoURL || avatar} alt="Profile" />
           </button>
         </div>
       </header>
