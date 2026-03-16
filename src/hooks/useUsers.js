@@ -56,19 +56,28 @@ export function useBraceletUsers() {
         // 3. Fetch only the braceletUsers whose IDs are in the linkedBraceletsID array.
         const usersQuery = query(collection(db, 'braceletUsers'), where(documentId(), 'in', linkedBraceletsID));
 
+        // Fetch deviceStatus using the same IDs (Serial Numbers ARE the Document IDs)
+        const deviceQuery = query(collection(db, 'deviceStatus'), where(documentId(), 'in', linkedBraceletsID));
+
         const [usersSnap, deviceSnap] = await Promise.all([
           getDocs(usersQuery),
-          getDocs(collection(db, 'deviceStatus')),
+          getDocs(deviceQuery),
         ]);
 
+        // Key deviceMap by doc.id (which is the Serial Number)
         const deviceMap = new Map();
         deviceSnap.docs.forEach((d) => {
-          const dd = d.data();
-          const uid = dd.userId || dd.userID || null;
-          if (uid) deviceMap.set(uid, { ...dd, id: d.id });
+          deviceMap.set(d.id, { ...d.data(), id: d.id });
         });
 
-        const merged = usersSnap.docs.map((u) => mapHelpers.buildUserWithDevice(u, deviceMap));
+        const braceletNicknames = appUserData?.braceletNicknames || {};
+        const merged = usersSnap.docs.map((u) => {
+          const userObj = mapHelpers.buildUserWithDevice(u, deviceMap);
+          if (braceletNicknames[u.id]) {
+            userObj.name = braceletNicknames[u.id];
+          }
+          return userObj;
+        });
         
         // Map for report generation
         const braceletNameMap = new Map();
@@ -83,8 +92,8 @@ export function useBraceletUsers() {
           const updatesByUser = new Map();
           snapshot.docChanges().forEach((change) => {
             const dd = change.doc.data();
-            const uid = dd.userId || dd.userID || null;
-            if (!uid) return;
+            // Use doc.id as the key (Serial Number = Document ID)
+            const uid = change.doc.id;
             if (change.type === 'added' || change.type === 'modified') {
               updatesByUser.set(uid, { ...dd, id: change.doc.id });
 

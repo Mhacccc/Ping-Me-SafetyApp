@@ -44,6 +44,8 @@ if (L.Edit && L.Edit.Circle) {
 }
 import "./Places.css";
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { reverseGeocode } from "../../utils/geocode";
 import * as mapHelpers from "../../utils/mapHelpers";
 import { useBraceletUsers } from "../../hooks/useUsers";
 import { useAuth } from "../../context/AuthContext";
@@ -87,6 +89,9 @@ const Places = () => {
 
   // List of active geofence alert messages for local display
   const [activeAlerts, setActiveAlerts] = useState([]);
+
+  // Address cache for popup location display
+  const [addressCache, setAddressCache] = useState({});
 
   // List of geofences fetched from Firestore
   const [geofences, setGeofences] = useState([]);
@@ -195,6 +200,21 @@ const Places = () => {
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  /**
+   * Effect: Reverse geocode user positions for popup display.
+   */
+  useEffect(() => {
+    braceletUsers.forEach((user) => {
+      if (user.position && !addressCache[user.id]) {
+        reverseGeocode(user.position[0], user.position[1]).then((addr) => {
+          if (addr) {
+            setAddressCache((prev) => ({ ...prev, [user.id]: addr }));
+          }
+        });
+      }
+    });
+  }, [braceletUsers]);
 
   /**
    * Effect: Geofence Monitoring Logic.
@@ -525,7 +545,11 @@ const Places = () => {
                 icon={mapHelpers.createCustomIcon(user)}
               >
                 <Popup className="custom-popup">
-                  <div className="popup-content">
+                  <Link
+                    to={`/app/userProfile/${user.id}`}
+                    state={{ personData: user }}
+                    className="popup-content"
+                  >
                     <img
                       src={user.avatar}
                       alt={user.name}
@@ -534,12 +558,18 @@ const Places = () => {
                     <div className="popup-info">
                       <h3>{user.name}</h3>
                       <p>Battery: {user.battery}%</p>
+                      <p>Status: {user.online ? "🟢 Online" : "🔴 Offline"}</p>
+                      <p>Pulse: {user.pulseRate ?? "—"}</p>
                       <p>
-                        Status: {user.online ? "🟢 Online" : "🔴 Offline"}
+                        Last Seen:{" "}
+                        {user.lastSeen
+                          ? user.lastSeen.toLocaleTimeString()
+                          : "—"}
                       </p>
-                      <p>Pulse: {user.pulseRate ?? "—"} BPM</p>
+                      <p>Location: {addressCache[user.id] || "—"}</p>
+                      {user.sos && <p className="sos">🚨 SOS Active!</p>}
                     </div>
-                  </div>
+                  </Link>
                 </Popup>
               </Marker>
             )
@@ -562,7 +592,17 @@ const Places = () => {
                 circle: { shapeOptions: { stroke: true, color: "#A4262C", weight: 2, opacity: 0.5, fillColor: "url(#geofenceGradient)", fillOpacity: 0.5 } }, // Red boundary for safety zones
               }}
               edit={{
-                edit: {},
+                edit: {
+                  selectedPathOptions: {
+                    stroke: true,
+                    color: "#A4262C",
+                    weight: 2,
+                    opacity: 0.5,
+                    fillColor: "url(#geofenceGradient)",
+                    fillOpacity: 0.6,
+                    maintainColor: true,
+                  }
+                },
                 remove: {},
               }}
             />
