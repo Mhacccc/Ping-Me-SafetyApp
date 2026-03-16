@@ -90,7 +90,7 @@
 .incident-type.black {
   /* color: #000; */
   color: var(--pm-text);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* UPDATED */
@@ -124,7 +124,7 @@
 
 .incident-type {
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 500;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
