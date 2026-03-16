@@ -1,6 +1,6 @@
 // src/pages/app/UserProfile.jsx
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Heart, MessageSquare, Phone, Wifi, Battery, ChevronLeft } from 'lucide-react';
+import { MessageSquare, Phone, Wifi, Battery, ChevronLeft } from 'lucide-react';
 import './UserProfile.css';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -61,70 +61,61 @@ const UserProfile = () => {
 
 
   return (
-    <div className="up-page-container">
-      <button
-        className="up-back-btn"
-        onClick={() => navigate(-1)}
-        title="Back"
-      >
-        <ChevronLeft size={24} />
-      </button>
+     <div className="up-page-container">
+      {/* HEADER SECTION */}
+      <div className="up-top-bar">
+        {/* <button
+          className="up-back-btn"
+          onClick={() => navigate(-1)}
+          title="Back"
+        >
+          <ChevronLeft size={24} color="#000" />
+        </button> */}
+        {/* <h1 className="up-page-title">User Profile</h1> */}
+     </div>
 
       <div className="up-content-grid">
-        {/* Left Section: Identity & Vitals */}
-        <div className="up-left-section">
-          <div className="up-identity-header">
-            <div className="up-avatar-wrapper">
-              <img src={person.avatar} alt={person.name} className="up-avatar-img" />
-              <div className={`up-status-dot ${isBraceletOn ? 'online' : 'offline'}`} />
-            </div>
-            <div className="up-name-info">
-              <h1 className="up-name">{person.name}</h1>
-              <p className="up-status-label">{isBraceletOn ? 'Bracelet Online' : 'Bracelet Offline'}</p>
-            </div>
+        {/* CENTER SECTION: Avatar & Name */}
+        <div className="up-identity-section">
+          <div className="up-avatar-wrapper">
+            <img src={person.avatar} alt={person.name} className="up-avatar-img" />
           </div>
-
-          <div className="up-vitals-list">
-            <div className="up-vital-row">
-              <div className="up-vital-icon"><Heart size={20} /></div>
-              <div className="up-vital-content">
-                <span className="up-vital-label">Heart Rate</span>
-                <span className="up-vital-value danger">89 BPM</span>
-              </div>
-            </div>
-
-            <div className="up-vital-row">
-              <div className="up-vital-icon"><Battery size={20} /></div>
-              <div className="up-vital-content">
-                <span className="up-vital-label">Battery Level</span>
-                <span className={`up-vital-value ${batteryColorClass.split('-')[0]}`}>{batteryLevel}%</span>
-              </div>
-            </div>
-
-            <div className="up-vital-row">
-              <div className="up-vital-icon"><Wifi size={20} /></div>
-              <div className="up-vital-content">
-                <span className="up-vital-label">Signal Status</span>
-                <span className={`up-vital-value ${isOnline ? 'success' : 'danger'}`}>
-                  {isOnline ? 'Strong' : 'Weak'}
-                </span>
-              </div>
-            </div>
+          <h2 className="up-name">{person.name}</h2>
+          
+          <div className="up-signal-badge">
+            <Wifi size={14} />
+            <span>{isOnline ? 'Strong' : 'Weak'}</span>
           </div>
         </div>
 
-        {/* Right Section: Map */}
-        <div className="up-right-section">
+        {/* CARDS SECTION: Battery & Bracelet Status */}
+        <div className="up-cards-row">
+          <div className="up-status-card">
+            <span className="up-card-label">Battery:</span>
+            <span className={`up-card-value ${batteryColorClass.split('-')[0]}`}>
+              {batteryLevel}%
+            </span>
+          </div>
+          
+          <div className="up-status-card">
+            <span className="up-card-label">Bracelet Status:</span>
+            <span className={`up-card-value ${isBraceletOn ? 'success' : 'danger'}`}>
+              {isBraceletOn ? 'ON' : 'OFF'}
+            </span>
+          </div>
+        </div>
+
+        {/* MAP SECTION */}
+        <div className="up-map-section">
           <div className="up-map-header">
-            <h2 className="up-map-title">Live Location</h2>
+            <h3 className="up-map-title">Live Location</h3>
             <div className="up-map-coords">
-              {userPosition[0].toFixed(6)}, {userPosition[1].toFixed(6)}
+              {userPosition[0].toFixed(6)},{userPosition[1].toFixed(6)}
             </div>
           </div>
 
           <div className="up-map-container">
             <MapContainer
-
               attributionControl={false}
               center={userPosition}
               zoom={15}
