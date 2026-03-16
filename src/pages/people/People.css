@@ -20,7 +20,7 @@
 
 .people-search-input {
   width: 100%;
-  height: 44px;
+  height: 38px;
   padding: 0 15px 0 45px;
   border: 1px solid var(--pm-border);
   border-radius: 50px;
@@ -47,8 +47,8 @@
 }
 
 .add-people-btn {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 40px;
   background-color: #8c2025;
   color: white;
@@ -74,7 +74,7 @@
 .person-row-item {
   display: flex;
   align-items: center;
-  padding: 15px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--pm-border);
   transition: background-color 0.2s ease;
 }
@@ -95,8 +95,8 @@
 
 .avatar-wrapper {
   position: relative;
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
 }
 
 .person-avatar-img {
@@ -132,7 +132,7 @@
 }
 
 .person-row-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--pm-text);
   margin: 0;
@@ -159,7 +159,7 @@
 }
 
 .battery-percentage {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   margin: 0;
 }
@@ -194,16 +194,16 @@
   }
 
   .person-row-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .avatar-wrapper {
-    width: 45px;
-    height: 45px;
+    width: 40px;
+    height: 40px;
   }
 
   .battery-percentage {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 }
 
