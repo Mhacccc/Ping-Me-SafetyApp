@@ -14,7 +14,7 @@ const AppLayout = () => {
   // Normalize path and check if navigation should be hidden
   const currentPath = location.pathname.toLowerCase();
   const isUserProfile = currentPath.startsWith('/app/userprofile');
-  const hideNavigation = ['/app/my-bracelet', '/app/account', '/app/tips', '/app/about'].some(path => currentPath.startsWith(path));
+  const hideNavigation = ['/app/my-bracelet', '/app/account', '/app/tips', '/app/about', '/app/notifications'].some(path => currentPath.startsWith(path));
 
   // Define visibility for each component
   const shouldHideAll = hideNavigation;
