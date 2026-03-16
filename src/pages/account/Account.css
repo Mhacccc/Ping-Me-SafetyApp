@@ -3,7 +3,7 @@
 /* Account Page Styling - Specific Overrides */
 
 .account-danger-section .br-section-title {
-    color: var(--pm-danger);
+    color: #A4262C;
     /* Keep danger red */
 }
 

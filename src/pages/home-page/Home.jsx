@@ -149,31 +149,52 @@ function Home() {
                 icon={mapHelpers.createCustomIcon(person)}
               >
                 <Popup className="custom-popup">
-                  <Link
-                    to={`/app/userProfile/${person.id}`}
-                    state={{ personData: person }}
-                    className="popup-content"
-                  >
-                    <img
-                      src={person.avatar}
-                      alt={person.name}
-                      className="popup-image"
-                    />
-                    <div className="popup-info">
+                  <div className="popup-layout">
+                    <div className="popup-header">
                       <h3>{person.name}</h3>
-                      <p>Battery: {person.battery}%</p>
-                      <p>Status: {person.online ? "🟢 Online" : "🔴 Offline"}</p>
-
-                      <p>
-                        Last Seen:{" "}
-                        {person.lastSeen
-                          ? person.lastSeen.toLocaleTimeString()
-                          : "—"}
-                      </p>
-                      <p>Location: {addressCache[person.id] || "—"}</p>
-                      {person.sos && <p className="sos">🚨 SOS Active!</p>}
                     </div>
-                  </Link>
+                    
+                    <div className="popup-details">
+                      <div className="detail-row">
+                        <span>Bracelet Status</span>
+                        <span className={`status-val ${person.online ? "active" : "inactive"}`}>
+                          {person.online ? "Active" : "Offline"}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Battery</span>
+                        <span>{person.battery}%</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Last Seen</span>
+                        <span>
+                          {person.lastSeen
+                            ? person.lastSeen.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                            : "—"}
+                        </span>
+                      </div>
+                      {person.sos && (
+                        <div className="detail-row">
+                          <span style={{color: 'red', fontWeight: 'bold'}}>SOS Status</span>
+                          <span style={{color: 'red', fontWeight: 'bold'}}>🚨 Active!</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="popup-location-box">
+                      <p>{addressCache[person.id] || "Fetching location…"}</p>
+                    </div>
+
+                    <div className="popup-footer">
+                      <Link
+                        to={`/app/userProfile/${person.id}`}
+                        state={{ personData: person }}
+                        className="profile-link"
+                      >
+                        View User Profile
+                      </Link>
+                    </div>
+                  </div>
                 </Popup>
               </Marker>
             ) : null

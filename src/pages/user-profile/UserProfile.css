@@ -1,65 +1,70 @@
-/* src/pages/user-profile/UserProfile.css */
+/* --- NEW LAYOUT: MOBILE APP STYLE --- */
 
 .up-page-container {
-  padding: 15px 20px 20px 20px;
-  max-width: 1200px;
+  padding: 0;
+  max-width: 100%;
+  /* Full screen on mobile */
   margin: 0 auto;
   min-height: 100vh;
+  background-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
 }
+
+/* --- HEADER / TOP BAR ---
+.up-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+} */
 
 .up-back-btn {
   background: transparent;
   border: none;
-  color: var(--pm-text);
-  width: 44px;
-  height: 44px;
+  cursor: pointer;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  margin-bottom: 20px;
-  margin-left: -10px;
-  /* Offset for better alignment since no border */
-  transition: all 0.2s ease;
 }
 
-.up-back-btn:hover {
-  background: var(--pm-primary);
-  color: white;
-  border-color: transparent;
+.up-page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #8b0000;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+  padding-right: 24px;
+  /* balances out the back button width to keep title perfectly centered */
 }
 
-/* --- GRID LAYOUT --- */
+/* --- MAIN CONTENT GRID --- */
 .up-content-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
-}
-
-@media (min-width: 900px) {
-  .up-content-grid {
-    grid-template-columns: 350px 1fr;
-    align-items: start;
-  }
-}
-
-/* --- LEFT SECTION (Identity & Vitals) --- */
-.up-left-section {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-}
-
-.up-identity-header {
-  display: flex;
-  align-items: center;
+  padding: 20px;
   gap: 20px;
 }
 
+/* --- CENTER SECTION: Identity --- */
+.up-identity-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
 .up-avatar-wrapper {
-  position: relative;
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
 }
 
 .up-avatar-img {
@@ -67,180 +72,129 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--pm-bg);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.up-status-dot {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid var(--pm-bg);
-}
-
-.up-status-dot.online {
-  background-color: #34A853;
-}
-
-.up-status-dot.offline {
-  background-color: #9ca3af;
 }
 
 .up-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--pm-text);
-  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  margin: 12px 0 8px 0;
 }
 
-.up-status-label {
-  font-size: 0.9rem;
-  color: var(--pm-text-muted);
-  margin: 4px 0 0 0;
-}
-
-/* Integrated Vitals (Menu Item Style) */
-.up-vitals-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.up-vital-row {
+.up-signal-badge {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 10px 0;
-  background-color: transparent;
-  border-bottom: 1px solid var(--pm-border);
-  transition: all 0.2s ease;
+  gap: 6px;
+  background-color: #B55050;
+  /* Matches the "Weak" pill in the design */
+  color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-.up-vital-row:last-child {
-  border-bottom: none;
-}
-
-.up-vital-icon {
-  color: var(--pm-text-muted);
+/* --- CARDS SECTION (Battery & Status) --- */
+.up-cards-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
-.up-vital-content {
+.up-status-card {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.up-vital-label {
-  font-size: 0.75rem;
+.up-card-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.up-card-value {
+  font-size: 28px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: var(--pm-text-muted);
-  letter-spacing: 0.05em;
+  text-align: center;
 }
 
-.up-vital-value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--pm-text);
-}
-
-.up-vital-value.danger {
-  color: var(--pm-danger);
-}
-
-.up-vital-value.success {
+.up-card-value.green {
   color: #34A853;
 }
 
-.up-vital-value.green {
+.up-card-value.red {
+  color: #d93025;
+}
+
+.up-card-value.orange {
+  color: #f29900;
+}
+
+.up-card-value.success {
   color: #34A853;
 }
 
-.up-vital-value.red {
-  color: var(--pm-danger);
+.up-card-value.danger {
+  color: #d93025;
 }
 
-/* Actions removed */
 
-/* --- RIGHT SECTION (Map) --- */
-.up-right-section {
+/* --- MAP SECTION --- */
+.up-map-section {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  height: 500px;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .up-map-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px 16px;
+  background: #fff;
 }
 
 .up-map-title {
-  font-size: 1.1rem;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--pm-text);
+  color: #8b0000;
   margin: 0;
 }
 
 .up-map-coords {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--pm-text-muted);
-  background: var(--pm-surface);
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--pm-border);
+  background: #e0e0e0;
+  color: #000;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 16px;
 }
 
 .up-map-container {
-  flex: 1;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid var(--pm-border);
-  background-color: var(--pm-surface);
+  height: 350px;
+  width: 100%;
+  background: #d9d9d9;
+  /* fallback background color like screenshot */
 }
 
-/* --- Responsive Adjustments --- */
-
-@media (max-width: 900px) {
-  .up-right-section {
-    height: 350px;
-  }
-
-  .up-avatar-wrapper {
-    width: 70px;
-    height: 70px;
-  }
-
-  .up-name {
-    font-size: 1.3rem;
-  }
-}
-
-/* iPhone SE */
-@media (max-width: 375px) {
-  .up-content-grid {
-    gap: 20px;
-  }
-
-  .up-right-section {
-    height: 300px;
-  }
-
-  .up-identity-header {
-    gap: 15px;
-  }
-}
-
-/* Desktop Fix */
+/* Desktop sizing constraints */
 @media (min-width: 768px) {
   .up-page-container {
-    padding-top: 20px;
+    max-width: 500px;
+    border: 1px solid #eee;
+    margin: 40px auto;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    overflow: hidden;
   }
 }

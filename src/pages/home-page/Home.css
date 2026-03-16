@@ -118,50 +118,95 @@ body {
   padding: 0;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .leaflet-popup-content {
   margin: 0;
-  width: 240px !important;
+  width: 260px !important;
 }
 
-.popup-content {
+/* Close button - reposition/recolor */
+.leaflet-container a.leaflet-popup-close-button {
+  top: 10px;
+  right: 12px;
+  color: #666;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 20px;
+}
+
+.popup-layout {
   display: flex;
-  padding: 12px;
-  text-decoration: none;
-  color: inherit;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
 }
 
-.popup-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 12px;
-  object-fit: cover;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
-  /* Prevents long-press 'Save Image' */
+.popup-header {
+  text-align: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.popup-info {
-  flex: 1;
-}
-
-.popup-info h3 {
-  margin: 0 0 4px 0;
+.popup-header h3 {
+  margin: 0;
   font-size: 16px;
+  color: #8b0000;
+  font-weight: 700;
+}
+
+.popup-details {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #111;
+}
+
+.detail-row span:first-child {
   color: #333;
 }
 
-.popup-info p {
-  margin: 0;
-  font-size: 14px;
+.detail-row .status-val.active {
+  color: #34A853;
+}
+
+.detail-row .status-val.inactive {
   color: #666;
+}
+
+.popup-location-box {
+  background: #ecdcdc;
+  border-left: 4px solid #8b0000;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #111;
   line-height: 1.4;
+}
+
+.popup-location-box p {
+  margin: 0;
+}
+
+.popup-footer {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.popup-footer .profile-link {
+  color: #8b0000;
+  font-size: 14px;
+  text-decoration: none;
+  display: block;
 }
 
 /* Remove the leaflet popup tip */
@@ -208,65 +253,7 @@ body {
   padding: 2rem;
 }
 
-/* Marker + popup styles (kept from your original) */
-.custom-marker-icon {
-  background: none;
-  border: none;
-}
 
-.leaflet-popup-content-wrapper {
-  padding: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
-}
-
-.leaflet-popup-content {
-  margin: 0;
-  width: 240px !important;
-}
-
-.popup-content {
-  display: flex;
-  padding: 12px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.popup-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 12px;
-  object-fit: cover;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
-  /* Prevents long-press 'Save Image' */
-}
-
-.popup-info {
-  flex: 1;
-}
-
-.popup-info h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.popup-info p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.leaflet-popup-tip-container {
-  display: none;
-}
 
 /* Mobile: panel hidden already via component CSS; map becomes full width */
 @media (max-width: 767px) {

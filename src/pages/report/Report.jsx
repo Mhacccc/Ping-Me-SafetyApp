@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, ShieldAlert } from 'lucide-react';
 import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import { useBraceletUsers } from '../../hooks/useUsers';
 import { useAuth } from '../../context/AuthContext';
-import ReportDetailModal from '../../components/ReportDetailModal';
-import LoadingSpinner from '../../components/LoadingSpinner'
+import Skeleton from '../../components/skeleton/Skeleton';
 import './Report.css';
 
 const Report = () => {
   const [reports, setReports] = useState([]);
-  const [selectedIncident, setSelectedIncident] = useState(null);
   const { braceletUsers } = useBraceletUsers();
   const { currentUser } = useAuth();
 
@@ -60,7 +59,7 @@ const Report = () => {
       // Since reports are generated when SOS turns OFF, we treat them as "Resolved"
       displayStatus: {
         text: 'Marked Safe',
-        color: 'red',
+        color: 'black',
         icon: ShieldAlert
       },
       // Map fields for the modal
@@ -68,17 +67,33 @@ const Report = () => {
     };
   };
 
-  const handleRowClick = (incident) => {
-    setSelectedIncident(getEnrichedReport(incident));
-  };
-
-  const handleCloseModal = () => {
-    setSelectedIncident(null);
-  };
+  // Removed handleRowClick as we'll use <Link> directly in JSX
 
   if (!reports.length) return (
-    <LoadingSpinner />
-  )
+    <div className="report-page-frame skeleton-wrapper">
+      <main className="app-main">
+        <ul className="incident-list" style={{ boxShadow: 'none' }} aria-label="Loading reports">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <li key={`skeleton-${i}`} className="incident-item skeleton-report-item">
+              <div className="incident-link-wrapper" style={{ cursor: 'default' }}>
+                <div className="skeleton-icon-wrapper">
+                  <Skeleton type="avatar" width="36px" height="36px" />
+                </div>
+                <div className="incident-details skeleton-details-flex">
+                  <Skeleton type="text" width="60%" height="18px" className="skeleton-report-title" />
+                  <Skeleton type="text" width="40%" height="14px" />
+                </div>
+                <div className="incident-time-wrapper">
+                  <Skeleton type="text" width="40px" height="12px" className="skeleton-report-time" />
+                  <Skeleton type="avatar" width="20px" height="20px" />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </main>
+    </div>
+  );
 
   return (
     <div className="report-page-frame">
@@ -92,17 +107,20 @@ const Report = () => {
               <li
                 key={incident.id}
                 className="incident-item"
-                role="button"
-                tabIndex={0}
-                onClick={() => handleRowClick(rawReport)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleRowClick(rawReport);
-                  }
-                }}
               >
-                <div className="incident-link-wrapper">
+                <Link 
+                  to={`/app/report/${incident.id}`}
+                  state={{ 
+                    incident: { 
+                      ...incident,
+                      displayStatus: { 
+                        text: incident.displayStatus.text,
+                        color: incident.displayStatus.color
+                      } 
+                    } 
+                  }}
+                  className="incident-link-wrapper"
+                >
                   <div className={`incident-icon-wrapper ${incident.displayStatus.color}`}>
                     <IconComponent size={20} />
                   </div>
@@ -120,19 +138,12 @@ const Report = () => {
                     </span>
                     <ChevronRight size={20} className="chevron-icon" />
                   </div>
-                </div>
+                </Link>
               </li>
             );
           })}
         </ul>
       </main>
-
-      {selectedIncident && (
-        <ReportDetailModal
-          incident={selectedIncident}
-          onClose={handleCloseModal}
-        />
-      )}
     </div>
   );
 };
