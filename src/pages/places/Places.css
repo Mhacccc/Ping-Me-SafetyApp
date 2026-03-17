@@ -1409,6 +1409,7 @@ html.pm-dark .checkmark-wrapper {
 }
 
 .popup-group-header {
+  height: 46px;
   background: #fdf2f2;
   padding: 8px 12px;
   text-align: center;
@@ -1417,8 +1418,8 @@ html.pm-dark .checkmark-wrapper {
 
 .popup-group-header p {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #8b0000;
 }
-
+
