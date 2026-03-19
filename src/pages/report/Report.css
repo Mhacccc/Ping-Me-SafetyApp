@@ -2,7 +2,7 @@
 
 /* Base Styles */
 .report-page-frame {
-  min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - 160px);
   /* Restore min-height, account for mobile nav */
   background-color: var(--pm-bg);
   /* Use page background code */
@@ -401,6 +401,6 @@
 
 @media (min-width: 768px) {
   .report-page-frame {
-    min-height: calc(100vh - 60px);
+    min-height: calc(100dvh - 60px);
   }
 }

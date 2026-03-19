@@ -44,7 +44,9 @@ const AppLayout = () => {
 
       {/* Main page content */}
       <main className={`app-content-main ${shouldHideTopBar ? 'no-navigation' : ''} ${shouldHideSidebar && !shouldHideTopBar ? 'no-sidebar' : ''}`}>
-        <Outlet />
+        <div className="scrollable-content">
+          <Outlet />
+        </div>
       </main>
 
       {/* Mobile-only Bottom Navbar */}

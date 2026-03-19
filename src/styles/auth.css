@@ -10,7 +10,7 @@
   --pm-border: rgba(34, 34, 34, 0.1);
   --pm-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.1);
 
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #FAF9F6 0%, #FCF9EE 46%, #D85C4F 100%);

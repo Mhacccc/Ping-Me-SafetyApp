@@ -7,7 +7,7 @@ body {
 }
 
 .map-page {
-  height: 100vh;
+  height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -17,7 +17,7 @@ body {
 
 .loading,
 .error {
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,7 +316,7 @@ body {
 
 .home-layout {
   display: flex;
-  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
   /* TopBar height */
   background: var(--pm-bg);
 }
@@ -338,7 +338,7 @@ body {
 /* Loading */
 .loading,
 .error {
-  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,8 +353,8 @@ body {
 /* Mobile: panel hidden already via component CSS; map becomes full width */
 @media (max-width: 767px) {
   .home-layout {
-    height: 100vh;
-    min-height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
   }
 
   .home-map {

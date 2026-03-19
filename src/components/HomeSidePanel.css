@@ -1,7 +1,7 @@
 /* Right-side panel (desktop) */
 .hsp {
   width: 360px;
-  height: calc(100vh - 60px); /* TopBar height */
+  height: calc(100dvh - 60px); /* TopBar height */
   position: sticky;
   top: 60px;
   border-left: 1px solid var(--pm-border);

@@ -10,7 +10,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background-color: rgba(0, 0, 0, 0.3);
   z-index: 1040;
   opacity: 0;
@@ -226,7 +226,7 @@ html.pm-dark .modal-header-logo {
     /* Remove left positioning */
     width: 300px;
     height: auto;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100dvh - 100px);
     border-radius: 20px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     border: 1px solid var(--pm-border);

@@ -6,7 +6,7 @@
   left: 0;
   width: 240px;
   /* Standard sidebar width */
-  height: 100vh;
+  height: 100dvh;
   background-color: var(--pm-surface);
   /* Our light gray */
   border-right: 1px solid var(--pm-border);

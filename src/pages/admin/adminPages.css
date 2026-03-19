@@ -275,7 +275,7 @@
 .admin-support-layout {
   display: flex;
   gap: 20px;
-  height: calc(100vh - 180px);
+  height: calc(100dvh - 180px);
   min-height: 500px;
 }
 

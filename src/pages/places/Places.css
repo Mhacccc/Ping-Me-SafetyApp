@@ -3,7 +3,7 @@
 .places-page-container {
   position: relative;
   width: 100%;
-  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
   /* Adjust for fixed TopBar */
   overflow: hidden;
   background-color: var(--pm-bg);
@@ -677,7 +677,7 @@ html.pm-dark .btn-rename-ghost {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1000,7 +1000,7 @@ html.pm-dark .leaflet-draw-draw-circle:hover {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
