@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Login from "./context/Login";
 import Signup from "./context/Signup";
+import ForgotPassword from "./context/ForgotPassword";
 import { ToastProvider } from "./context/ToastContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import AppLayout from "./layouts/AppLayout";
@@ -44,6 +45,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/onboarding" element={<Onboarding />} />
 
           {/*Admin mock login (public, no Firebase) */}

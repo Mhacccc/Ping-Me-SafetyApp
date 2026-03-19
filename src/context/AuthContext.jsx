@@ -1,13 +1,17 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
+  signInWithPopup, 
   signOut, 
   onAuthStateChanged,
-  updateProfile
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebaseConfig';
+import { doc, setDoc, serverTimestamp, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, db, googleProvider } from '../config/firebaseConfig';
 
 const AuthContext = createContext();
 
@@ -19,7 +23,61 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Signup: Creates Auth user AND appUsers document
+  // Handle Redirect Result (for PWA/Mobile)
+  async function handleRedirectResult() {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result) {
+        const user = result.user;
+        const userDocRef = doc(db, 'appUsers', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+          // Clear Google photoURL
+          await updateProfile(user, { photoURL: "" });
+
+          await setDoc(userDocRef, {
+            name: user.displayName,
+            email: user.email,
+            linkedBraceletsID: [],
+            createdAt: serverTimestamp()
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Redirect sign-in error:", error);
+    }
+  }
+
+  async function signInWithGoogle() {
+    // Detect if the app is running in "standalone" mode (installed PWA)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isStandalone) {
+      // Use redirect for better PWA compatibility on mobile
+      return signInWithRedirect(auth, googleProvider);
+    } else {
+      // Use popup for a smoother desktop/browser experience
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      const userDocRef = doc(db, 'appUsers', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await updateProfile(user, { photoURL: "" });
+        await setDoc(userDocRef, {
+          name: user.displayName,
+          email: user.email,
+          linkedBraceletsID: [],
+          createdAt: serverTimestamp()
+        });
+      }
+      return result;
+    }
+  }
+
+  // Email/Password Signup: Creates Auth user AND appUsers document
   async function signup(email, password, name) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -29,7 +87,7 @@ export function AuthProvider({ children }) {
       displayName: name
     });
     
-    // Create the appUser document with the specific structure you requested
+    // Create the appUser document
     await setDoc(doc(db, 'appUsers', user.uid), {
       name: name,
       email: email,
@@ -40,8 +98,25 @@ export function AuthProvider({ children }) {
     return userCredential;
   }
 
+  // Email/Password Login
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  // Password Reset Email
+  async function resetPassword(email) {
+    // Firebase sendPasswordResetEmail is silent for security (to avoid email enumeration).
+    // We manually check Firestore to see if the user exists first to give better feedback.
+    const q = query(collection(db, 'appUsers'), where('email', '==', email));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      const error = new Error("No account found with this email.");
+      error.code = "auth/user-not-found";
+      throw error;
+    }
+
+    return sendPasswordResetEmail(auth, email);
   }
 
   function logout() {
@@ -49,17 +124,32 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
+    // Check for redirect result on mount (for PWAs after redirect back)
+    handleRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      // If user is logged in but has no displayName, try to sync it from Firestore
-      if (user && !user.displayName) {
-        try {
-          const userDocRef = doc(db, 'appUsers', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists() && userDoc.data().name) {
-            await updateProfile(user, { displayName: userDoc.data().name });
+      if (user) {
+        // If the avatar is from Google, clear it to let the app's default (red.webp) take over.
+        // Users can still upload their own custom avatar via the Account page later.
+        if (user.photoURL && user.photoURL.includes("googleusercontent.com")) {
+          try {
+            await updateProfile(user, { photoURL: "" });
+          } catch (error) {
+            console.error("Error clearing Google photoURL:", error);
           }
-        } catch (error) {
-          console.error("Error syncing displayName:", error);
+        }
+
+        // If user is logged in but has no displayName, try to sync it from Firestore
+        if (!user.displayName) {
+          try {
+            const userDocRef = doc(db, 'appUsers', user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists() && userDoc.data().name) {
+              await updateProfile(user, { displayName: userDoc.data().name });
+            }
+          } catch (error) {
+            console.error("Error syncing displayName:", error);
+          }
         }
       }
       setCurrentUser(user);
@@ -73,6 +163,8 @@ export function AuthProvider({ children }) {
     currentUser,
     signup,
     login,
+    signInWithGoogle,
+    resetPassword,
     logout
   };
 

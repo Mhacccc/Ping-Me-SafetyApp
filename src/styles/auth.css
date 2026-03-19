@@ -178,7 +178,6 @@
 
 .forgotPwdLink {
   text-align: right;
-  margin-top: -8px;
 }
 
 .forgotPwdLink a {
@@ -186,6 +185,62 @@
   color: #3B82F6;
   text-decoration: none;
   font-weight: 500;
+}
+
+.authDivider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.authDivider::before,
+.authDivider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ddd;
+}
+
+.authDivider::before { margin-right: .75em; }
+.authDivider::after { margin-left: .75em; }
+
+.authBtnGoogle {
+  width: 100%;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 30px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.authBtnGoogle:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(66, 133, 244, 0.4);
+  box-shadow: 0 4px 16px rgba(66, 133, 244, 0.15);
+  transform: translateY(-1px);
+}
+
+.authBtnGoogle:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.authBtnGoogle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .authBtnContainer {
@@ -228,17 +283,55 @@
   margin-left: 4px;
 }
 
-/* Specific iPhone SE adjustments */
-@media (max-width: 375px) {
+/* Specific iPhone SE adjustments / Small Height viewports */
+@media (max-width: 375px), (max-height: 700px) {
   .authMain {
-    padding: 30px 20px;
+    padding: 20px 20px;
   }
 
-  .authHeader h1 {
-    font-size: 24px;
+  .authLogoContainer {
+    margin-bottom: 12px;
   }
 
   .authLogo {
-    height: 50px;
+    height: 60px;
+    
+  }
+
+  .authHeader {
+    margin-bottom: 12px;
+  }
+
+  .authHeader h1 {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .authHeader p {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .authForm {
+    gap: 8px;
+  }
+
+  .authBtnMaroon,
+  .authBtnGoogle {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .authDivider {
+    margin: 0px 0;
+  }
+
+  .authBtnContainer {
+    margin-top: 4px;
+  }
+
+  .authFooter {
+    margin-top: 12px;
+    font-size: 14px;
   }
 }

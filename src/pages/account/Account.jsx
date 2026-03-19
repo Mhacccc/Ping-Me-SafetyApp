@@ -5,6 +5,7 @@ import { updateProfile, deleteUser } from "firebase/auth";
 import { doc, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
 import { useToast } from "../../context/ToastContext";
+import avatar from "../../assets/red.webp";
 import { Camera, Save, ChevronLeft, User, Mail, ShieldAlert, Plus } from "lucide-react";
 import "./Account.css";
 
@@ -135,11 +136,7 @@ export default function Account() {
         <div className="br-avatar-section">
           <div className="br-avatar-wrapper" onClick={handlePhotoClick}>
             <div className="br-avatar-circle">
-              {photoURL ? (
-                <img src={photoURL} alt="Avatar" className="br-avatar-img" />
-              ) : (
-                <Plus size={48} color="#fff" strokeWidth={2.5} />
-              )}
+              <img src={photoURL || avatar} alt="Avatar" className="br-avatar-img" />
               <div className="br-avatar-edit">
                 <Camera size={12} color="#A4262C" />
               </div>
