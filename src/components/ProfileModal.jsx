@@ -93,7 +93,7 @@ export default function ProfileModal({ isOpen, onClose }) {
         </div>
 
         <div className="profile-modal-user">
-          <img src={avatar} alt="User Avatar" className="profile-modal-avatar" />
+          <img src={currentUser?.photoURL || avatar} alt="User Avatar" className="profile-modal-avatar" />
           <h2 className="profile-modal-name">{displayName}</h2>
           <p className="profile-modal-email">{currentUser?.email || "—"}</p>
         </div>

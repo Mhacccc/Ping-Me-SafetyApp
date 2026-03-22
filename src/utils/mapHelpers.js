@@ -26,22 +26,35 @@ export function parseFirestoreDate(value) {
 
 // Get latitude/longitude from different shapes
 export function parseLocation(locationField) {
+  const isValid = (lat, lng) => {
+    // If both are strictly 0, or coerce to 0, treat as invalid (GPS lost signal / Null Island)
+    if (lat == null || lng == null) return false;
+    if (Number(lat) === 0 && Number(lng) === 0) return false;
+    return true;
+  };
+
   if (locationField?.arrayValue?.values) {
     const vals = locationField.arrayValue.values;
     const lat = vals[0]?.doubleValue ?? null;
     const lng = vals[1]?.doubleValue ?? null;
-    if (lat !== null && lng !== null) return [lat, lng];
+    if (isValid(lat, lng)) return [lat, lng];
   }
   if (typeof locationField === 'object' && locationField !== null) {
     if ('latitude' in locationField && 'longitude' in locationField) {
-      return [locationField.latitude, locationField.longitude];
+      if (isValid(locationField.latitude, locationField.longitude)) {
+        return [locationField.latitude, locationField.longitude];
+      }
     }
     if ('lat' in locationField && 'lng' in locationField) {
-      return [locationField.lat, locationField.lng];
+      if (isValid(locationField.lat, locationField.lng)) {
+        return [locationField.lat, locationField.lng];
+      }
     }
   }
   if (Array.isArray(locationField) && locationField.length >= 2) {
-    return [locationField[0], locationField[1]];
+    if (isValid(locationField[0], locationField[1])) {
+      return [locationField[0], locationField[1]];
+    }
   }
   return null;
 }
