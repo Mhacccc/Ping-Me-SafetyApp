@@ -8,7 +8,8 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   signInWithRedirect,
-  getRedirectResult
+  getRedirectResult,
+  sendEmailVerification
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../config/firebaseConfig';
@@ -33,12 +34,10 @@ export function AuthProvider({ children }) {
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists()) {
-          // Clear Google photoURL
-          await updateProfile(user, { photoURL: "" });
-
           await setDoc(userDocRef, {
             name: user.displayName,
             email: user.email,
+            avatar: user.photoURL || "",
             linkedBraceletsID: [],
             createdAt: serverTimestamp()
           });
@@ -65,10 +64,10 @@ export function AuthProvider({ children }) {
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
-        await updateProfile(user, { photoURL: "" });
         await setDoc(userDocRef, {
           name: user.displayName,
           email: user.email,
+          avatar: user.photoURL || "",
           linkedBraceletsID: [],
           createdAt: serverTimestamp()
         });
@@ -91,16 +90,28 @@ export function AuthProvider({ children }) {
     await setDoc(doc(db, 'appUsers', user.uid), {
       name: name,
       email: email,
+      avatar: "", // Init empty avatar for email signups (fallback to default)
       linkedBraceletsID: [], // Initialize empty array for bracelets
       createdAt: serverTimestamp()
     });
+    
+    // Send verification email
+    await sendEmailVerification(user);
     
     return userCredential;
   }
 
   // Email/Password Login
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential;
+  }
+
+  // Resend Verification Email Helper
+  async function resendVerification(email, password) {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCredential.user);
+    await signOut(auth);
   }
 
   // Password Reset Email
@@ -129,15 +140,7 @@ export function AuthProvider({ children }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // If the avatar is from Google, clear it to let the app's default (red.webp) take over.
-        // Users can still upload their own custom avatar via the Account page later.
-        if (user.photoURL && user.photoURL.includes("googleusercontent.com")) {
-          try {
-            await updateProfile(user, { photoURL: "" });
-          } catch (error) {
-            console.error("Error clearing Google photoURL:", error);
-          }
-        }
+        let shouldReload = false;
 
         // If user is logged in but has no displayName, try to sync it from Firestore
         if (!user.displayName) {
@@ -146,13 +149,24 @@ export function AuthProvider({ children }) {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists() && userDoc.data().name) {
               await updateProfile(user, { displayName: userDoc.data().name });
+              shouldReload = true;
             }
           } catch (error) {
             console.error("Error syncing displayName:", error);
           }
         }
+
+        // If we made changes to the Firebase Auth profile, reload it so the UI
+        // gets the updated fields instantly without needing a browser refresh.
+        if (shouldReload) {
+          await user.reload();
+          setCurrentUser(auth.currentUser);
+        } else {
+          setCurrentUser(user);
+        }
+      } else {
+        setCurrentUser(null);
       }
-      setCurrentUser(user);
       setLoading(false);
     });
 
@@ -165,6 +179,7 @@ export function AuthProvider({ children }) {
     login,
     signInWithGoogle,
     resetPassword,
+    resendVerification,
     logout
   };
 

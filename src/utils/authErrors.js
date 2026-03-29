@@ -20,6 +20,8 @@ export const getAuthErrorMessage = (error) => {
       return "Incorrect password. Please try again.";
     case "auth/invalid-credential":
       return "Invalid email or password. Please check your credentials.";
+    case "auth/email-not-verified":
+      return "Please verify your email address. Check your inbox for the verification link.";
     
     // Signup
     case "auth/email-already-in-use":

@@ -1,12 +1,12 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { updateProfile, deleteUser } from "firebase/auth";
+import { updateProfile, updateEmail, sendEmailVerification, linkWithPopup } from "firebase/auth";
 import { doc, collection, query, where, getDocs, writeBatch } from "firebase/firestore";
-import { db } from "../../config/firebaseConfig";
+import { db, googleProvider } from "../../config/firebaseConfig";
 import { useToast } from "../../context/ToastContext";
 import avatar from "../../assets/red.webp";
-import { Camera, Save, ChevronLeft, User, Mail, ShieldAlert, Plus } from "lucide-react";
+import { Camera, Save, ChevronLeft, User, Mail, ShieldCheck } from "lucide-react";
 import "./Account.css";
 
 export default function Account() {
@@ -15,9 +15,14 @@ export default function Account() {
   const navigate = useNavigate();
 
   const [displayName, setDisplayName] = useState(currentUser?.displayName || "");
+  const [email, setEmail] = useState(currentUser?.email || "");
   const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || "");
   const [photoFile, setPhotoFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
+
+  const isGoogleUser = currentUser?.providerData.some(p => p.providerId === 'google.com');
   const fileInputRef = useRef(null);
 
   const handlePhotoClick = () => {
@@ -64,12 +69,16 @@ export default function Account() {
         finalPhotoURL = data.secure_url;
       }
 
+      if (email !== currentUser.email) {
+        await updateEmail(currentUser, email);
+      }
+
       await updateProfile(currentUser, {
         displayName: displayName,
         photoURL: finalPhotoURL
       });
 
-      // Synchronize the new avatar/name directly to Firestore collections
+      // Synchronize the new avatar/name/email directly to Firestore collections
       try {
         const batch = writeBatch(db);
 
@@ -77,6 +86,7 @@ export default function Account() {
         const appUserRef = doc(db, 'appUsers', currentUser.uid);
         batch.update(appUserRef, {
           name: displayName,
+          email: email,
           avatar: finalPhotoURL
         });
 
@@ -97,24 +107,46 @@ export default function Account() {
       navigate('/app', { state: { openProfile: true } });
     } catch (error) {
       console.error("Error updating profile:", error);
-      addToast("Failed to update profile.", "error");
+      if (error.code === 'auth/requires-recent-login') {
+        addToast("For security, please log out and log back in to change your email address.", "error");
+      } else if (error.code === 'auth/email-already-in-use') {
+        addToast("That email address is already in use by another account.", "error");
+      } else {
+        addToast("Failed to update profile.", "error");
+      }
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      return;
-    }
+  const handleLinkGoogle = async () => {
     try {
-      if (currentUser) {
-        await deleteUser(currentUser);
-        addToast("Account deleted.", "success");
-      }
+      setLinkingGoogle(true);
+      await linkWithPopup(currentUser, googleProvider);
+      await currentUser.reload();
+      addToast("Successfully linked Google Account!", "success");
     } catch (error) {
-      console.error("Error deleting user:", error);
-      addToast("Failed to delete. You may need to log in again first.", "error");
+      console.error("Error linking Google:", error);
+      if (error.code === 'auth/credential-already-in-use') {
+        addToast("This Google account is already linked to another user.", "error");
+      } else {
+        addToast("Failed to link Google account.", "error");
+      }
+    } finally {
+      setLinkingGoogle(false);
+    }
+  };
+
+  const handleSendVerification = async () => {
+    try {
+      setSendingVerification(true);
+      await sendEmailVerification(currentUser);
+      addToast("Verification email sent! Check your inbox.", "success");
+    } catch (error) {
+      console.error("Error sending verification:", error);
+      addToast(error.message || "Failed to send verification.", "error");
+    } finally {
+      setSendingVerification(false);
     }
   };
 
@@ -183,31 +215,111 @@ export default function Account() {
                 <input
                   type="email"
                   className="br-input"
-                  value={currentUser?.email || ""}
-                  disabled
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isGoogleUser}
                 />
               </div>
+              {isGoogleUser && <p className="br-hint">Your email is managed securely by Google and cannot be changed here.</p>}
             </div>
           </div>
 
-          {/* Danger Zone Section */}
-          <div className="br-section account-danger-section">
+          {/* Account Security Section */}
+          <div className="br-section">
             <div className="br-section-header">
               <h2 className="br-section-title">
                 <span className="br-indicator"></span>
-                DANGER ZONE
+                ACCOUNT SECURITY
               </h2>
             </div>
-            <div className="br-danger-card">
-              <ShieldAlert size={24} className="br-danger-icon" />
-              <div className="br-danger-content">
-                <p className="br-danger-text">
-                  Once you delete your account, there is no going back. Please be certain.
-                </p>
-                <button className="br-btn-delete" onClick={handleDelete}>
-                  Delete Account
-                </button>
-              </div>
+            
+            <div className="br-field" style={{ flexDirection: 'column', gap: '16px' }}>
+              {!currentUser?.emailVerified && !currentUser?.providerData.some(p => p.providerId === 'google.com') && (
+                <div style={{ 
+                  background: 'rgba(164, 38, 44, 0.05)', 
+                  padding: '20px', 
+                  borderRadius: 'var(--radius)', 
+                  border: '1px solid rgba(164, 38, 44, 0.2)', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '12px' 
+                }}>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--pm-primary)', fontWeight: '600', lineHeight: '1.5' }}>
+                    Verify Your Email
+                  </p>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)', opacity: 0.8, lineHeight: '1.4' }}>
+                    Your email is not verified. If you forget your password, you will not be able to reset it and your account will be permanently lost.
+                  </p>
+                  <button 
+                    onClick={handleSendVerification}
+                    className="br-btn-secondary" 
+                    style={{ 
+                      height: '40px', 
+                      padding: '0 20px', 
+                      fontSize: '13px', 
+                      alignSelf: 'flex-start',
+                      marginTop: '4px'
+                    }}
+                    disabled={sendingVerification || linkingGoogle || saving}
+                  >
+                    {sendingVerification ? "Sending..." : "Send Verification Email"}
+                  </button>
+                </div>
+              )}
+              
+              {!isGoogleUser ? (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  background: 'var(--surface)', 
+                  padding: '20px', 
+                  borderRadius: 'var(--radius)', 
+                  border: '1px solid var(--border)' 
+                }}>
+                  <div style={{ flex: 1, paddingRight: '16px' }}>
+                    <p style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--text)' }}>Connect Google Account</p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text)', opacity: 0.6, lineHeight: '1.4' }}>Sign in effortlessly with a single click.</p>
+                  </div>
+                  <button 
+                    onClick={handleLinkGoogle} 
+                    disabled={linkingGoogle || sendingVerification || saving} 
+                    className="br-btn-primary" 
+                    style={{ 
+                      padding: '0 24px', 
+                      height: '44px',
+                      background: 'var(--pm-primary)', 
+                      width: 'auto',
+                      fontSize: '14px',
+                      gap: '10px'
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 48 48">
+                      <path fill="#fff" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#fff" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#fff" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24.01 24.01 0 0 0 0 21.56l7.98-6.19z"/>
+                      <path fill="#fff" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    {linkingGoogle ? "Connecting..." : "Connect"}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  background: 'rgba(22, 163, 74, 0.05)', 
+                  padding: '20px', 
+                  borderRadius: 'var(--radius)', 
+                  border: '1px solid rgba(22, 163, 74, 0.2)' 
+                }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#166534' }}>Google Account Linked</p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#15803d', opacity: 0.8 }}>You can sign in safely using Google.</p>
+                  </div>
+                  <ShieldCheck size={28} color="#16a34a" />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -220,7 +332,7 @@ export default function Account() {
         <button
           className="br-btn-primary"
           onClick={handleSave}
-          disabled={saving || (displayName === currentUser?.displayName && photoURL === currentUser?.photoURL)}
+          disabled={saving || sendingVerification || linkingGoogle || (displayName === currentUser?.displayName && photoURL === currentUser?.photoURL && email === currentUser?.email)}
         >
           {saving ? "Saving..." : "Save"}
         </button>

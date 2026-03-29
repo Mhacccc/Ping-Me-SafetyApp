@@ -69,7 +69,7 @@ export default function Signup() {
 
             <div className="authHeader">
               <h1>Join PingMe's trusted Network</h1>
-              <p>Sign up to request help when it's needed the most.</p>
+              <p>Sign up to start tracking and requesting help when it's needed the most.</p>
             </div>
           </div>
 

@@ -5,12 +5,9 @@ import './UserProfile.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useEffect, useState } from 'react';
-import { createCustomIcon, buildUserWithDevice, isUserOnline, parseFirestoreDate, parseLocation } from '../../utils/mapHelpers';
-import { reverseGeocode } from '../../utils/geocode';
+import { useEffect } from 'react';
+import { createCustomIcon } from '../../utils/mapHelpers';
 import { useBraceletUsers } from '../../context/BraceletDataProvider';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../config/firebaseConfig';
 
 // Fix for Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,54 +34,12 @@ const UserProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { addressCache, fetchAddress } = useBraceletUsers();
-  const [person, setPerson] = useState(location.state?.personData);
-
-  // Real-time synchronization for the specific user
-  useEffect(() => {
-    if (!person?.id) return;
-
-    // Listen to braceletUsers for static info (emergency contacts, etc.)
-    const unsubUser = onSnapshot(doc(db, 'braceletUsers', person.id), (userSnap) => {
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        setPerson(prev => ({
-          ...prev,
-          name: userData.name || prev.name,
-          avatar: userData.avatar || prev.avatar,
-          emergencyContacts: userData.emergencyContacts || prev.emergencyContacts || [],
-          serialNumber: userData.serialNumber || prev.serialNumber
-        }));
-      }
-    });
-
-    // Listen to deviceStatus for real-time info (battery, location, SOS)
-    const unsubDevice = onSnapshot(doc(db, 'deviceStatus', person.id), (deviceSnap) => {
-      if (deviceSnap.exists()) {
-        const dd = deviceSnap.data();
-        const loc = parseLocation(dd.location) || parseLocation(dd);
-        const lastSeen = parseFirestoreDate(dd.lastSeen);
-        const online = isUserOnline(lastSeen);
-
-        setPerson(prev => ({
-          ...prev,
-          battery: Number(dd.battery ?? prev.battery),
-          braceletOn: online ? Boolean(dd.isBraceletOn ?? prev.braceletOn) : false,
-          lastSeen,
-          sos: (dd.sos && (dd.sos.active ?? dd.sos)) || false,
-          position: loc || prev.position,
-          online: online,
-          currentGeofenceId: dd.currentGeofenceId ?? prev.currentGeofenceId,
-          deviceStatusId: deviceSnap.id ?? prev.deviceStatusId
-        }));
-      }
-    });
-
-    return () => {
-      unsubUser();
-      unsubDevice();
-    };
-  }, [person?.id]);
+  const { braceletUsers, addressCache, fetchAddress } = useBraceletUsers();
+  
+  // Derive real-time user data directly from our global continuous stream, 
+  // falling back to navigation state if they were just loaded
+  const targetId = location.state?.personData?.id;
+  const person = braceletUsers?.find(u => u.id === targetId) || location.state?.personData;
 
   // Request geocode if not already in the shared cache (e.g. direct navigation)
   useEffect(() => {
