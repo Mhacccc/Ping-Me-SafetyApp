@@ -241,7 +241,7 @@
     justify-content: center;
     gap: 8px;
     height: 52px;
-    padding: 0 50px;
+    width: 150px;
     /* background: var(--surface); */
     background-color: transparent;
     border: var(--maroon) 1px solid;
@@ -259,7 +259,7 @@
     justify-content: center;
     gap: 8px;
     height: 52px;
-    padding: 0 65px;
+    width: 160px;
     background: var(--maroon);
     border: none;
     border-radius: 40px;
