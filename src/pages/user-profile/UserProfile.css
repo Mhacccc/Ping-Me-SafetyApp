@@ -198,3 +198,255 @@
     overflow: hidden;
   }
 }
+
+/* --- DARK MODE --- */
+html.pm-dark .up-page-container {
+  background-color: var(--pm-bg);
+  color: var(--pm-text);
+}
+
+html.pm-dark .up-name,
+html.pm-dark .up-card-value,
+html.pm-dark .up-detail-value {
+  color: var(--pm-text);
+}
+
+html.pm-dark .up-details-box {
+  border-color: var(--pm-border);
+}
+
+html.pm-dark .up-status-bar {
+  background-color: var(--pm-surface);
+  border-color: var(--pm-border);
+}
+
+html.pm-dark .up-status-label {
+  color: var(--pm-text-muted);
+}
+
+html.pm-dark .up-status-divider {
+  background-color: var(--pm-border);
+}
+
+html.pm-dark .up-back-btn {
+  color: var(--pm-text);
+}
+
+html.pm-dark .up-status-card {
+  background-color: var(--pm-surface);
+  border-color: var(--pm-border);
+}
+
+html.pm-dark .up-map-section {
+  background-color: var(--pm-surface);
+  border-color: var(--pm-border);
+}
+
+html.pm-dark .up-map-header {
+  background-color: var(--pm-surface);
+}
+
+html.pm-dark .up-map-title {
+  color: var(--pm-text);
+}
+
+html.pm-dark .up-map-coords {
+  background: var(--pm-border);
+  color: var(--pm-text);
+}
+
+html.pm-dark .up-card-value.green,
+html.pm-dark .up-card-value.success {
+  color: var(--pm-success);
+}
+
+html.pm-dark .up-card-value.red,
+html.pm-dark .up-card-value.danger {
+  color: var(--pm-danger);
+}
+
+html.pm-dark .up-card-value.orange {
+  color: var(--pm-warning);
+}
+
+/* --- CUSTOM MARKER STYLES (SYNCED WITH HOME.CSS) --- */
+.custom-marker-icon {
+  background: none;
+  border: none;
+}
+
+.marker-pin {
+  position: relative;
+  width: 52px;
+  /* Increased from 51px for perfect symmetry */
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.marker-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.marker-content {
+  position: relative;
+  top: 3px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+  background-color: #8b0000;
+  /* Defensive background: matches pin color */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.marker-image {
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.marker-status {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid white;
+  z-index: 3;
+}
+
+.marker-status.online {
+  background-color: #4CAF50;
+}
+
+.marker-status.offline {
+  background-color: red;
+}
+
+/* --- MAP POPUP STYLES (MATCHING HOME.CSS) --- */
+.up-map-container .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.up-map-container .leaflet-popup-content {
+  margin: 0;
+  width: 260px !important;
+}
+
+.up-map-container .leaflet-container a.leaflet-popup-close-button {
+  top: 10px;
+  right: 12px;
+  color: #666;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 20px;
+}
+
+.popup-layout {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.popup-header {
+  text-align: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #8b0000;
+  font-weight: 700;
+}
+
+.popup-details {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #111;
+}
+
+.detail-row span:first-child {
+  color: #333;
+}
+
+.detail-row .status-val.active {
+  color: #34A853;
+}
+
+.detail-row .status-val.inactive {
+  color: #666;
+}
+
+.popup-location-box {
+  background: #ecdcdc;
+  border-left: 4px solid #8b0000;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #111;
+  line-height: 1.4;
+}
+
+.popup-location-box p {
+  margin: 0;
+}
+
+.up-map-container .leaflet-popup-tip-container {
+  display: none;
+}
+
+/* --- DARK MODE FOR POPUP --- */
+html.pm-dark .popup-layout {
+  background: var(--pm-surface);
+}
+
+html.pm-dark .popup-header {
+  border-bottom-color: var(--pm-border);
+}
+
+html.pm-dark .popup-header h3 {
+  color: var(--pm-text);
+}
+
+html.pm-dark .detail-row {
+  color: var(--pm-text);
+}
+
+html.pm-dark .detail-row span:first-child {
+  color: var(--pm-text-muted);
+}
+
+html.pm-dark .popup-location-box {
+  background: var(--pm-border);
+  color: var(--pm-text);
+  border-left-color: var(--pm-danger);
+}
