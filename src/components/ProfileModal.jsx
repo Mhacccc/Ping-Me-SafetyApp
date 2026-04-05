@@ -4,14 +4,13 @@ import { useAuth } from "../context/AuthContext";
 import "./ProfileModal.css";
 import logo from "../assets/logo.png";
 import avatar from "../assets/red.webp";
-import { X, User, Shield, Phone, Lock, Lightbulb, Info, Moon, LogOut, Watch } from "lucide-react";
+import { X, User, Shield, Phone, Lock, Lightbulb, Info, LogOut, Watch } from "lucide-react";
 
 const menuItems = [
   { icon: User, label: "Account", to: "/app/account" },
   { icon: Watch, label: "My Bracelet", to: "/app/my-bracelet" },
   { icon: Lightbulb, label: "Tips", to: "/app/tips" },
   { icon: Info, label: "About", to: "/app/about" },
-  { icon: Moon, label: "Dark mode", toggle: true },
 ];
 
 const DARK_KEY = "pm_dark_mode";
@@ -20,21 +19,11 @@ export default function ProfileModal({ isOpen, onClose }) {
   const { logout, currentUser } = useAuth();
   const navigate = useNavigate();
 
-  const [darkMode, setDarkMode] = React.useState(false);
-
-  // Load persisted dark mode
+  // Ensure dark mode class is removed on load since the feature is disabled
   React.useEffect(() => {
-    const saved = localStorage.getItem(DARK_KEY);
-    const enabled = saved === "1";
-    setDarkMode(enabled);
-    document.documentElement.classList.toggle("pm-dark", enabled);
+    document.documentElement.classList.remove("pm-dark");
+    localStorage.removeItem(DARK_KEY);
   }, []);
-
-  // Apply dark mode changes
-  React.useEffect(() => {
-    document.documentElement.classList.toggle("pm-dark", darkMode);
-    localStorage.setItem(DARK_KEY, darkMode ? "1" : "0");
-  }, [darkMode]);
 
   // Prevent body scroll when modal open (mobile only)
   React.useEffect(() => {
