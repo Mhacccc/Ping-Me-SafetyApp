@@ -259,7 +259,7 @@ function People() {
                         value={newBraceletSerial}
                         onChange={(e) => setNewBraceletSerial(e.target.value)}
                         required
-                        placeholder="PM-YYYYMMDD-XXX"
+                        placeholder="PM-YYYY-XXX"
                       />
                     </div>
                     <p className="form-hint">Enter the serial number of a registered bracelet to link it.</p>

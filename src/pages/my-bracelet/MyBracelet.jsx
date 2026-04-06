@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ChevronLeft, User, CreditCard, Phone, CheckCircle2 } from 'lucide-react';
-import { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './MyBracelet.css';
@@ -22,6 +22,16 @@ const MyBracelet = () => {
         emergencyName: '',
         emergencyNumber: ''
     });
+
+    const [originalSerial, setOriginalSerial] = useState('');
+
+    const [errors, setErrors] = useState({
+        serialNumber: '',
+        emergencyNumber: ''
+    });
+
+    const SERIAL_NUMBER_REGEX = /^PM-\d{4}-\d{3,5}$/;
+    const PHONE_NUMBER_REGEX = /^(09\d{9}|\+639\d{9})$/;
 
     React.useEffect(() => {
         const fetchOwnedBracelet = async () => {
@@ -43,6 +53,7 @@ const MyBracelet = () => {
                         emergencyName: emergency.name || '',
                         emergencyNumber: emergency.contactNo || ''
                     });
+                    setOriginalSerial(data.serialNumber || '');
                     setIsAlreadyConfigured(true);
                 }
             } catch (err) {
@@ -58,9 +69,42 @@ const MyBracelet = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // Clear error when user starts typing
+        if (name === 'serialNumber' && errors.serialNumber) {
+            setErrors(prev => ({ ...prev, serialNumber: '' }));
+        }
+        if (name === 'emergencyNumber' && errors.emergencyNumber) {
+            setErrors(prev => ({ ...prev, emergencyNumber: '' }));
+        }
     };
 
-    const handleNext = () => setStep('confirm');
+    const validate = () => {
+        let newErrors = { serialNumber: '', emergencyNumber: '' };
+        let hasError = false;
+
+        // Validate Serial Number
+        if (!SERIAL_NUMBER_REGEX.test(formData.serialNumber)) {
+            newErrors.serialNumber = 'Invalid format. Use PM-YYYY-XXX (e.g., PM-2026-001)';
+            hasError = true;
+        }
+
+        // Validate Phone Number
+        if (!PHONE_NUMBER_REGEX.test(formData.emergencyNumber)) {
+            newErrors.emergencyNumber = 'Invalid format. Use 09 or +639 format (e.g., 09123456789)';
+            hasError = true;
+        }
+
+        setErrors(newErrors);
+        return !hasError;
+    };
+
+    const handleNext = () => {
+        if (validate()) {
+            setStep('confirm');
+        }
+    };
+
     const handleBack = () => {
         if (step === 'confirm') setStep('add');
         else navigate(-1);
@@ -72,24 +116,31 @@ const MyBracelet = () => {
             return;
         }
 
+        // Enterprise Standard Validation before saving
+        if (!validate()) {
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const serial = formData.serialNumber.trim();
-
-            // 1. Check if Serial Number already exists (document ID = serial number)
             const braceletRef = doc(db, 'braceletUsers', serial);
-            const existingDoc = await getDoc(braceletRef);
-
-            if (existingDoc.exists()) {
-                alert("A bracelet with this Serial Number is already registered.");
-                setIsSubmitting(false);
-                return;
+            
+            const hasSerialChanged = isAlreadyConfigured && serial !== originalSerial;
+            
+            if (!isAlreadyConfigured || hasSerialChanged) {
+                // Check if the NEW Serial Number is available
+                const existingDoc = await getDoc(braceletRef);
+                if (existingDoc.exists()) {
+                    alert("A bracelet with this Serial Number is already registered by another user.");
+                    setIsSubmitting(false);
+                    return;
+                }
             }
 
-            // 2. Avatar uses the wearer's Account profile photo (fallback handled by UI)
             const avatarURL = currentUser?.photoURL || null;
 
-            // 3. Create braceletUsers document — Serial Number IS the Document ID
+            // Update or Create braceletUsers document with merge to avoid data destruction
             await setDoc(braceletRef, {
                 name: formData.braceletName,
                 serialNumber: serial,
@@ -99,35 +150,46 @@ const MyBracelet = () => {
                     contactNo: formData.emergencyNumber
                 }],
                 avatar: avatarURL,
-            });
+            }, { merge: true });
 
-            // 4. Create deviceStatus document — Same Serial Number as Document ID
-            const deviceRef = doc(db, 'deviceStatus', serial);
-            await setDoc(deviceRef, {
-                battery: 100,
-                isBraceletOn: true,
-                lastSeen: serverTimestamp(),
-                location: {
-                    latitude: 0,
-                    longitude: 0,
-                    updatedAt: serverTimestamp()
-                },
-
-                sos: { active: false, timestamp: null },
-            });
-
-            alert("Bracelet Registered Successfully!");
+            if (!isAlreadyConfigured) {
+                // ADD MODE: Create deviceStatus document only if new
+                const deviceRef = doc(db, 'deviceStatus', serial);
+                await setDoc(deviceRef, {
+                    battery: 100,
+                    isBraceletOn: true,
+                    lastSeen: serverTimestamp(),
+                    location: {
+                        latitude: 0,
+                        longitude: 0,
+                        updatedAt: serverTimestamp()
+                    },
+                    sos: { active: false, timestamp: null },
+                });
+                alert("Bracelet Registered Successfully!");
+            } else {
+                if (hasSerialChanged) {
+                    // Cleanup the old records if the Serial Number was moved
+                    await deleteDoc(doc(db, 'braceletUsers', originalSerial));
+                    await deleteDoc(doc(db, 'deviceStatus', originalSerial));
+                    setOriginalSerial(serial);
+                    alert("Serial Number Updated and Migrated Successfully!");
+                } else {
+                    alert("Bracelet Configuration Updated!");
+                }
+            }
+            
             navigate('/app', { state: { openProfile: true } });
 
         } catch (error) {
-            console.error("Error registering bracelet:", error);
-            alert("Failed to register bracelet. Please try again.");
+            console.error("Error registering/updating bracelet:", error);
+            alert("Failed to save changes. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const isConfirm = step === 'confirm';
+    const isConfirm = step === 'confirm' && !isAlreadyConfigured;
 
     return (
         <div className="br-page">
@@ -136,7 +198,7 @@ const MyBracelet = () => {
                     <ChevronLeft size={24} color="#444" />
                 </button>
                 <h1 className="br-nav-title">
-                    {isConfirm ? "Confirm Details" : (isAlreadyConfigured ? "Edit Bracelet" : "Register My Bracelet")}
+                    {isAlreadyConfigured ? "Edit Bracelet" : (isConfirm ? "Confirm Details" : "Register My Bracelet")}
                 </h1>
                 <div className="br-nav-spacer"></div>
             </header>
@@ -146,7 +208,7 @@ const MyBracelet = () => {
                     <LoadingSpinner />
                 </div>
             ) : (
-                <main className="br-main">
+                <main className="br-main" style={{ paddingBottom: '0px' }}>
                     <div className="br-form-container">
                         {/* Bracelet Information Section */}
                         <div className="br-section">
@@ -157,10 +219,10 @@ const MyBracelet = () => {
                                 </h2>
                                 {isAlreadyConfigured && !isConfirm && (
                                     <div className="br-configured-badge">
-                                        <CheckCircle2 size={14} /> Already Configured
+                                        <CheckCircle2 size={18} className='circle-icon'/> Already Configured
                                     </div>
                                 )}
-                                {isConfirm && <button className="br-edit-link" onClick={() => setStep('add')}>Edit</button>}
+                                {isConfirm && <button className="br-edit-link" style={{ padding: '0px' }} onClick={() => setStep('add')}>Edit</button>}
                             </div>
 
                         <div className="br-field">
@@ -188,14 +250,15 @@ const MyBracelet = () => {
                                     className="br-input"
                                     type="text"
                                     name="serialNumber"
-                                    placeholder="PM-YYYYMMDD-XXX"
+                                    placeholder="PM-YYYY-XXX"
                                     value={formData.serialNumber}
                                     onChange={handleChange}
                                     disabled={isConfirm}
                                     required
                                 />
                             </div>
-                            <p className="br-hint">You can find the serial number on the back of the bracelet</p>
+                            {errors.serialNumber && <p className="br-error" style={{ margin: '0px' }}>{errors.serialNumber}</p>}
+                            <p className="br-hint" style={{ margin: '0px' }}>You can find the serial number on the back of the bracelet</p>
                         </div>
                     </div>
 
@@ -241,18 +304,22 @@ const MyBracelet = () => {
                                     required
                                 />
                             </div>
-                            {isConfirm && <p className="br-hint br-hint-center">Please make sure the information is correct before proceeding</p>}
+                            {errors.emergencyNumber && <p className="br-error" style={{ margin: '0px' }}>{errors.emergencyNumber}</p>}
                         </div>
                     </div>
                 </div>
                 </main>
             )}
-
-            <footer className="br-footer">
+            {isConfirm && <p className="br-hint br-hint-center" style={{ margin: '0px' }}>Please make sure the information is correct before proceeding</p>}
+            <footer className="br-footer" >
                 <button className="br-btn-secondary" onClick={() => navigate('/app')}>Cancel</button>
-                {isConfirm ? (
+                {isAlreadyConfigured ? (
                     <button className="br-btn-primary" onClick={handleRegister} disabled={isSubmitting}>
-                        {isSubmitting ? 'Saving Changes...' : (isAlreadyConfigured ? 'Save Changes' : 'Confirm & Save')}
+                        {isSubmitting ? 'Saving Changes...' : 'Save Changes'}
+                    </button>
+                ) : isConfirm ? (
+                    <button className="br-btn-primary" onClick={handleRegister} disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving Changes...' : 'Confirm & Save'}
                     </button>
                 ) : (
                     <button className="br-btn-primary" onClick={handleNext} disabled={isLoading}>Next</button>
