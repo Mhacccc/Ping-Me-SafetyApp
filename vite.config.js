@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       manifest: false, // the user is linking site.webmanifest manually
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']

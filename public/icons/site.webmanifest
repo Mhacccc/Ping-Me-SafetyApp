@@ -1,6 +1,12 @@
 {
   "name": "PingMe",
   "short_name": "PingMe",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "theme_color": "#FDFCFA",
+  "background_color": "#FDFCFA",
   "icons": [
     {
       "src": "/icons/android-chrome-192x192.png",
@@ -8,7 +14,7 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#FDFCFA",
-  "background_color": "#FDFCFA",
-  "display": "fullscreen"
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
