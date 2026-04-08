@@ -1,5 +1,5 @@
 // src/pages/app/UserProfile.jsx
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { MessageSquare, Phone, Wifi, Battery, ChevronLeft } from 'lucide-react';
 import './UserProfile.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -33,12 +33,13 @@ const ResizeMap = () => {
 const UserProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { userId } = useParams();
 
   const { braceletUsers, addressCache, fetchAddress } = useBraceletUsers();
   
   // Derive real-time user data directly from our global continuous stream, 
   // falling back to navigation state if they were just loaded
-  const targetId = location.state?.personData?.id;
+  const targetId = location.state?.personData?.id || userId;
   const person = braceletUsers?.find(u => u.id === targetId) || location.state?.personData;
 
   // Request geocode if not already in the shared cache (e.g. direct navigation)
@@ -47,6 +48,14 @@ const UserProfile = () => {
       fetchAddress(person.id, person.position[0], person.position[1]);
     }
   }, [person?.position, person?.id, addressCache, fetchAddress]);
+
+  if (!person) {
+    return (
+      <div className="up-page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <p style={{ color: '#888', fontSize: '1rem', fontWeight: 500 }}>Loading profile...</p>
+      </div>
+    );
+  }
 
   const address = addressCache[person?.id] || 'Fetching location…';
 
