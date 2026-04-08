@@ -6,6 +6,7 @@ import Signup from "./context/Signup";
 import ForgotPassword from "./context/ForgotPassword";
 import { ToastProvider } from "./context/ToastContext";
 import AppLayout from "./layouts/AppLayout";
+import ReloadPrompt from "./components/ReloadPrompt";
 
 import People from "./pages/people/People";
 import UserProfile from "./pages/user-profile/UserProfile";
@@ -38,6 +39,7 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <ReloadPrompt />
         <Routes>
           {/* Public */}
           <Route path="/" element={<Landing />} />
