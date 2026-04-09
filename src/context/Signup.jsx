@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Check, X } from "lucide-react";
 import { getAuthErrorMessage } from "../utils/authErrors";
+import {
+  checkPasswordRules,
+  getPasswordStrengthScore,
+  getStrengthMeta,
+  isPasswordValid,
+} from "../utils/passwordValidation";
 
 import logo from "../assets/logo.png";
 import Input from "../ui/Input";
@@ -21,10 +27,27 @@ export default function Signup() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
+  // Track whether the user has interacted with the password field yet
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  /* ── Derived password state ────────────────────────────────────── */
+  const rules = checkPasswordRules(password);
+  const score = getPasswordStrengthScore(password);
+  const { label: strengthLabel, level: strengthLevel } = getStrengthMeta(score);
+
+  /* ── Handlers ──────────────────────────────────────────────────── */
   const handleSignup = async (e) => {
     e.preventDefault();
     setFormError("");
 
+    // 1. Strong-password gate
+    if (!isPasswordValid(password)) {
+      setPasswordTouched(true); // reveal checklist if not shown yet
+      setFormError("Please create a stronger password meeting all the requirements below.");
+      return;
+    }
+
+    // 2. Confirm-password match
     if (password !== confirmPassword) {
       setFormError("Passwords do not match.");
       return;
@@ -56,6 +79,7 @@ export default function Signup() {
     }
   };
 
+  /* ── Render ────────────────────────────────────────────────────── */
   return (
     <div className="authPage">
       <main className="authMain">
@@ -96,30 +120,65 @@ export default function Signup() {
                 leftSlot={<Mail size={18} />}
               />
 
+              {/* ── Password field + strength indicator ── */}
               <Input
                 label="Password"
                 type={showPw ? "text" : "password"}
                 placeholder="Enter password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordTouched(true);
+                }}
+                onBlur={() => setPasswordTouched(true)}
                 autoComplete="new-password"
                 required
                 leftSlot={<Lock size={18} />}
                 rightSlot={
                   <button
                     type="button"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}
                     onClick={() => setShowPw((v) => !v)}
+                    aria-label={showPw ? "Hide password" : "Show password"}
                   >
                     {showPw ? <EyeOff size={18} color="#888" /> : <Eye size={18} color="#888" />}
                   </button>
                 }
               />
 
+              {/* Strength indicator — only visible after user starts typing */}
+              {passwordTouched && password.length > 0 && (
+                <div className="pwStrengthBlock" aria-live="polite">
+                  {/* Label only — no bar */}
+                  {strengthLabel && (
+                    <span className={`pwStrengthLabel pwStrengthLabel--${strengthLevel}`}>
+                      {strengthLabel}
+                    </span>
+                  )}
+
+                  {/* Per-rule checklist */}
+                  <ul className="pwRuleList" aria-label="Password requirements">
+                    {rules.map((rule) => (
+                      <li
+                        key={rule.id}
+                        className={`pwRuleItem ${rule.passed ? "pwRuleItem--pass" : "pwRuleItem--fail"}`}
+                      >
+                        {rule.passed ? (
+                          <Check size={12} strokeWidth={3} className="pwRuleIcon" />
+                        ) : (
+                          <X size={12} strokeWidth={3} className="pwRuleIcon" />
+                        )}
+                        {rule.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <Input
                 label="Confirm Password"
                 type={showPw ? "text" : "password"}
-                placeholder="Enter password"
+                placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
@@ -128,15 +187,37 @@ export default function Signup() {
                 rightSlot={
                   <button
                     type="button"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}
                     onClick={() => setShowPw((v) => !v)}
+                    aria-label={showPw ? "Hide password" : "Show password"}
                   >
                     {showPw ? <EyeOff size={18} color="#888" /> : <Eye size={18} color="#888" />}
                   </button>
                 }
+                /* Inline mismatch hint — only when both fields have text */
+                error={
+                  confirmPassword && password && confirmPassword !== password
+                    ? "Passwords do not match"
+                    : undefined
+                }
               />
 
-              {formError ? <div className="authError" style={{ textAlign: 'center', color: '#fff', background: 'rgba(231, 76, 60, 0.8)', padding: '8px', borderRadius: '8px', fontSize: '12px' }}>{formError}</div> : null}
+              {formError ? (
+                <div
+                  className="authError"
+                  role="alert"
+                  style={{
+                    textAlign: "center",
+                    color: "#fff",
+                    background: "rgba(231, 76, 60, 0.8)",
+                    padding: "8px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                >
+                  {formError}
+                </div>
+              ) : null}
 
               <div className="authBtnContainer">
                 <button className="authBtnMaroon" type="submit" disabled={submitting}>

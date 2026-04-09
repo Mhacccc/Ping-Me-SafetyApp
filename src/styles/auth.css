@@ -335,3 +335,66 @@
     font-size: 14px;
   }
 }
+
+/* ── Password Strength Indicator ───────────────────────────────────────────── */
+
+.pwStrengthBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: pwFadeIn 0.2s ease;
+}
+
+@keyframes pwFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Strength label */
+.pwStrengthLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  align-self: flex-end;
+  margin-top: -4px;
+}
+
+.pwStrengthLabel--weak   { color: #E53935; }
+.pwStrengthLabel--fair   { color: #FB8C00; }
+.pwStrengthLabel--good   { color: #43A047; }
+.pwStrengthLabel--strong { color: #1B5E20; }
+
+/* Rule checklist */
+.pwRuleList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+@media (max-width: 480px) {
+  .pwRuleList {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pwRuleItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.pwRuleItem--pass { color: #2E7D32; }
+.pwRuleItem--fail { color: #9E9E9E; }
+
+.pwRuleIcon { flex-shrink: 0; }
+
+.pwRuleItem--pass .pwRuleIcon { color: #43A047; }
+.pwRuleItem--fail .pwRuleIcon { color: #BDBDBD; }
+
