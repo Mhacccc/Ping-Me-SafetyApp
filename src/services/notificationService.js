@@ -32,6 +32,8 @@ export const saveGeofenceNotification = async (currentUser, detection) => {
         type: 'Geofence',
         time: serverTimestamp(),
         icon: user.avatar || null,
+        // Store the user's position so tapping the notification can fly the map there
+        coords: user.position ? { lat: user.position[0], lng: user.position[1] } : null,
     });
 
     if (user.deviceStatusId) {

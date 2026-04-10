@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Trash2, BellOff, CheckSquare, Square, CheckCheck } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
+import { useBraceletUsers } from '../../context/BraceletDataProvider';
 import logo from '../../assets/logo.png';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './Notifications.css';
@@ -19,6 +20,7 @@ const SwipeableNotif = ({
   item, onDelete, onMarkRead,
   openId, setOpenId,
   selectMode, isChecked, onToggleCheck,
+  onNotifTap,
 }) => {
   const startX         = useRef(null);
   const rawDx          = useRef(0);
@@ -136,7 +138,8 @@ const SwipeableNotif = ({
     if (selectMode) { onToggleCheck(item.id); return; }
     if (didLongPress.current) { didLongPress.current = false; return; }
     if (isSwiped) { closeDelete(); return; }
-    onMarkRead(e, item.id, item.read);
+    // Delegate to page-level handler (marks read + navigates)
+    onNotifTap(e, item);
   };
 
   const offset = selectMode ? 0 : displayOffset;
@@ -211,6 +214,7 @@ const SwipeableNotif = ({
 const Notifications = () => {
   const navigate = useNavigate();
   const { notifications, loading, markAsRead, deleteNotification } = useNotifications();
+  const { braceletUsers } = useBraceletUsers();
   const [filter, setFilter] = React.useState('all');
 
   /* Swipe state */
@@ -240,6 +244,33 @@ const Notifications = () => {
     setSelectMode(false);
     setSelected(new Set());
   };
+
+  /* ── Notification tap: mark read + navigate to map ── */
+  const handleNotifTap = useCallback(async (e, item) => {
+    // 1. Mark as read in Firestore
+    await markAsRead(e, item.id, item.read);
+
+    // 2. Resolve coordinates:
+    //    a) Live position from braceletUsers (most current)
+    //    b) Stored coords field on the notification (snapshot at alert time)
+    let focusCoords = null;
+    if (item.braceletUserId) {
+      const liveUser = braceletUsers.find(u => u.id === item.braceletUserId);
+      if (liveUser?.position) {
+        focusCoords = liveUser.position; // already [lat, lng]
+      }
+    }
+    if (!focusCoords && item.coords) {
+      focusCoords = [item.coords.lat, item.coords.lng];
+    }
+
+    // 3. Navigate to Places, passing coords via router state
+    navigate('/app/places', {
+      state: focusCoords
+        ? { focusCoords, focusUserId: item.braceletUserId ?? null }
+        : null,
+    });
+  }, [markAsRead, braceletUsers, navigate]);
 
   const filteredNotifications = notifications.filter(item => {
     if (filter === 'read') return item.read;
@@ -373,6 +404,7 @@ const Notifications = () => {
                 selectMode={selectMode}
                 isChecked={selected.has(item.id)}
                 onToggleCheck={handleToggleCheck}
+                onNotifTap={handleNotifTap}
               />
             ))}
           </ul>

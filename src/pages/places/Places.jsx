@@ -44,7 +44,7 @@ if (L.Edit && L.Edit.Circle) {
 }
 import "./Places.css";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import * as mapHelpers from "../../utils/mapHelpers";
 import { useBraceletUsers } from "../../context/BraceletDataProvider";
@@ -83,6 +83,11 @@ mapHelpers.setupLeafletIcons();
 const Places = () => {
   // Leaflet map instance state
   const [map, setMap] = useState(null);
+
+  // Read coords passed from Notifications page via router state
+  const location = useLocation();
+  const focusCoords  = location.state?.focusCoords  ?? null;
+  const focusUserId  = location.state?.focusUserId  ?? null;
 
   // Custom hook to fetch bracelet users and their positions
   const { braceletUsers, loading, addressCache, mapViewState, setMapViewState } = useBraceletUsers();
@@ -133,6 +138,22 @@ const Places = () => {
       }
     };
   }, [map]);
+
+  /**
+   * Effect: Fly to focusCoords passed from Notifications page.
+   * Runs when the map instance is ready OR when focusCoords changes.
+   * Uses flyTo so the user gets a smooth animated pan-and-zoom to the target pin.
+   */
+  useEffect(() => {
+    if (!map || !focusCoords) return;
+    // Small delay to let the map finish its initial render cycle
+    const tid = setTimeout(() => {
+      if (map && map._container) {
+        map.flyTo(focusCoords, 18, { animate: true, duration: 1.2 });
+      }
+    }, 300);
+    return () => clearTimeout(tid);
+  }, [map, focusCoords]);
 
   /**
    * Effect: Scroll Lock
