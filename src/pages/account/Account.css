@@ -78,3 +78,112 @@ html.pm-dark .br-danger-card {
         grid-column: span 1;
     }
 }
+
+/* ────────────────────────────────────────────────────────────
+   Change Password Section
+───────────────────────────────────────────────────────────── */
+
+/* Eye-toggle button */
+.br-pw-eye {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    color: var(--pm-text-muted, #888);
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+.br-pw-eye:hover { color: var(--pm-primary, #A4262C); }
+
+/* Error border on confirm field */
+.br-input-group--error {
+    border-color: var(--pm-danger, #e74c3c) !important;
+}
+
+/* Inline mismatch hint */
+.br-field-error {
+    font-size: 12px;
+    color: var(--pm-danger, #e74c3c);
+    margin: 4px 0 0;
+    line-height: 1.4;
+}
+
+/* Error banner */
+.br-pw-error-banner {
+    font-size: 13px;
+    color: #fff;
+    background: rgba(231, 76, 60, 0.85);
+    padding: 10px 14px;
+    border-radius: 8px;
+    line-height: 1.4;
+}
+
+/* Strength bar row */
+.br-pw-strength {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+.br-pw-strength-bars {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+}
+.br-pw-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--pm-border, #e0e0e0);
+    transition: background 0.25s ease;
+}
+
+/* Filled segment colours */
+.br-pw-bar--filled.br-pw-bar--weak   { background: #e74c3c; }
+.br-pw-bar--filled.br-pw-bar--fair   { background: #f39c12; }
+.br-pw-bar--filled.br-pw-bar--good   { background: #2980b9; }
+.br-pw-bar--filled.br-pw-bar--strong { background: #27ae60; }
+
+/* Strength label */
+.br-pw-strength-label {
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    min-width: 58px;
+    text-align: right;
+}
+.br-pw-strength-label--weak   { color: #e74c3c; }
+.br-pw-strength-label--fair   { color: #f39c12; }
+.br-pw-strength-label--good   { color: #2980b9; }
+.br-pw-strength-label--strong { color: #27ae60; }
+
+/* Update Password button */
+.br-btn-change-pw {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    width: 100%;
+    background: var(--pm-primary, #A4262C);
+    border: none;
+    border-radius: 40px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s, transform 0.15s;
+    margin-top: 4px;
+}
+.br-btn-change-pw:hover:not(:disabled)  { filter: brightness(1.12); }
+.br-btn-change-pw:active:not(:disabled) { transform: scale(0.97); }
+.br-btn-change-pw:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Dark mode */
+html.pm-dark .br-pw-bar { background: rgba(255,255,255,0.12); }
+html.pm-dark .br-pw-error-banner { background: rgba(231,76,60,0.7); }
