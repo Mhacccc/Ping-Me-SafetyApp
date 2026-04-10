@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import L from "leaflet";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import "leaflet/dist/leaflet.css";
 import "./Home.css";
 import { Link } from "react-router-dom";
@@ -42,6 +43,18 @@ function Home() {
   const groupedMarkers = useMemo(() => {
     return mapHelpers.groupUsersByLocation(braceletUsers);
   }, [braceletUsers]);
+
+  // Collect all bracelet users that currently have an active SOS signal
+  const sosUsers = useMemo(() => {
+    return (braceletUsers || []).filter((u) => u.sos && u.position);
+  }, [braceletUsers]);
+
+  // Track when the user last manually interacted with the map so the
+  // auto-zoom doesn't fight them (10-second grace window)
+  const lastUserInteractionRef = useRef(0);
+  const markUserInteraction = useCallback(() => {
+    lastUserInteractionRef.current = Date.now();
+  }, []);
 
   const getInitialCenter = () => {
     // 1. Priority: Any user in SOS mode (even if marked offline, SOS takes precedence)
@@ -95,7 +108,8 @@ function Home() {
           attributionControl={false}
           style={{ height: "100%", width: "100%" }}
         >
-          <MapController mapRef={mapRef} setMapViewState={setMapViewState} />
+          <MapController mapRef={mapRef} setMapViewState={setMapViewState} onUserInteraction={markUserInteraction} />
+          <SosMapController sosUsers={sosUsers} lastUserInteractionRef={lastUserInteractionRef} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -215,7 +229,7 @@ function Home() {
 export default Home;
 
 // Helper to access map instance and track pan/zoom state globally
-function MapController({ mapRef, setMapViewState }) {
+function MapController({ mapRef, setMapViewState, onUserInteraction }) {
   const map = useMapEvents({
     moveend: () => {
       if (setMapViewState) {
@@ -237,7 +251,10 @@ function MapController({ mapRef, setMapViewState }) {
           return { center: [newLat, newLng], zoom: newZoom };
         });
       }
-    }
+    },
+    // Record any deliberate user interaction so SosMapController won't override it
+    dragstart: () => onUserInteraction?.(),
+    zoomstart: () => onUserInteraction?.(),
   });
 
   useEffect(() => {
@@ -247,5 +264,50 @@ function MapController({ mapRef, setMapViewState }) {
       map.invalidateSize();
     }, 200);
   }, [map, mapRef]);
+  return null;
+}
+
+/**
+ * SosMapController
+ * Reactively zooms / fits the map whenever active SOS users change:
+ *  - 0 SOS users → do nothing
+ *  - 1 SOS user  → flyTo their pin at zoom 17
+ *  - 2+ SOS users → fitBounds to include all emergency pins with padding
+ *
+ * A 10-second user-interaction grace period prevents the controller from
+ * fighting the user when they have manually panned/zoomed the map.
+ */
+function SosMapController({ sosUsers, lastUserInteractionRef }) {
+  const map = useMap();
+  // Serialise sos positions so we can compare across renders
+  const prevKeyRef = useRef("");
+
+  useEffect(() => {
+    if (!sosUsers || sosUsers.length === 0) return;
+
+    // Build a stable key from current SOS positions
+    const key = sosUsers
+      .map((u) => `${u.id}:${u.position[0].toFixed(5)},${u.position[1].toFixed(5)}`)
+      .sort()
+      .join("|");
+
+    // Don't re-fly if nothing changed
+    if (key === prevKeyRef.current) return;
+    prevKeyRef.current = key;
+
+    // Respect a 10-second window after the user last interacted with the map
+    const timeSinceInteraction = Date.now() - (lastUserInteractionRef.current || 0);
+    if (timeSinceInteraction < 10_000) return;
+
+    if (sosUsers.length === 1) {
+      // Single emergency: fly smoothly to that user's pin
+      map.flyTo(sosUsers[0].position, 17, { duration: 1.2 });
+    } else {
+      // Multiple emergencies: fit all pins inside the current viewport
+      const bounds = L.latLngBounds(sosUsers.map((u) => u.position));
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17, animate: true });
+    }
+  }, [sosUsers, map, lastUserInteractionRef]);
+
   return null;
 }
