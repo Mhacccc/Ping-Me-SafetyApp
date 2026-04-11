@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { useBraceletUsers } from '../../context/BraceletDataProvider';
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
-import { Plus, X, Trash2, User, CreditCard, Pencil } from "lucide-react";
+import { Plus, X, Trash2, User, CreditCard, Pencil, CheckCircle2 } from "lucide-react";
 import Skeleton from '../../components/skeleton/Skeleton';
 
 /**
@@ -35,6 +35,7 @@ function People() {
   const { braceletUsers, loading, error } = useBraceletUsers();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   // Bracelet Information
   const [newBraceletName, setNewBraceletName] = useState('');
@@ -137,24 +138,32 @@ function People() {
         return;
       }
 
-      // 2. Link the Serial Number to the guardian's account and optionally set a local nickname
-      const appUserRef = doc(db, 'appUsers', user.uid);
-      const updates = {
-        linkedBraceletsID: arrayUnion(serial)
-      };
-      
-      if (newBraceletName.trim()) {
-        updates[`braceletNicknames.${serial}`] = newBraceletName.trim();
+      // 2. Send Connection Request to the Owner
+      const ownerId = braceletSnap.data().ownerAppUserId;
+      if (!ownerId) {
+        alert("This bracelet does not have an owner yet.");
+        setIsSubmitting(false);
+        return;
       }
 
-      await updateDoc(appUserRef, updates);
+      await addDoc(collection(db, 'notifications'), {
+        appUserId: ownerId, // send to the owner
+        type: 'connection_request',
+        title: 'Connection Request',
+        message: `${user.displayName || 'A user'} wants to link with your bracelet.`,
+        requesterId: user.uid,
+        requesterName: user.displayName || 'Unknown',
+        requesterPhone: user.phoneNumber || '',
+        braceletId: serial,
+        nickname: newBraceletName.trim(),
+        read: false,
+        time: serverTimestamp()
+      });
 
-      alert("Bracelet linked successfully!");
       setNewBraceletName('');
       setNewBraceletSerial('');
       setIsModalOpen(false);
-
-      window.location.reload();
+      setIsSuccessModalOpen(true);
 
     } catch (err) {
       console.error("Error linking bracelet:", err);
@@ -425,6 +434,30 @@ function People() {
           ))
         )}
       </div>
+
+      {/* Success Modal */}
+      {isSuccessModalOpen && (
+        <div className="add-bracelet-backdrop">
+          <div className="add-bracelet-modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '32px 24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <CheckCircle2 size={48} color="var(--pm-primary)" strokeWidth={1.5} />
+            </div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '8px', color: 'var(--pm-text)' }}>
+              Request Sent Successfully
+            </h2>
+            <p style={{ fontSize: '0.95rem', color: 'var(--pm-text-muted)', marginBottom: '24px', lineHeight: '1.5' }}>
+              Your connection request is now pending the owner's approval.
+            </p>
+            <button 
+              className="btn-next" 
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => setIsSuccessModalOpen(false)}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

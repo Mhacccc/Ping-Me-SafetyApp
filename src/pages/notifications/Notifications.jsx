@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Trash2, BellOff, CheckSquare, Square, CheckCheck, CheckCircle } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 import { useBraceletUsers } from '../../context/BraceletDataProvider';
+import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { db } from '../../config/firebaseConfig';
 import logo from '../../assets/logo.png';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './Notifications.css';
@@ -20,7 +22,7 @@ const SwipeableNotif = ({
   item, onDelete, onMarkRead,
   openId, setOpenId,
   selectMode, isChecked, onToggleCheck,
-  onNotifTap,
+  onNotifTap, onApproveTap,
 }) => {
   const startX         = useRef(null);
   const rawDx          = useRef(0);
@@ -193,6 +195,16 @@ const SwipeableNotif = ({
         <div className="notif-body">
           <p className="notif-title">{item.title}</p>
           <p className="notif-message">{item.message}</p>
+          {item.type === 'connection_request' && onApproveTap && (
+             <div className="notif-actions" style={{ marginTop: '8px' }}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onApproveTap(e, item); }}
+                  style={{ background: 'var(--pm-primary)', color: 'white', border: 'none', padding: '6px 16px', borderRadius: '8px', fontWeight: 'bold' }}
+                >
+                  Approve
+                </button>
+             </div>
+          )}
         </div>
         <div className="notif-meta">
           <span className="notif-time">
@@ -228,10 +240,10 @@ const Notifications = () => {
   const [isBulkReadModal,   setIsBulkReadModal]   = useState(false);
 
   /* Success Modal State */
-  const [successModalInfo, setSuccessModalInfo] = useState({ open: false, count: 0 });
+  const [successModalInfo, setSuccessModalInfo] = useState({ open: false, count: 0, message: '' });
 
-  const showSuccessModal = (count) => {
-    setSuccessModalInfo({ open: true, count });
+  const showSuccessModal = (count, message = '') => {
+    setSuccessModalInfo({ open: true, count, message });
     setTimeout(() => {
       setSuccessModalInfo(prev => ({ ...prev, open: false }));
     }, 3000);
@@ -243,6 +255,45 @@ const Notifications = () => {
       showSuccessModal(1);
     } catch (err) {
       console.error('Single delete error:', err);
+    }
+  };
+
+  const handleApproveConnection = async (e, item) => {
+    e.stopPropagation();
+    try {
+      // 1. Link the bracelet to the requester's appUser doc
+      const appUserRef = doc(db, 'appUsers', item.requesterId);
+      const appUserSnap = await getDoc(appUserRef);
+      if (appUserSnap.exists()) {
+         const updates = {
+           linkedBraceletsID: arrayUnion(item.braceletId)
+         };
+         if (item.nickname) {
+           updates[`braceletNicknames.${item.braceletId}`] = item.nickname;
+         }
+         await updateDoc(appUserRef, updates);
+      }
+      
+      // 2. Add requester to owner's Emergency Contacts in braceletUsers
+      const braceletRef = doc(db, 'braceletUsers', item.braceletId);
+      const braceletSnap = await getDoc(braceletRef);
+      if (braceletSnap.exists()) {
+         const newContact = {
+            name: item.requesterName || "Unknown",
+            contactNo: item.requesterPhone || "N/A"
+         };
+         await updateDoc(braceletRef, {
+            emergencyContacts: [newContact]
+         });
+      }
+
+      // 3. Delete notification
+      await deleteNotification(e, item.id);
+      showSuccessModal(1, "Connection request approved!");
+
+    } catch (err) {
+      console.error("Error approving connection:", err);
+      alert("Failed to approve connection.");
     }
   };
 
@@ -426,6 +477,7 @@ const Notifications = () => {
                 isChecked={selected.has(item.id)}
                 onToggleCheck={handleToggleCheck}
                 onNotifTap={handleNotifTap}
+                onApproveTap={handleApproveConnection}
               />
             ))}
           </ul>
@@ -497,7 +549,9 @@ const Notifications = () => {
               <CheckCircle size={32} strokeWidth={2.5} />
             </div>
             <p>
-              {successModalInfo.count === 1
+              {successModalInfo.message 
+                ? successModalInfo.message 
+                : successModalInfo.count === 1
                 ? 'Notification successfully deleted'
                 : `${successModalInfo.count} notifications successfully deleted`}
             </p>
