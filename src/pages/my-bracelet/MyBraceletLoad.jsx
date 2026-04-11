@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ChevronLeft, Wallet, Zap, CreditCard } from 'lucide-react';
+import { ChevronLeft, Wallet, Zap, CreditCard, Eye, EyeOff } from 'lucide-react';
 import { doc, getDocs, updateDoc, collection, query, where } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -17,6 +17,7 @@ const MyBraceletLoad = () => {
     const [serialNumber, setSerialNumber] = useState('');
     const [loadAmount, setLoadAmount] = useState('');
     const [selectedQuickAmount, setSelectedQuickAmount] = useState(null);
+    const [showBalance, setShowBalance] = useState(true);
 
     const QUICK_AMOUNTS = [100, 200, 500, 1000];
 
@@ -117,9 +118,14 @@ const MyBraceletLoad = () => {
                             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '50%', background: '#fff', boxShadow: '0 4px 12px rgba(164,38,44,0.15)', marginBottom: '16px' }}>
                                 <Wallet size={28} color="#a4262c" />
                             </div>
-                            <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Available Balance</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                                <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#666', margin: '0', textTransform: 'uppercase', letterSpacing: '1px' }}>Available Balance</h3>
+                                <button onClick={() => setShowBalance(!showBalance)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', transition: 'color 0.2s ease' }}>
+                                    {showBalance ? <Eye size={16} /> : <EyeOff size={16} />}
+                                </button>
+                            </div>
                             <div style={{ fontSize: '42px', fontWeight: '800', color: '#a4262c', lineHeight: '1' }}>
-                                ₱{balance.toFixed(2)}
+                                {showBalance ? `₱${balance.toFixed(2)}` : '₱ ••••'}
                             </div>
                         </div>
 
