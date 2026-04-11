@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ChevronLeft, Wallet, Zap, CreditCard, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, Wallet, Zap, CreditCard, Eye, EyeOff, X, Smartphone, Building } from 'lucide-react';
 import { doc, getDocs, updateDoc, collection, query, where } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -18,6 +18,7 @@ const MyBraceletLoad = () => {
     const [loadAmount, setLoadAmount] = useState('');
     const [selectedQuickAmount, setSelectedQuickAmount] = useState(null);
     const [showBalance, setShowBalance] = useState(true);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const QUICK_AMOUNTS = [100, 200, 500, 1000];
 
@@ -56,7 +57,7 @@ const MyBraceletLoad = () => {
         setSelectedQuickAmount(amount);
     };
 
-    const handleReload = async () => {
+    const handleReloadClick = () => {
         const amountToAdd = parseFloat(loadAmount);
         if (isNaN(amountToAdd) || amountToAdd <= 0) {
             alert("Please enter a valid amount to load.");
@@ -68,7 +69,14 @@ const MyBraceletLoad = () => {
             return;
         }
 
+        setShowPaymentModal(true);
+    };
+
+    const processPayment = async (method) => {
+        setShowPaymentModal(false);
         setIsSubmitting(true);
+        const amountToAdd = parseFloat(loadAmount);
+        
         // Simulate payment gateway processing time
         setTimeout(async () => {
             try {
@@ -80,7 +88,7 @@ const MyBraceletLoad = () => {
                 setBalance(newBalance);
                 setLoadAmount('');
                 setSelectedQuickAmount(null);
-                alert(`Successfully loaded ₱${amountToAdd}. New Balance: ₱${newBalance.toFixed(2)}`);
+                alert(`Successfully loaded ₱${amountToAdd.toFixed(2)} via ${method}. New Balance: ₱${newBalance.toFixed(2)}`);
             } catch (err) {
                 console.error("Error updating balance:", err);
                 alert("Transaction failed. Please try again.");
@@ -92,6 +100,40 @@ const MyBraceletLoad = () => {
 
     return (
         <div className="br-page">
+            {showPaymentModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div style={{ background: '#fff', borderRadius: '20px', width: '100%', maxWidth: '400px', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+                        <div style={{ padding: '20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#333' }}>Select Payment Method</h3>
+                            <button onClick={() => setShowPaymentModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '4px' }}>
+                                <X size={24} color="#666" />
+                            </button>
+                        </div>
+                        <div style={{ padding: '20px' }}>
+                            <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px' }}>Amount to pay: <strong style={{ color: '#a4262c', fontSize: '16px' }}>₱{parseFloat(loadAmount).toFixed(2)}</strong></p>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button onClick={() => processPayment('GCash')} style={{ display: 'flex', alignItems: 'center', padding: '16px', borderRadius: '12px', border: '1px solid #eee', background: '#fcfcfc', cursor: 'pointer', gap: '12px', transition: 'background 0.2s' }}>
+                                    <div style={{ background: 'rgba(0, 106, 255, 0.1)', color: '#006aff', padding: '8px', borderRadius: '8px', display: 'flex' }}><Smartphone size={20} /></div>
+                                    <span style={{ fontWeight: '600', color: '#333', fontSize: '15px' }}>GCash</span>
+                                </button>
+                                <button onClick={() => processPayment('Maya')} style={{ display: 'flex', alignItems: 'center', padding: '16px', borderRadius: '12px', border: '1px solid #eee', background: '#fcfcfc', cursor: 'pointer', gap: '12px', transition: 'background 0.2s' }}>
+                                    <div style={{ background: 'rgba(20, 20, 20, 0.1)', color: '#141414', padding: '8px', borderRadius: '8px', display: 'flex' }}><Smartphone size={20} /></div>
+                                    <span style={{ fontWeight: '600', color: '#333', fontSize: '15px' }}>Maya</span>
+                                </button>
+                                <button onClick={() => processPayment('Credit / Debit Card')} style={{ display: 'flex', alignItems: 'center', padding: '16px', borderRadius: '12px', border: '1px solid #eee', background: '#fcfcfc', cursor: 'pointer', gap: '12px', transition: 'background 0.2s' }}>
+                                    <div style={{ background: 'rgba(164, 38, 44, 0.1)', color: '#a4262c', padding: '8px', borderRadius: '8px', display: 'flex' }}><CreditCard size={20} /></div>
+                                    <span style={{ fontWeight: '600', color: '#333', fontSize: '15px' }}>Credit / Debit Card</span>
+                                </button>
+                                <button onClick={() => processPayment('Bank Transfer')} style={{ display: 'flex', alignItems: 'center', padding: '16px', borderRadius: '12px', border: '1px solid #eee', background: '#fcfcfc', cursor: 'pointer', gap: '12px', transition: 'background 0.2s' }}>
+                                    <div style={{ background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', padding: '8px', borderRadius: '8px', display: 'flex' }}><Building size={20} /></div>
+                                    <span style={{ fontWeight: '600', color: '#333', fontSize: '15px' }}>Bank Transfer</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             <header className="br-navbar">
                 <button className="br-nav-back" onClick={() => navigate('/app/my-bracelet')}>
                     <ChevronLeft size={24} color="#444" />
@@ -191,7 +233,7 @@ const MyBraceletLoad = () => {
             <footer className="br-footer">
                 <button 
                     className="br-btn-primary" 
-                    onClick={handleReload} 
+                    onClick={handleReloadClick} 
                     disabled={isSubmitting || isLoading || !loadAmount}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: (isSubmitting || isLoading || !loadAmount) ? 0.6 : 1 }}
                 >
