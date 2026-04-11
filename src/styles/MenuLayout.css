@@ -23,7 +23,7 @@
     height: 60px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     padding: 0 16px;
     border-bottom: 1px solid var(--border);
     position: sticky;
@@ -36,20 +36,65 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0px 0px;
+    padding: 0;
     display: flex;
     align-items: center;
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
 }
 
 .br-nav-title {
-    font-size: 18px;
+    font-size: clamp(11px, 4vw, 18px);
     font-weight: 800;
     color: var(--maroon);
     margin: 0;
+    white-space: nowrap;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 120px);
+    text-align: center;
+    padding: 0;
 }
 
 .br-nav-spacer {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 40px;
+    height: 40px;
+    z-index: 10;
+}
+
+/* Global Edit button in the navbar */
+.br-nav-edit-btn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--pm-primary, #A4262C);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background 0.15s, opacity 0.15s;
+    z-index: 10;
+}
+
+.br-nav-edit-btn:hover {
+    background: rgba(164, 38, 44, 0.08);
+}
+
+.br-nav-edit-btn:active {
+    opacity: 0.7;
 }
 
 /* Main Content */
@@ -297,12 +342,16 @@ html.pm-dark .br-input::placeholder {
 
 /* iPhone SE specific adjustments */
 @media (max-width: 375px) {
+    .br-navbar {
+        padding: 0 12px;
+    }
+
     .br-main {
         padding: 30px 16px;
     }
 
     .br-nav-title {
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .br-avatar-circle {

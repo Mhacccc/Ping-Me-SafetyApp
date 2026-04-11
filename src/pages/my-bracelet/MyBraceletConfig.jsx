@@ -14,6 +14,8 @@ const MyBraceletConfig = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isAlreadyConfigured, setIsAlreadyConfigured] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [originalData, setOriginalData] = useState({ braceletName: '', serialNumber: '' });
 
     const [formData, setFormData] = useState({
         braceletName: '',
@@ -46,9 +48,16 @@ const MyBraceletConfig = () => {
                         braceletName: data.name || '',
                         serialNumber: data.serialNumber || '',
                     });
+                    setOriginalData({
+                        braceletName: data.name || '',
+                        serialNumber: data.serialNumber || '',
+                    });
                     setOriginalSerial(data.serialNumber || '');
                     setExistingEmergencyContacts(data.emergencyContacts || []);
                     setIsAlreadyConfigured(true);
+                    setIsEditing(false);
+                } else {
+                    setIsEditing(true);
                 }
             } catch (err) {
                 console.error("Error fetching owned bracelet:", err);
@@ -61,11 +70,22 @@ const MyBraceletConfig = () => {
     }, [currentUser]);
 
     const handleChange = (e) => {
+        if (!isEditing) return;
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
         
         if (name === 'serialNumber' && errors.serialNumber) {
             setErrors(prev => ({ ...prev, serialNumber: '' }));
+        }
+    };
+
+    const handleCancelEdit = () => {
+        if (!isAlreadyConfigured) {
+            navigate('/app/my-bracelet');
+        } else {
+            setFormData(originalData);
+            setErrors({ serialNumber: '' });
+            setIsEditing(false);
         }
     };
 
@@ -138,7 +158,10 @@ const MyBraceletConfig = () => {
                 }
             }
             
-            navigate('/app/my-bracelet');
+            setOriginalData({ braceletName: formData.braceletName, serialNumber: serial });
+            setOriginalSerial(serial);
+            setIsAlreadyConfigured(true);
+            setIsEditing(false);
 
         } catch (error) {
             console.error("Error registering/updating bracelet:", error);
@@ -157,7 +180,13 @@ const MyBraceletConfig = () => {
                 <h1 className="br-nav-title">
                     {isAlreadyConfigured ? "Bracelet Configuration" : "Register Bracelet"}
                 </h1>
-                <div className="br-nav-spacer"></div>
+                {isAlreadyConfigured && !isEditing ? (
+                    <button className="br-nav-edit-btn" onClick={() => setIsEditing(true)}>
+                        Edit
+                    </button>
+                ) : (
+                    <div className="br-nav-spacer"></div>
+                )}
             </header>
 
             {isLoading ? (
@@ -191,6 +220,7 @@ const MyBraceletConfig = () => {
                                     placeholder="Enter your name"
                                     value={formData.braceletName}
                                     onChange={handleChange}
+                                    readOnly={!isEditing}
                                     required
                                 />
                             </div>
@@ -207,6 +237,7 @@ const MyBraceletConfig = () => {
                                     placeholder="PM-YYYY-XXX"
                                     value={formData.serialNumber}
                                     onChange={handleChange}
+                                    readOnly={!isEditing}
                                     required
                                 />
                             </div>
@@ -217,12 +248,14 @@ const MyBraceletConfig = () => {
                 </div>
                 </main>
             )}
-            <footer className="br-footer" >
-                <button className="br-btn-secondary" onClick={() => navigate('/app/my-bracelet')}>Cancel</button>
-                <button className="br-btn-primary" onClick={handleSave} disabled={isSubmitting || isLoading}>
-                    {isSubmitting ? 'Saving Changes...' : 'Save Configuration'}
-                </button>
-            </footer>
+            {isEditing && (
+                <footer className="br-footer" >
+                    <button className="br-btn-secondary" onClick={handleCancelEdit}>Cancel</button>
+                    <button className="br-btn-primary" onClick={handleSave} disabled={isSubmitting || isLoading}>
+                        {isSubmitting ? 'Saving Changes...' : 'Save Configuration'}
+                    </button>
+                </footer>
+            )}
         </div>
     );
 };
