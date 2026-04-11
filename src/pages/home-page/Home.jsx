@@ -113,6 +113,29 @@ function Home() {
     handleSelectUser(u);
   };
 
+  const handleLocationSearch = async (searchQuery) => {
+    const q = searchQuery.trim();
+    if (!q) return;
+
+    const userMatch = (braceletUsers || []).find((u) => (u.name || "").toLowerCase() === q.toLowerCase());
+    if (userMatch && userMatch.position) {
+       handleSelectUser(userMatch);
+       return;
+    }
+
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        if (mapRef.current) {
+          mapRef.current.flyTo([parseFloat(lat), parseFloat(lon)], 16, { duration: 1.2 });
+        }
+      }
+    } catch (err) {
+      console.error("Geocoding failed", err);
+    }
+  };
   const handleZoomIn = () => {
     if (mapRef.current) mapRef.current.zoomIn();
   };
@@ -254,9 +277,16 @@ function Home() {
               ref={mapSearchRef}
               className="map-search-input"
               type="text"
-              placeholder="Search Location"
+              placeholder="Search Name/Place"
               value={mapSearch}
               onChange={(e) => setMapSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleLocationSearch(mapSearch);
+                  setSearchFocused(false);
+                  mapSearchRef.current?.blur();
+                }
+              }}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
               autoComplete="off"
@@ -322,6 +352,7 @@ function Home() {
         selectedId={selectedId}
         onSelectUser={handleSelectUser}
         addressCache={addressCache}
+        onSearchLocation={handleLocationSearch}
       />
     </div>
   );
