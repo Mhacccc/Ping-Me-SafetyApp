@@ -16,16 +16,9 @@ const MyBraceletEmergency = () => {
     const [isConfigured, setIsConfigured] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [serialNumber, setSerialNumber] = useState(null);
-    const [originalData, setOriginalData] = useState({ emergencyName: '', emergencyNumber: '' });
-
-    const [formData, setFormData] = useState({
-        emergencyName: '',
-        emergencyNumber: ''
-    });
-
-    const [errors, setErrors] = useState({
-        emergencyNumber: ''
-    });
+    const [originalContacts, setOriginalContacts] = useState([{ name: '', contactNo: '' }]);
+    const [contacts, setContacts] = useState([{ name: '', contactNo: '' }]);
+    const [errors, setErrors] = useState([]);
 
     const PHONE_NUMBER_REGEX = /^(09\d{9}|\+639\d{9})$/;
 
@@ -41,19 +34,19 @@ const MyBraceletEmergency = () => {
                 
                 if (!querySnapshot.empty) {
                     const data = querySnapshot.docs[0].data();
-                    const emergency = data.emergencyContacts?.[0] || {};
+                    const emergency = data.emergencyContacts || [];
                     
-                    setFormData({
-                        emergencyName: emergency.name || '',
-                        emergencyNumber: emergency.contactNo || ''
-                    });
-                    setOriginalData({
-                        emergencyName: emergency.name || '',
-                        emergencyNumber: emergency.contactNo || ''
-                    });
+                    if (emergency.length > 0) {
+                        setContacts(emergency);
+                        setOriginalContacts(emergency);
+                        setIsEditing(false);
+                    } else {
+                        setContacts([{ name: '', contactNo: '' }]);
+                        setOriginalContacts([{ name: '', contactNo: '' }]);
+                        setIsEditing(true);
+                    }
                     setSerialNumber(data.serialNumber);
                     setIsConfigured(true);
-                    setIsEditing(!(emergency.name || emergency.contactNo));
                 } else {
                     setIsConfigured(false);
                     setIsEditing(true);
@@ -68,33 +61,52 @@ const MyBraceletEmergency = () => {
         fetchOwnedBracelet();
     }, [currentUser]);
 
-    const handleChange = (e) => {
+    const handleChange = (index, field, value) => {
         if (!isEditing) return;
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const newContacts = [...contacts];
+        newContacts[index] = { ...newContacts[index], [field]: value };
+        setContacts(newContacts);
         
-        if (name === 'emergencyNumber' && errors.emergencyNumber) {
-            setErrors(prev => ({ ...prev, emergencyNumber: '' }));
+        const newErrors = [...errors];
+        if (newErrors[index] && newErrors[index][field]) {
+            newErrors[index][field] = '';
+            setErrors(newErrors);
         }
     };
 
+    const handleAddContact = () => {
+        setContacts([...contacts, { name: '', contactNo: '' }]);
+    };
+
+    const handleRemoveContact = (index) => {
+        const newContacts = [...contacts];
+        newContacts.splice(index, 1);
+        setContacts(newContacts);
+        
+        const newErrors = [...errors];
+        newErrors.splice(index, 1);
+        setErrors(newErrors);
+    };
+
     const handleCancelEdit = () => {
-        setFormData(originalData);
-        setErrors({ emergencyNumber: '' });
+        setContacts(originalContacts);
+        setErrors([]);
         setIsEditing(false);
     };
 
     const validate = () => {
-        let newErrors = { emergencyNumber: '' };
-        let hasError = false;
-
-        if (!PHONE_NUMBER_REGEX.test(formData.emergencyNumber)) {
-            newErrors.emergencyNumber = 'Invalid format. Use 09 or +639 format (e.g., 09123456789)';
-            hasError = true;
-        }
-
+        let isValid = true;
+        const newErrors = [];
+        contacts.forEach((contact, index) => {
+            let errs = {};
+            if (contact.contactNo && !PHONE_NUMBER_REGEX.test(contact.contactNo)) {
+                errs.contactNo = 'Invalid format. Use 09 or +639 format (e.g., 09123456789)';
+                isValid = false;
+            }
+            newErrors[index] = errs;
+        });
         setErrors(newErrors);
-        return !hasError;
+        return isValid;
     };
 
     const handleSave = async () => {
@@ -103,8 +115,9 @@ const MyBraceletEmergency = () => {
             return;
         }
 
-        if (!formData.emergencyName || !formData.emergencyNumber) {
-            alert("Please fill in all required fields.");
+        const emptyFields = contacts.some(c => !c.name.trim() || !c.contactNo.trim());
+        if (emptyFields) {
+            alert("Please fill in all required fields for every contact.");
             return;
         }
 
@@ -114,16 +127,18 @@ const MyBraceletEmergency = () => {
         try {
             const braceletRef = doc(db, 'braceletUsers', serialNumber);
 
+            const contactsToSave = contacts.map(c => ({
+                name: c.name.trim(),
+                contactNo: c.contactNo.trim()
+            }));
+
             await setDoc(braceletRef, {
-                emergencyContacts: [{
-                    name: formData.emergencyName,
-                    contactNo: formData.emergencyNumber
-                }]
+                emergencyContacts: contactsToSave
             }, { merge: true });
 
-            alert("Emergency Contact Updated!");
+            alert("Emergency Contacts Updated!");
             
-            setOriginalData({ emergencyName: formData.emergencyName, emergencyNumber: formData.emergencyNumber });
+            setOriginalContacts(contactsToSave);
             setIsEditing(false);
 
         } catch (error) {
@@ -187,42 +202,71 @@ const MyBraceletEmergency = () => {
                             </h2>
                         </div>
 
-                        <div className="br-field">
-                            <label className="br-label">Name <span className="br-required">*</span></label>
-                            <div className="br-input-group">
-                                <User size={18} className="br-icon" />
-                                <input
-                                    className="br-input"
-                                    type="text"
-                                    name="emergencyName"
-                                    placeholder="Enter contact name"
-                                    value={formData.emergencyName}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
-                                    disabled={!isConfigured}
-                                    required
-                                />
-                            </div>
-                        </div>
+                        {contacts.map((contact, index) => (
+                            <div key={index} style={{ marginBottom: '24px', borderBottom: index < contacts.length - 1 ? '1px solid #eee' : 'none', paddingBottom: index < contacts.length - 1 ? '24px' : '0' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                    <h3 style={{ fontSize: '14px', margin: 0, color: 'var(--pm-text)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
+                                        Contact {index + 1}
+                                    </h3>
+                                    {isEditing && contacts.length > 1 && (
+                                        <button 
+                                          className="br-btn-secondary" 
+                                          style={{ padding: '6px 12px', fontSize: '12px', minWidth: 'auto', background: 'transparent', border: 'none', color: '#dc3545' }}
+                                          onClick={() => handleRemoveContact(index)}
+                                          type="button"
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </div>
 
-                        <div className="br-field">
-                            <label className="br-label">Contact Number <span className="br-required">*</span></label>
-                            <div className="br-input-group">
-                                <Phone size={18} className="br-icon" />
-                                <input
-                                    className="br-input"
-                                    type="text"
-                                    name="emergencyNumber"
-                                    placeholder="Enter contact number"
-                                    value={formData.emergencyNumber}
-                                    onChange={handleChange}
-                                    readOnly={!isEditing}
-                                    disabled={!isConfigured}
-                                    required
-                                />
+                                <div className="br-field">
+                                    <label className="br-label">Name <span className="br-required">*</span></label>
+                                    <div className="br-input-group">
+                                        <User size={18} className="br-icon" />
+                                        <input
+                                            className="br-input"
+                                            type="text"
+                                            placeholder="Enter contact name"
+                                            value={contact.name}
+                                            onChange={(e) => handleChange(index, 'name', e.target.value)}
+                                            readOnly={!isEditing}
+                                            disabled={!isConfigured}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="br-field">
+                                    <label className="br-label">Contact Number <span className="br-required">*</span></label>
+                                    <div className="br-input-group">
+                                        <Phone size={18} className="br-icon" />
+                                        <input
+                                            className="br-input"
+                                            type="text"
+                                            placeholder="Enter contact number"
+                                            value={contact.contactNo}
+                                            onChange={(e) => handleChange(index, 'contactNo', e.target.value)}
+                                            readOnly={!isEditing}
+                                            disabled={!isConfigured}
+                                            required
+                                        />
+                                    </div>
+                                    {errors[index]?.contactNo && <p className="br-error" style={{ margin: '0px' }}>{errors[index].contactNo}</p>}
+                                </div>
                             </div>
-                            {errors.emergencyNumber && <p className="br-error" style={{ margin: '0px' }}>{errors.emergencyNumber}</p>}
-                        </div>
+                        ))}
+
+                        {isEditing && (
+                            <button 
+                              className="br-btn-secondary"
+                              style={{ width: '100%', marginTop: '8px', padding: '12px', background: 'transparent', color: 'var(--pm-primary)', border: '1px dashed var(--pm-primary)' }}
+                              onClick={handleAddContact}
+                              type="button"
+                            >
+                                + Add Another Contact
+                            </button>
+                        )}
                     </div>
                 </div>
             </main>

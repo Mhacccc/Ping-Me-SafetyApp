@@ -1,12 +1,12 @@
 
 import './People.css';
 import { Link } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useBraceletUsers } from '../../context/BraceletDataProvider';
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField, collection, addDoc, serverTimestamp, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
-import { Plus, X, Trash2, User, CreditCard, Pencil, CheckCircle2 } from "lucide-react";
+import { Plus, X, Trash2, User, CreditCard, Pencil, CheckCircle2, Clock } from "lucide-react";
 import Skeleton from '../../components/skeleton/Skeleton';
 
 /**
@@ -36,6 +36,28 @@ function People() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState([]);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (user) {
+        const q = query(
+          collection(db, 'notifications'),
+          where('requesterId', '==', user.uid),
+          where('type', '==', 'connection_request')
+        );
+        const unsub = onSnapshot(q, (snapshot) => {
+          const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          setPendingRequests(items);
+        });
+        return () => unsub();
+      } else {
+        setPendingRequests([]);
+      }
+    });
+    return () => unsubscribeAuth();
+  }, []);
 
   // Bracelet Information
   const [newBraceletName, setNewBraceletName] = useState('');
@@ -363,6 +385,32 @@ function People() {
           </div>
         </div>
       )}
+
+      {/* Pending Requests Visual Tag */}
+      <div className="pending-requests-section" style={{ padding: '0 20px', marginBottom: '16px' }}>
+        {pendingRequests.length > 0 && (
+          <>
+            <h3 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--pm-text-muted)', marginBottom: '8px', letterSpacing: '0.05em', fontWeight: 'bold' }}>
+              Pending Connections
+            </h3>
+            {pendingRequests.map(req => (
+              <div key={req.id} style={{ display: 'flex', alignItems: 'center', background: '#fff3cd', padding: '12px 16px', borderRadius: '12px', marginBottom: '8px', border: '1px solid #ffeeba' }}>
+                <div style={{ marginRight: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffeeba', borderRadius: '50%', width: '40px', height: '40px' }}>
+                   <Clock size={20} color="#856404" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, color: '#856404', fontSize: '15px', fontWeight: '600', marginBottom: '2px' }}>
+                     Waiting for approval
+                  </p>
+                  <p style={{ margin: 0, color: '#856404', fontSize: '13px', opacity: 0.85 }}>
+                     Request sent for Tracker ID: {req.braceletId}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
 
       <div className="people-list">
         {loading ? (Array.from({ length: 4 }).map((_, i) => (

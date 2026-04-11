@@ -261,12 +261,28 @@ const Notifications = () => {
   const handleApproveConnection = async (e, item) => {
     e.stopPropagation();
     try {
-      // 1. Link the bracelet to the requester's appUser doc
+      // Fetch the owner's details to populate the requester's personal contacts
+      const ownerRef = doc(db, 'appUsers', item.appUserId);
+      const ownerSnap = await getDoc(ownerRef);
+      let ownerName = "Unknown";
+      let ownerPhone = "N/A";
+
+      if (ownerSnap.exists()) {
+         const ownerData = ownerSnap.data();
+         ownerName = ownerData.name || "Unknown";
+         ownerPhone = ownerData.phoneNumber || "N/A";
+      }
+
+      // 1. Link the bracelet to the requester's appUser doc AND update their personal contacts
       const appUserRef = doc(db, 'appUsers', item.requesterId);
       const appUserSnap = await getDoc(appUserRef);
       if (appUserSnap.exists()) {
          const updates = {
-           linkedBraceletsID: arrayUnion(item.braceletId)
+           linkedBraceletsID: arrayUnion(item.braceletId),
+           personalContacts: arrayUnion({
+              name: ownerName,
+              contactNo: ownerPhone
+           })
          };
          if (item.nickname) {
            updates[`braceletNicknames.${item.braceletId}`] = item.nickname;
@@ -283,7 +299,7 @@ const Notifications = () => {
             contactNo: item.requesterPhone || "N/A"
          };
          await updateDoc(braceletRef, {
-            emergencyContacts: [newContact]
+            emergencyContacts: arrayUnion(newContact)
          });
       }
 
