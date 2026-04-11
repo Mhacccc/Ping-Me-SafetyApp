@@ -22,7 +22,9 @@ import "./App.css";
 import AccountMenu from "./pages/account/AccountMenu";
 import Account from "./pages/account/Account";
 import AccountSecurity from "./pages/account/AccountSecurity";
-import MyBracelet from "./pages/my-bracelet/MyBracelet";
+import MyBraceletMenu from "./pages/my-bracelet/MyBraceletMenu";
+import MyBraceletConfig from "./pages/my-bracelet/MyBraceletConfig";
+import MyBraceletEmergency from "./pages/my-bracelet/MyBraceletEmergency";
 import Tips from "./pages/tips/Tips";
 import About from "./pages/about/About";
 import Notifications from "./pages/notifications/Notifications";
@@ -77,7 +79,9 @@ function App() {
               <Route path="account" element={<AccountMenu />} />
               <Route path="account/info" element={<Account />} />
               <Route path="account/security" element={<AccountSecurity />} />
-              <Route path="my-bracelet" element={<MyBracelet />} />
+              <Route path="my-bracelet" element={<MyBraceletMenu />} />
+              <Route path="my-bracelet/config" element={<MyBraceletConfig />} />
+              <Route path="my-bracelet/emergency" element={<MyBraceletEmergency />} />
               <Route path="tips" element={<Tips />} />
               <Route path="about" element={<About />} />
               <Route path="notifications" element={<Notifications />} />
