@@ -1,0 +1,330 @@
+/* src/pages/report/ReportExportCard.css */
+
+.rec-root {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 600px;
+  background: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1a1a1a;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.rec-header {
+  background: #7a1a1e;
+  padding: 22px 32px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rec-brand {
+  display: flex;
+  align-items: center;
+}
+
+/* Clip wrapper — shows only the left icon half of the logo PNG */
+.rec-logo-wrap {
+  width: 90px;
+  height: 90px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.rec-logo {
+  width: 180px;
+  height: auto;
+  object-fit: none;
+  margin-left: -4px;
+  margin-top: 2px;
+  filter: brightness(0) invert(1);
+}
+
+.rec-header-right {
+  text-align: right;
+}
+
+.rec-doc-type {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 4px;
+}
+
+.rec-doc-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* ── Red accent rule ── */
+.rec-rule {
+  height: 4px;
+  background: linear-gradient(90deg, #a4262c 0%, #c0392b 50%, #e74c3c 100%);
+}
+
+/* ── Subject ── */
+.rec-subject {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.rec-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #a4262c;
+  flex-shrink: 0;
+}
+
+.rec-subject-info {
+  flex: 1;
+}
+
+.rec-subject-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 6px;
+}
+
+.rec-status-chip {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #28a745;
+}
+
+/* Bracelet + Level pills beside the name */
+.rec-meta-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.rec-meta-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.rec-meta-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #aaaaaa;
+  margin-bottom: 1px;
+}
+
+.rec-meta-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* ── Details area ── */
+.rec-details {
+  padding: 20px 32px 24px;
+}
+
+.rec-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #999999;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+/* ── Shared field card ── */
+.rec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.rec-field {
+  background: #f7f7f7;
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  padding: 11px 14px;
+}
+
+.rec-field-full {
+  grid-column: span 2;
+}
+
+.rec-field-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #999999;
+  margin-bottom: 3px;
+}
+
+.rec-field-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+/* ── Timeline ── */
+.rec-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.rec-tl-item {
+  display: flex;
+  gap: 14px;
+  position: relative;
+}
+
+/* Vertical connector line */
+.rec-tl-connector {
+  position: absolute;
+  left: 9px;
+  top: 22px;
+  bottom: -6px;
+  width: 2px;
+  background: #e0e0e0;
+  z-index: 0;
+}
+
+/* Phase circle marker */
+.rec-tl-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+  position: relative;
+  z-index: 1;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.rec-tl-sos  { background: #dc2626; color: #dc2626; }
+.rec-tl-safe { background: #16a34a; color: #16a34a; }
+
+.rec-tl-content {
+  flex: 1;
+  padding-bottom: 18px;
+}
+
+.rec-tl-item-last .rec-tl-content {
+  padding-bottom: 0;
+}
+
+/* Phase heading */
+.rec-tl-phase {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.rec-tl-phase-sos  { color: #dc2626; }
+.rec-tl-phase-safe { color: #16a34a; }
+
+/* Grid inside each timeline block */
+.rec-tl-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ── Static Map ── */
+.rec-map-section {
+  margin-top: 4px;
+}
+
+.rec-map-frame {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  height: 200px;
+  background: #e8eaed;
+}
+
+.rec-map-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rec-map-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
+  padding: 14px 14px 10px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.rec-map-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* ── Footer ── */
+.rec-footer {
+  background: #f7f7f7;
+  border-top: 1px solid #e8e8e8;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rec-footer-left {
+  font-size: 11px;
+  color: #aaaaaa;
+  font-weight: 500;
+}
+
+.rec-footer-right {
+  font-size: 11px;
+  color: #aaaaaa;
+  font-weight: 500;
+}
+
+.rec-footer-accent {
+  color: #a4262c;
+  font-weight: 700;
+}

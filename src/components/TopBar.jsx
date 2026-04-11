@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./TopBar.css";
-import { Bell, ChevronLeft } from "lucide-react";
+import { Bell, ChevronLeft, Download } from "lucide-react";
 import avatar from "../assets/red.webp";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
@@ -10,6 +10,9 @@ const TopBar = ({ onProfileClick }) => {
   const { unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Scoped flag: true only on the Incident Report detail page
+  const isReportDetail = location.pathname.includes('/app/report/');
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -53,15 +56,28 @@ const TopBar = ({ onProfileClick }) => {
 
       {/* Right: Actions */}
       <div className="topbar-actions">
-        <button
-          className="topbar-icon-btn"
-          onClick={() => navigate('/app/notifications')}
-        >
-          <Bell size={22} />
-          {unreadCount > 0 && (
-            <span className="notification-badge">{unreadCount}</span>
-          )}
-        </button>
+        {isReportDetail ? (
+          /* Incident Report: Download / Save icon → exports as PNG */
+          <button
+            className="topbar-icon-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('pingme:export-report'))}
+            aria-label="Save / Download report as image"
+            title="Download as PNG"
+          >
+            <Download size={22} />
+          </button>
+        ) : (
+          /* All other pages: standard Bell notification button */
+          <button
+            className="topbar-icon-btn"
+            onClick={() => navigate('/app/notifications')}
+          >
+            <Bell size={22} />
+            {unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount}</span>
+            )}
+          </button>
+        )}
 
         <button
           className="topbar-desktop-profile-btn"

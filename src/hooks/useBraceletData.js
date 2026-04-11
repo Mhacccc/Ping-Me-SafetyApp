@@ -329,8 +329,10 @@ export function useBraceletData() {
 export function useSosReportGenerator(braceletUsers) {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
-  // We use a ref to persist previous states across re-renders without triggering new ones.
+  // Persist previous SOS booleans across re-renders
   const previousSosStates = useRef(new Map());
+  // Track when + where SOS was first activated for each bracelet user
+  const sosStartData = useRef(new Map()); // braceletId → { startTime, startPosition }
 
   useEffect(() => {
     if (!currentUser || !braceletUsers?.length) return;
@@ -340,37 +342,82 @@ export function useSosReportGenerator(braceletUsers) {
       const previousSos = previousSosStates.current.get(user.id);
 
       /**
+       * LOGIC: SOS False → True transition detector.
+       * Capture the exact moment and position when the user first called for help.
+       * previousSos may be `undefined` on first mount — treat that as false.
+       */
+      if (!previousSos && currentSos === true) {
+        sosStartData.current.set(user.id, {
+          startTime: new Date(),
+          startPosition: user.position ?? null,
+        });
+      }
+
+      /**
        * LOGIC: SOS True → False transition detector.
-       * Why: We only want to generate a report once an emergency is OVER.
+       * Generate a full timeline report once the emergency is resolved.
        */
       if (previousSos === true && currentSos === false) {
         (async () => {
           try {
-            const loc = user.position;
-            let locationAddress = 'Unknown Location';
-            
-            // Resolve the coordinates to a street address for readability in the report list
-            if (loc && loc.length === 2) {
-              const addr = await reverseGeocode(loc[0], loc[1]);
-              if (addr) locationAddress = addr;
+            // ── Marked Safe (end) data ────────────────────────────────────
+            const endDate   = new Date();
+            const endPos    = user.position ?? null;
+            let   endAddr   = 'Unknown Location';
+            if (endPos?.length === 2) {
+              const a = await reverseGeocode(endPos[0], endPos[1]);
+              if (a) endAddr = a;
             }
 
-            const reportDate = new Date();
+            // ── Request for Help (start) data ─────────────────────────────
+            const start     = sosStartData.current.get(user.id);
+            const startDate = start?.startTime ?? endDate; // fallback: use end time
+            const startPos  = start?.startPosition ?? endPos;
+            let   startAddr = 'Unknown Location';
+            if (startPos?.length === 2) {
+              // Avoid a duplicate geocode call if user hasn't moved
+              if (
+                !endPos ||
+                Math.abs(startPos[0] - endPos[0]) > 0.0001 ||
+                Math.abs(startPos[1] - endPos[1]) > 0.0001
+              ) {
+                const a = await reverseGeocode(startPos[0], startPos[1]);
+                if (a) startAddr = a;
+              } else {
+                startAddr = endAddr; // same location at start and end
+              }
+            }
+            sosStartData.current.delete(user.id);
 
-            // Create the record in the 'reports' collection
+            const fmtDate = (d) =>
+              d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            const fmtTime = (d) =>
+              d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            // Create the timeline report in Firestore
             await addDoc(collection(db, 'reports'), {
               braceletStatus: user.braceletOn ?? false,
-              avatar: null, // Future feature: incident photos
-              date: reportDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-              time: reportDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-              location: locationAddress,
-              appUserId: currentUser.uid,
-              appUserName: currentUser.displayName || 'App User',
-              braceletUserId: user.id,
-              braceletUserName: user.name || 'Unknown Bracelet',
+              avatar: null,
+
+              // ── Request for Help (SOS triggered) ──────────────────────
+              sosStartDate:     fmtDate(startDate),
+              sosStartTime:     fmtTime(startDate),
+              sosStartLocation: startAddr,
+              sosStartPosition: startPos,
+
+              // ── Marked Safe (SOS resolved) ────────────────────────────
+              date:     fmtDate(endDate),
+              time:     fmtTime(endDate),
+              location: endAddr,
+              position: endPos,
+
+              appUserId:          currentUser.uid,
+              appUserName:        currentUser.displayName || 'App User',
+              braceletUserId:     user.id,
+              braceletUserName:   user.name || 'Unknown Bracelet',
+              sosLevel:           user.sosLevel ?? 1,
             });
-            
-            // Feedback to the user that saving was successful
+
             addToast('SOS Resolved: New incident report generated.', 'success');
           } catch (err) {
             console.error('REPORT GEN ERROR:', err);
