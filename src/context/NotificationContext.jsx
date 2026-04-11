@@ -74,6 +74,7 @@ export function NotificationProvider({ children }) {
       await deleteDoc(doc(db, 'notifications', id));
     } catch (err) {
       console.error('Failed to delete notification:', err);
+      throw err;
     }
   };
 

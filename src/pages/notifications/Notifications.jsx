@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Trash2, BellOff, CheckSquare, Square, CheckCheck } from 'lucide-react';
+import { ChevronLeft, Trash2, BellOff, CheckSquare, Square, CheckCheck, CheckCircle } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 import { useBraceletUsers } from '../../context/BraceletDataProvider';
 import logo from '../../assets/logo.png';
@@ -227,6 +227,25 @@ const Notifications = () => {
   const [isBulkDeleteModal, setIsBulkDeleteModal] = useState(false);
   const [isBulkReadModal,   setIsBulkReadModal]   = useState(false);
 
+  /* Success Modal State */
+  const [successModalInfo, setSuccessModalInfo] = useState({ open: false, count: 0 });
+
+  const showSuccessModal = (count) => {
+    setSuccessModalInfo({ open: true, count });
+    setTimeout(() => {
+      setSuccessModalInfo(prev => ({ ...prev, open: false }));
+    }, 3000);
+  };
+
+  const handleSingleDelete = async (e, id) => {
+    try {
+      await deleteNotification(e, id);
+      showSuccessModal(1);
+    } catch (err) {
+      console.error('Single delete error:', err);
+    }
+  };
+
   /* Click-away: close any open swipe-row when tapping outside the list */
   useEffect(() => {
     const handleDocPointerDown = (e) => {
@@ -301,9 +320,11 @@ const Notifications = () => {
   /* Bulk delete */
   const handleBulkDelete = async () => {
     try {
+      const count = selected.size;
       await Promise.all([...selected].map(id => deleteNotification({ stopPropagation: () => {} }, id)));
       setIsBulkDeleteModal(false);
       exitSelectMode();
+      showSuccessModal(count);
     } catch (err) {
       console.error('Bulk delete error:', err);
       alert('Failed to delete selected notifications.');
@@ -397,7 +418,7 @@ const Notifications = () => {
               <SwipeableNotif
                 key={item.id}
                 item={item}
-                onDelete={deleteNotification}
+                onDelete={handleSingleDelete}
                 onMarkRead={markAsRead}
                 openId={openId}
                 setOpenId={setOpenId}
@@ -464,6 +485,22 @@ const Notifications = () => {
               <button className="notif-modal-btn cancel" onClick={() => setIsBulkReadModal(false)}>Cancel</button>
               <button className="notif-modal-btn confirm" onClick={handleBulkMarkRead}>Mark as Read</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {successModalInfo.open && (
+        <div className="notif-modal-backdrop" onClick={() => setSuccessModalInfo({ open: false, count: 0 })}>
+          <div className="notif-success-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="notif-success-icon">
+              <CheckCircle size={32} strokeWidth={2.5} />
+            </div>
+            <p>
+              {successModalInfo.count === 1
+                ? 'Notification successfully deleted'
+                : `${successModalInfo.count} notifications successfully deleted`}
+            </p>
           </div>
         </div>
       )}
