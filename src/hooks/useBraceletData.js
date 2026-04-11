@@ -194,6 +194,7 @@ export function useBraceletData() {
                 braceletOn: false,
                 lastSeen: null,
                 sos: false,
+                sosLevel: null,
                 position: u.position,
                 online: false,
               };
@@ -204,6 +205,13 @@ export function useBraceletData() {
             const lastSeen = mapHelpers.parseFirestoreDate(dd.lastSeen);
             const online = mapHelpers.isUserOnline(lastSeen);
 
+            // Derive the SOS active flag and the numeric severity level (1=Mild, 2=Moderate, 3=Severe)
+            const sosActive = (dd.sos && (dd.sos.active ?? dd.sos)) || false;
+            const rawSosLevel = dd.sos && typeof dd.sos === 'object'
+              ? Number(dd.sos.level ?? dd.sos.priority ?? 1)
+              : 1;
+            const sosLevel = (rawSosLevel >= 1 && rawSosLevel <= 3) ? rawSosLevel : 1;
+
             return {
               ...u,
               battery: Number(dd.battery ?? u.battery),
@@ -211,7 +219,8 @@ export function useBraceletData() {
               // to prevent the user from thinking a disconnected device is still "monitoring".
               braceletOn: online ? Boolean(dd.isBraceletOn ?? u.braceletOn) : false,
               lastSeen,
-              sos: (dd.sos && (dd.sos.active ?? dd.sos)) || false,
+              sos: sosActive,
+              sosLevel: sosActive ? sosLevel : null,
               position: loc || u.position,
               online,
               currentGeofenceId: dd.currentGeofenceId ?? u.currentGeofenceId,

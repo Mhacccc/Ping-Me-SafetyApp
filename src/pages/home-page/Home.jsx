@@ -214,7 +214,13 @@ function Home() {
                           {singleUser.sos && (
                             <div className="detail-row">
                               <span style={{color: 'red', fontWeight: 'bold'}}>SOS Status</span>
-                              <span style={{color: 'red', fontWeight: 'bold'}}>🚨 Active!</span>
+                              <span style={{color: 'red', fontWeight: 'bold'}}>
+                                🚨 {
+                                  singleUser.sosLevel === 3 ? 'Level 3 (Severe)' :
+                                  singleUser.sosLevel === 2 ? 'Level 2 (Moderate)' :
+                                  'Level 1 (Mild)'
+                                }
+                              </span>
                             </div>
                           )}
                         </div>
