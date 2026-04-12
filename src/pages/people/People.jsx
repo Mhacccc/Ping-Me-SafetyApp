@@ -37,7 +37,6 @@ function People() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isPhoneWarningModalOpen, setIsPhoneWarningModalOpen] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([]);
 
   useEffect(() => {
@@ -61,23 +60,13 @@ function People() {
     return () => unsubscribeAuth();
   }, []);
 
-  const handleOpenAddBraceletModal = async () => {
+  const handleOpenAddBraceletModal = () => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
         alert("You must be logged in to link a bracelet.");
         return;
-      }
-      const appUserRef = doc(db, 'appUsers', user.uid);
-      const appUserSnap = await getDoc(appUserRef);
-      
-      if (appUserSnap.exists()) {
-        const phone = appUserSnap.data().phone;
-        if (!phone || phone.trim() === '') {
-          setIsPhoneWarningModalOpen(true);
-          return;
-        }
       }
       setIsModalOpen(true);
     } catch (e) {
@@ -534,41 +523,6 @@ function People() {
         </div>
       )}
 
-      {/* Phone Warning Modal */}
-      {isPhoneWarningModalOpen && (
-        <div className="add-bracelet-backdrop">
-          <div className="add-bracelet-modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '32px 24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <AlertTriangle size={48} color="#A4262C" strokeWidth={1.5} />
-            </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '8px', color: 'var(--pm-text)' }}>
-              Phone Number Required
-            </h2>
-            <p style={{ fontSize: '0.95rem', color: 'var(--pm-text-muted)', marginBottom: '24px', lineHeight: '1.5' }}>
-              To ensure safety and identification, please add your phone number in Account Information before linking a bracelet.
-            </p>
-            <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
-              <button 
-                className="btn-next" 
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => {
-                  setIsPhoneWarningModalOpen(false);
-                  navigate('/app/account/info');
-                }}
-              >
-                Go to Account Information
-              </button>
-              <button 
-                className="btn-cancel" 
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => setIsPhoneWarningModalOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

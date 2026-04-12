@@ -261,36 +261,13 @@ const Notifications = () => {
   const handleApproveConnection = async (e, item) => {
     e.stopPropagation();
     try {
-      // Fetch the owner's details to populate the requester's personal contacts
-      const ownerRef = doc(db, 'appUsers', item.appUserId);
-      const ownerSnap = await getDoc(ownerRef);
-      let ownerName = "Unknown";
-      let ownerPhone = "N/A";
-
-      if (ownerSnap.exists()) {
-         const ownerData = ownerSnap.data();
-         ownerName = ownerData.name || "Unknown";
-         ownerPhone = ownerData.phone || ownerData.phoneNumber || "N/A";
-      }
-
-      // 1. Link the bracelet to the requester's appUser doc AND update their personal contacts
+      // 1. Link the bracelet to the requester's appUser doc
       const appUserRef = doc(db, 'appUsers', item.requesterId);
       const appUserSnap = await getDoc(appUserRef);
       
-      let fetchedRequesterName = item.requesterName || "Unknown";
-      let fetchedRequesterPhone = item.requesterPhone || "N/A";
-
       if (appUserSnap.exists()) {
-         const appUserData = appUserSnap.data();
-         fetchedRequesterName = appUserData.name || fetchedRequesterName;
-         fetchedRequesterPhone = appUserData.phone || appUserData.phoneNumber || fetchedRequesterPhone;
-
          const updates = {
-           linkedBraceletsID: arrayUnion(item.braceletId),
-           personalContacts: arrayUnion({
-              name: ownerName,
-              contactNo: ownerPhone
-           })
+           linkedBraceletsID: arrayUnion(item.braceletId)
          };
          if (item.nickname) {
            updates[`braceletNicknames.${item.braceletId}`] = item.nickname;
