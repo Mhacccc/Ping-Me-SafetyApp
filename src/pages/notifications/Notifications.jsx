@@ -270,13 +270,21 @@ const Notifications = () => {
       if (ownerSnap.exists()) {
          const ownerData = ownerSnap.data();
          ownerName = ownerData.name || "Unknown";
-         ownerPhone = ownerData.phoneNumber || "N/A";
+         ownerPhone = ownerData.phone || ownerData.phoneNumber || "N/A";
       }
 
       // 1. Link the bracelet to the requester's appUser doc AND update their personal contacts
       const appUserRef = doc(db, 'appUsers', item.requesterId);
       const appUserSnap = await getDoc(appUserRef);
+      
+      let fetchedRequesterName = item.requesterName || "Unknown";
+      let fetchedRequesterPhone = item.requesterPhone || "N/A";
+
       if (appUserSnap.exists()) {
+         const appUserData = appUserSnap.data();
+         fetchedRequesterName = appUserData.name || fetchedRequesterName;
+         fetchedRequesterPhone = appUserData.phone || appUserData.phoneNumber || fetchedRequesterPhone;
+
          const updates = {
            linkedBraceletsID: arrayUnion(item.braceletId),
            personalContacts: arrayUnion({
@@ -295,8 +303,8 @@ const Notifications = () => {
       const braceletSnap = await getDoc(braceletRef);
       if (braceletSnap.exists()) {
          const newContact = {
-            name: item.requesterName || "Unknown",
-            contactNo: item.requesterPhone || "N/A"
+            name: fetchedRequesterName,
+            contactNo: fetchedRequesterPhone
          };
          await updateDoc(braceletRef, {
             emergencyContacts: arrayUnion(newContact)
