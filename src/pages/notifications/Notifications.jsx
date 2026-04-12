@@ -298,18 +298,7 @@ const Notifications = () => {
          await updateDoc(appUserRef, updates);
       }
       
-      // 2. Add requester to owner's Emergency Contacts in braceletUsers
-      const braceletRef = doc(db, 'braceletUsers', item.braceletId);
-      const braceletSnap = await getDoc(braceletRef);
-      if (braceletSnap.exists()) {
-         const newContact = {
-            name: fetchedRequesterName,
-            contactNo: fetchedRequesterPhone
-         };
-         await updateDoc(braceletRef, {
-            emergencyContacts: arrayUnion(newContact)
-         });
-      }
+
 
       // 3. Delete notification
       await deleteNotification(e, item.id);
