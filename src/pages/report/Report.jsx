@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ClipboardX } from 'lucide-react';
 import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import { useBraceletUsers } from '../../context/BraceletDataProvider';
@@ -10,12 +10,14 @@ import './Report.css';
 
 const Report = () => {
   const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { braceletUsers } = useBraceletUsers();
   const { currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser) {
       setReports([]);
+      setLoading(false);
       return;
     }
 
@@ -39,6 +41,7 @@ const Report = () => {
       });
 
       setReports(fetchedReports);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -68,7 +71,7 @@ const Report = () => {
 
   // Removed handleRowClick as we'll use <Link> directly in JSX
 
-  if (!reports.length) return (
+  if (loading) return (
     <div className="report-page-frame skeleton-wrapper">
       <main className="app-main">
         <ul className="incident-list" style={{ boxShadow: 'none' }} aria-label="Loading reports">
@@ -97,54 +100,61 @@ const Report = () => {
   return (
     <div className="report-page-frame">
       <main className="app-main">
-        <ul className="incident-list" aria-label="Incident list">
-          {reports.map(rawReport => {
-            const incident = getEnrichedReport(rawReport);
+        {reports.length === 0 ? (
+          <div className="report-empty">
+            <ClipboardX size={56} strokeWidth={1.2} />
+            <p>No incident reports yet</p>
+          </div>
+        ) : (
+          <ul className="incident-list" aria-label="Incident list">
+            {reports.map(rawReport => {
+              const incident = getEnrichedReport(rawReport);
 
-            return (
-              <li
-                key={incident.id}
-                className="incident-item"
-              >
-                <Link 
-                  to={`/app/report/${incident.id}`}
-                  state={{ 
-                    incident: { 
-                      ...incident,
-                      displayStatus: { 
-                        text: incident.displayStatus.text,
-                        color: incident.displayStatus.color
-                      } 
-                    } 
-                  }}
-                  className="incident-link-wrapper"
+              return (
+                <li
+                  key={incident.id}
+                  className="incident-item"
                 >
-                  <div className="incident-avatar-wrapper">
-                    <img
-                      src={incident.user.avatar}
-                      alt={incident.user.name}
-                      className="incident-avatar-img"
-                    />
-                  </div>
+                  <Link 
+                    to={`/app/report/${incident.id}`}
+                    state={{ 
+                      incident: { 
+                        ...incident,
+                        displayStatus: { 
+                          text: incident.displayStatus.text,
+                          color: incident.displayStatus.color
+                        } 
+                      } 
+                    }}
+                    className="incident-link-wrapper"
+                  >
+                    <div className="incident-avatar-wrapper">
+                      <img
+                        src={incident.user.avatar}
+                        alt={incident.user.name}
+                        className="incident-avatar-img"
+                      />
+                    </div>
 
-                  <div className="incident-details">
-                    <p className={`incident-type ${incident.displayStatus.color}`}>{incident.displayStatus.text}</p>
-                    <p className="incident-date-location">
-                      {incident.date} &bull; {incident.location}
-                    </p>
-                  </div>
+                    <div className="incident-details">
+                      <p className={`incident-type ${incident.displayStatus.color}`}>{incident.displayStatus.text}</p>
+                      <p className="incident-date-location">
+                        {incident.date} &bull; {incident.location}
+                      </p>
+                    </div>
 
-                  <div className="incident-time-wrapper">
-                    <span className="incident-date-right">
-                      {incident.time}
-                    </span>
-                    <ChevronRight size={20} className="chevron-icon" />
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                    <div className="incident-time-wrapper">
+                      <span className="incident-date-right">
+                        {incident.time}
+                      </span>
+                      <ChevronRight size={20} className="chevron-icon" />
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </main>
     </div>
   );
