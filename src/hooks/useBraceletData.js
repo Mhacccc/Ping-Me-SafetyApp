@@ -23,6 +23,7 @@ import * as mapHelpers from '../utils/mapHelpers';
 import { useAuth } from '../context/AuthContext';
 import { reverseGeocode } from '../utils/geocode';
 import { useToast } from '../context/ToastContext';
+import { saveSosNotification, saveSosResolvedNotification } from '../services/notificationService';
 
 /**
  * Generates a unique cache key for TanStack Query.
@@ -351,6 +352,11 @@ export function useSosReportGenerator(braceletUsers) {
           startTime: new Date(),
           startPosition: user.position ?? null,
         });
+
+        // Trigger real-time notification record for the SOS Alert
+        saveSosNotification(currentUser, user).catch(err => 
+          console.error('Failed to save SOS notification:', err)
+        );
       }
 
       /**
@@ -395,7 +401,7 @@ export function useSosReportGenerator(braceletUsers) {
               d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
             // Create the timeline report in Firestore
-            await addDoc(collection(db, 'reports'), {
+            const reportRef = await addDoc(collection(db, 'reports'), {
               braceletStatus: user.braceletOn ?? false,
               avatar: null,
 
@@ -417,6 +423,11 @@ export function useSosReportGenerator(braceletUsers) {
               braceletUserName:   user.name || 'Unknown Bracelet',
               sosLevel:           user.sosLevel ?? 1,
             });
+
+            // Trigger notification record for SOS Resolved, now with a report reference
+            saveSosResolvedNotification(currentUser, user, reportRef.id).catch(err => 
+              console.error('Failed to save SOS resolved notification:', err)
+            );
 
             addToast('SOS Resolved: New incident report generated.', 'success');
           } catch (err) {

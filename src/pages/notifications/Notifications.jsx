@@ -18,7 +18,7 @@ const LONG_PRESS_MS   = 500;
    openId / setOpenId are shared across all rows
    selectMode disables swipe and shows checkbox
 ───────────────────────────────────────────── */
-const SwipeableNotif = ({
+const SwipeableNotif = React.memo(({
   item, onDelete, onMarkRead,
   openId, setOpenId,
   selectMode, isChecked, onToggleCheck,
@@ -218,14 +218,21 @@ const SwipeableNotif = ({
       </div>
     </li>
   );
-};
+});
 
 /* ─────────────────────────────────────────────
    Page
 ───────────────────────────────────────────── */
 const Notifications = () => {
   const navigate = useNavigate();
-  const { notifications, loading, markAsRead, deleteNotification } = useNotifications();
+  const { 
+    notifications, 
+    loading, 
+    markAsRead, 
+    deleteNotification, 
+    deleteMultipleNotifications, 
+    markMultipleAsRead 
+  } = useNotifications();
   const { braceletUsers } = useBraceletUsers();
   const [filter, setFilter] = React.useState('all');
 
@@ -339,26 +346,30 @@ const Notifications = () => {
     setSelected(new Set());
   };
 
-  /* ── Notification tap: mark read + navigate to map ── */
+/* ── Notification tap: mark read + navigate ── */
   const handleNotifTap = useCallback(async (e, item) => {
     // 1. Mark as read in Firestore
     await markAsRead(e, item.id, item.read);
 
-    // 2. Resolve coordinates:
-    //    a) Live position from braceletUsers (most current)
-    //    b) Stored coords field on the notification (snapshot at alert time)
+    // 2. Navigation logic based on type
+    if (item.type === 'sos_resolved' && item.reportId) {
+      // Navigate to the specific report detail
+      navigate(`/app/report/${item.reportId}`);
+      return;
+    }
+
+    // Default: Resolve coordinates and go to Map (Places)
     let focusCoords = null;
     if (item.braceletUserId) {
       const liveUser = braceletUsers.find(u => u.id === item.braceletUserId);
       if (liveUser?.position) {
-        focusCoords = liveUser.position; // already [lat, lng]
+        focusCoords = liveUser.position;
       }
     }
     if (!focusCoords && item.coords) {
       focusCoords = [item.coords.lat, item.coords.lng];
     }
 
-    // 3. Navigate to Places, passing coords via router state
     navigate('/app/places', {
       state: focusCoords
         ? { focusCoords, focusUserId: item.braceletUserId ?? null }
@@ -395,8 +406,9 @@ const Notifications = () => {
   /* Bulk delete */
   const handleBulkDelete = async () => {
     try {
-      const count = selected.size;
-      await Promise.all([...selected].map(id => deleteNotification({ stopPropagation: () => {} }, id)));
+      const ids = [...selected];
+      const count = ids.length;
+      await deleteMultipleNotifications(ids);
       setIsBulkDeleteModal(false);
       exitSelectMode();
       showSuccessModal(count);
@@ -409,11 +421,8 @@ const Notifications = () => {
   /* Bulk mark-as-read */
   const handleBulkMarkRead = async () => {
     try {
-      const unread = [...selected].filter(id => {
-        const n = notifications.find(n => n.id === id);
-        return n && !n.read;
-      });
-      await Promise.all(unread.map(id => markAsRead({ stopPropagation: () => {} }, id, false)));
+      const ids = [...selected];
+      await markMultipleAsRead(ids);
       setIsBulkReadModal(false);
       exitSelectMode();
     } catch (err) {

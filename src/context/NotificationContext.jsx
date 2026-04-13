@@ -97,6 +97,32 @@ export function NotificationProvider({ children }) {
     }
   };
 
+  const deleteMultipleNotifications = async (ids) => {
+    try {
+      const batch = writeBatch(db);
+      ids.forEach((id) => {
+        batch.delete(doc(db, 'notifications', id));
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error('Failed to delete multiple notifications:', err);
+      throw err;
+    }
+  };
+
+  const markMultipleAsRead = async (ids) => {
+    try {
+      const batch = writeBatch(db);
+      ids.forEach((id) => {
+        batch.update(doc(db, 'notifications', id), { read: true });
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error('Failed to mark multiple notifications as read:', err);
+      throw err;
+    }
+  };
+
   return (
     <NotificationContext.Provider
       value={{ 
@@ -105,7 +131,9 @@ export function NotificationProvider({ children }) {
         unreadCount, 
         markAsRead, 
         deleteNotification,
-        deleteAllNotifications 
+        deleteAllNotifications,
+        deleteMultipleNotifications,
+        markMultipleAsRead
       }}
     >
       {children}
