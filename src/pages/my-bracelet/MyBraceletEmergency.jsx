@@ -5,6 +5,7 @@ import { ChevronLeft, User, Phone, CheckCircle2, AlertTriangle } from 'lucide-re
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import SuccessModal from '../../components/SuccessModal';
 import './MyBracelet.css';
 
 const MyBraceletEmergency = () => {
@@ -18,6 +19,7 @@ const MyBraceletEmergency = () => {
     const [serialNumber, setSerialNumber] = useState(null);
     const [originalContacts, setOriginalContacts] = useState([{ name: '', contactNo: '' }]);
     const [contacts, setContacts] = useState([{ name: '', contactNo: '' }]);
+    const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', buttonText: '' });
     const [errors, setErrors] = useState([]);
 
     const PHONE_NUMBER_REGEX = /^(09\d{9}|\+639\d{9})$/;
@@ -136,7 +138,12 @@ const MyBraceletEmergency = () => {
                 emergencyContacts: contactsToSave
             }, { merge: true });
 
-            alert("Emergency Contacts Updated!");
+            setModalConfig({
+                isOpen: true,
+                title: "Success!",
+                message: "Emergency contact has been successfully added to your list.",
+                buttonText: "Great!"
+            });
             
             setOriginalContacts(contactsToSave);
             setIsEditing(false);
@@ -278,6 +285,14 @@ const MyBraceletEmergency = () => {
                     </button>
                 </footer>
             )}
+
+            <SuccessModal 
+                isOpen={modalConfig.isOpen} 
+                title={modalConfig.title}
+                message={modalConfig.message}
+                buttonText={modalConfig.buttonText}
+                onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} 
+            />
         </div>
     );
 };

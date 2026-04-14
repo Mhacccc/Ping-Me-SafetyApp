@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import './SuccessModal.css';
 
-const SuccessModal = ({ isOpen, onClose, title, message }) => {
+const SuccessModal = ({ isOpen, onClose, title, message, buttonText }) => {
   if (!isOpen) return null;
 
   return (
@@ -21,7 +21,7 @@ const SuccessModal = ({ isOpen, onClose, title, message }) => {
           className="success-modal-btn" 
           onClick={onClose}
         >
-          Okay
+          {buttonText || "Okay"}
         </button>
       </div>
     </div>
