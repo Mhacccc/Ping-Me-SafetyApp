@@ -1,5 +1,5 @@
-/* src/components/SuccessModal.css */
-.success-modal-backdrop {
+/* src/components/ConfirmationModal.css */
+.confirmation-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,7 +13,7 @@
   backdrop-filter: blur(4px);
 }
 
-.success-modal-content {
+.confirmation-modal-content {
   background-color: var(--pm-surface, #ffffff);
   width: 90%;
   max-width: 400px;
@@ -29,31 +29,34 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
-.success-modal-icon-wrapper {
+.confirmation-modal-icon-wrapper {
   display: flex;
   justify-content: center;
   margin-bottom: 16px;
 }
 
-.success-modal-title {
+.confirmation-modal-title {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 8px;
   color: var(--pm-text, #111827);
 }
 
-.success-modal-message {
+.confirmation-modal-message {
   font-size: 0.95rem;
   color: var(--pm-text-muted, #6b7280);
   margin-bottom: 24px;
   line-height: 1.5;
 }
 
-.success-modal-btn {
+.confirmation-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirmation-modal-btn {
   padding: 12px 30px;
-  background-color: var(--pm-primary, #a4262c);
-  color: white;
-  border: none;
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -62,26 +65,29 @@
   justify-content: center;
   align-items: center;
   transition: all 0.2s ease;
+  font-size: 1rem;
 }
 
-.success-modal-btn:hover {
-  background-color: rgb(140, 32, 37);
+.confirmation-modal-btn.confirm {
+  background-color: var(--pm-primary, #a4262c);
+  color: white;
+  border: none;
 }
 
-.success-modal-backdrop.fade-out {
-  animation: fade-out 0.3s ease forwards;
+.confirmation-modal-btn.confirm.danger {
+  background-color: var(--pm-danger, #A4262C);
 }
 
-.success-modal-content.pop-out {
-  animation: modal-pop-out 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.confirmation-modal-btn.confirm:hover {
+  filter: brightness(0.9);
 }
 
-@keyframes fade-out {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+.confirmation-modal-btn.cancel {
+  background-color: transparent;
+  color: var(--pm-text, #333);
+  border: 1px solid var(--pm-border, #ccc);
 }
 
-@keyframes modal-pop-out {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0; }
+.confirmation-modal-btn.cancel:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }

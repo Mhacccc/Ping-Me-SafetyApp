@@ -6,6 +6,7 @@ import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase
 import { db } from '../../config/firebaseConfig';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import SuccessModal from '../../components/SuccessModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import './MyBracelet.css';
 
 const MyBraceletEmergency = () => {
@@ -19,7 +20,8 @@ const MyBraceletEmergency = () => {
     const [serialNumber, setSerialNumber] = useState(null);
     const [originalContacts, setOriginalContacts] = useState([{ name: '', contactNo: '' }]);
     const [contacts, setContacts] = useState([{ name: '', contactNo: '' }]);
-    const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', buttonText: '' });
+    const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', buttonText: '', hideButton: false, autoClose: false });
+    const [contactToDeleteIndex, setContactToDeleteIndex] = useState(null);
     const [errors, setErrors] = useState([]);
 
     const PHONE_NUMBER_REGEX = /^(09\d{9}|\+639\d{9})$/;
@@ -142,7 +144,9 @@ const MyBraceletEmergency = () => {
                 isOpen: true,
                 title: "Success!",
                 message: "Emergency contact has been successfully added to your list.",
-                buttonText: "Great!"
+                buttonText: "Great!",
+                hideButton: false,
+                autoClose: false
             });
             
             setOriginalContacts(contactsToSave);
@@ -219,7 +223,7 @@ const MyBraceletEmergency = () => {
                                         <button 
                                           className="br-btn-secondary" 
                                           style={{ padding: '6px 12px', fontSize: '12px', minWidth: 'auto', background: 'transparent', border: 'none', color: '#dc3545' }}
-                                          onClick={() => handleRemoveContact(index)}
+                                          onClick={() => setContactToDeleteIndex(index)}
                                           type="button"
                                         >
                                             Remove
@@ -291,7 +295,30 @@ const MyBraceletEmergency = () => {
                 title={modalConfig.title}
                 message={modalConfig.message}
                 buttonText={modalConfig.buttonText}
+                hideButton={modalConfig.hideButton}
+                autoClose={modalConfig.autoClose}
                 onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} 
+            />
+
+            <ConfirmationModal 
+                isOpen={contactToDeleteIndex !== null}
+                onClose={() => setContactToDeleteIndex(null)}
+                onConfirm={() => {
+                    handleRemoveContact(contactToDeleteIndex);
+                    setContactToDeleteIndex(null);
+                    setModalConfig({
+                        isOpen: true,
+                        title: "Successfully Removed",
+                        message: "The contact has been deleted from your emergency list.",
+                        hideButton: true,
+                        autoClose: true
+                    });
+                }}
+                title="Remove Contact?"
+                message="Are you sure you want to remove this emergency contact? This action cannot be undone."
+                confirmText="Remove"
+                cancelText="Cancel"
+                isDanger={true}
             />
         </div>
     );
