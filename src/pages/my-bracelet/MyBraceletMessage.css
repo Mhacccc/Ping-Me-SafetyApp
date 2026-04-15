@@ -6,12 +6,12 @@
 
 @import "../../styles/MenuLayout.css";
 
-/* ── Page base tweak ── */
+/* ── Page base ── */
 .bmc-page {
-  position: relative;   /* for context menu positioning */
+  position: relative;
 }
 
-/* ── Three-dot menu (replaces br-nav-spacer) ── */
+/* ── Three-dot menu ── */
 .bmc-menu-wrap {
   position: absolute;
   right: 16px;
@@ -32,7 +32,6 @@
 }
 .bmc-three-dot-btn:hover { background: rgba(0, 0, 0, 0.06); }
 
-/* Context menu dropdown */
 .bmc-context-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -61,36 +60,58 @@
 }
 .bmc-context-item:hover { background: rgba(0, 0, 0, 0.04); }
 
-/* ── Main layout tweak ── */
+/* ── Main layout ── */
 .bmc-main {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding-top: 28px;
-  padding-bottom: 28px;
+  gap: 22px;
+  padding-top: 24px;
+  padding-bottom: 24px;
 }
 
-/* ── Transparent Intro ── */
-.bmc-intro {
-  /* No background — sits directly on br-page bg */
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.bmc-heading {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--pm-text, #1a1a1a);
-  margin: 0;
-  line-height: 1.35;
-}
-
+/* ── Instructional text ── */
 .bmc-subtext {
   font-size: 12px;
-  color: #777;
-  line-height: 1.6;
+  color: #888;
+  line-height: 1.65;
   margin: 0;
+}
+
+/* ── Segmented Tab Switcher ── */
+.bmc-tab-switcher {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 30px;
+  padding: 5px;
+  gap: 4px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.bmc-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 24px;
+  padding: 11px 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: var(--pm-font, inherit);
+  color: #888;
+  cursor: pointer;
+  letter-spacing: 0.1px;
+  transition: background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease, transform 0.15s ease;
+}
+
+.bmc-tab:hover:not(.bmc-tab--active) {
+  color: #555;
+  background: rgba(255,255,255,0.4);
+}
+
+.bmc-tab--active {
+  background: #8b2328;
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(139, 35, 40, 0.35);
+  transform: scale(1.01);
 }
 
 /* ── Content Sections ── */
@@ -144,7 +165,6 @@
 
 /* ── Textarea with gradient border ── */
 .bmc-textarea-border {
-  /* Gradient border via background + 2px padding */
   background: linear-gradient(135deg, #f5a623 0%, #d9363e 100%);
   padding: 2px;
   border-radius: 14px;
@@ -165,18 +185,15 @@
   box-sizing: border-box;
   display: block;
 }
-
 .bmc-textarea::placeholder { color: #bbb; }
 
-/* ── Apply To — Custom Dropdown ── */
+/* ── Apply To ── */
 .bmc-apply-group {
   gap: 8px;
-}
-
-.bmc-dropdown-wrap {
   position: relative;
 }
 
+/* Trigger button */
 .bmc-dropdown-trigger {
   width: 100%;
   display: flex;
@@ -193,58 +210,146 @@
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: border-color 0.2s;
+  text-align: left;
 }
-.bmc-dropdown-trigger:hover,
-.bmc-dropdown-trigger:focus { border-color: var(--pm-primary, #a4262c); outline: none; }
+.bmc-dropdown-trigger:hover:not(:disabled),
+.bmc-dropdown-trigger:focus:not(:disabled) {
+  border-color: var(--pm-primary, #a4262c);
+  outline: none;
+}
+.bmc-dropdown-trigger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.bmc-dropdown-summary {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
 .bmc-chevron {
   color: #aaa;
   transition: transform 0.2s ease;
   flex-shrink: 0;
+  margin-left: 8px;
 }
 .bmc-chevron--open { transform: rotate(180deg); }
 
-/* Dropdown list */
-.bmc-dropdown-list {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
+/* ── Multi-select Checklist Panel ── */
+.bmc-checklist {
   background: var(--pm-surface, #fff);
-  border: 1px solid var(--pm-border, #eee);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1.5px solid var(--pm-border, #e5e5e5);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  z-index: 100;
-  list-style: none;
-  margin: 0;
-  padding: 4px 0;
   animation: bmc-pop 0.15s ease;
+  padding: 4px 0;
 }
 
-.bmc-dropdown-option {
+/* Individual row */
+.bmc-check-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 12px 16px;
-  font-size: 14px;
-  font-family: var(--pm-font, inherit);
-  color: var(--pm-text, #333);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.14s;
+  user-select: none;
 }
-.bmc-dropdown-option:hover { background: rgba(0, 0, 0, 0.04); }
-.bmc-dropdown-option--active {
+.bmc-check-row:hover { background: rgba(0, 0, 0, 0.03); }
+
+/* "All" row accent */
+.bmc-check-row--all {
+  background: rgba(164, 38, 44, 0.03);
+}
+.bmc-check-row--all:hover { background: rgba(164, 38, 44, 0.07); }
+
+/* Hide native checkbox */
+.bmc-check-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom checkbox box */
+.bmc-check-box-wrap {
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bmc-check-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--pm-border, #ddd);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, border-color 0.18s;
+  flex-shrink: 0;
+}
+
+.bmc-check-box--checked {
+  background: var(--pm-primary, #a4262c);
+  border-color: var(--pm-primary, #a4262c);
+}
+
+/* Label text */
+.bmc-check-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pm-text, #222);
+}
+
+.bmc-check-label--all {
   color: var(--pm-primary, #a4262c);
   font-weight: 700;
-  background: rgba(164, 38, 44, 0.05);
 }
 
-/* ── Footer override ── */
+.bmc-check-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bmc-check-sub {
+  font-size: 11.5px;
+  color: #aaa;
+  font-weight: 400;
+}
+
+/* Divider between "All" and individual contacts */
+.bmc-check-divider {
+  height: 1px;
+  background: var(--pm-border, #eee);
+  margin: 2px 0;
+}
+
+/* Empty contacts notice */
+.bmc-no-contacts {
+  font-size: 12px;
+  color: #aaa;
+  margin: 0;
+  padding: 4px 2px;
+  line-height: 1.5;
+}
+
+/* ── Footer ── */
 .bmc-footer {
   justify-content: center;
   padding-bottom: 28px;
   padding-top: 8px;
 }
 
-/* ── Edit Button — dark red pill, full width ── */
+/* ── Edit button — dark red full-width pill ── */
 .bmc-edit-btn {
   display: flex;
   align-items: center;
@@ -259,11 +364,11 @@
   padding: 15px 28px;
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.2px;
   cursor: pointer;
   font-family: var(--pm-font, inherit);
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 14px rgba(139, 35, 40, 0.3);
-  letter-spacing: 0.2px;
+  box-shadow: 0 4px 14px rgba(139, 35, 40, 0.35);
 }
 
 .bmc-edit-btn svg { display: none; }
@@ -284,13 +389,16 @@
 /* ── Animation ── */
 @keyframes bmc-pop {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── Dark Mode ── */
-html.pm-dark .bmc-heading     { color: var(--pm-text); }
-html.pm-dark .bmc-subtext     { color: #888; }
-html.pm-dark .bmc-bubble-text { color: var(--pm-text); }
-html.pm-dark .bmc-textarea    { color: var(--pm-text); }
-html.pm-dark .bmc-edit-btn    { background: #2a2a2a; color: #eee; }
-html.pm-dark .bmc-edit-btn svg { background: #555; }
+/* ── Dark mode ── */
+html.pm-dark .bmc-tab-switcher       { background: rgba(255,255,255,0.1); }
+html.pm-dark .bmc-tab--active        { background: var(--pm-surface); }
+html.pm-dark .bmc-bubble-text        { color: var(--pm-text); }
+html.pm-dark .bmc-textarea           { color: var(--pm-text); }
+html.pm-dark .bmc-check-box          { background: #2a2a2a; border-color: #555; }
+html.pm-dark .bmc-check-box--checked { background: var(--pm-primary); border-color: var(--pm-primary); }
+html.pm-dark .bmc-checklist          { background: var(--pm-surface); }
+html.pm-dark .bmc-edit-btn           { background: #2a2a2a; color: #ddd; }
+html.pm-dark .bmc-edit-btn svg       { background: #555; }
