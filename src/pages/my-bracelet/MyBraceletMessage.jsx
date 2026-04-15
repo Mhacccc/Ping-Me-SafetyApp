@@ -98,6 +98,7 @@ export default function MyBraceletMessage() {
 
   // Bracelet data
   const [serialNumber, setSerialNumber] = useState(null);
+  const [braceletName, setBraceletName] = useState("");
   const [isLoadingBracelet, setIsLoadingBracelet] = useState(true);
 
   // Active tab: "emergency" | "safe"
@@ -125,6 +126,8 @@ export default function MyBraceletMessage() {
         if (!snap.empty) {
           const data = snap.docs[0].data();
           setSerialNumber(data.serialNumber ?? snap.docs[0].id);
+          // Use the bracelet user's configured name, not the account display name
+          setBraceletName(data.name || "");
           if (data.customHelpPhrase) {
             setSavedPhrase(data.customHelpPhrase);
           }
@@ -150,7 +153,8 @@ export default function MyBraceletMessage() {
   }, []);
 
   // ── Derived values ───────────────────────────────────────────────────────
-  const ownerName = currentUser?.displayName || "Your Name";
+  // Use the bracelet-configured name (braceletUsers.name), not the Auth displayName
+  const ownerName = isLoadingBracelet ? "Loading…" : (braceletName || currentUser?.displayName || "Bracelet User");
   const previewUrl = buildLocationUrl(
     PREVIEW_POSITION[0], PREVIEW_POSITION[1], PREVIEW_BRACELET_ID
   );

@@ -394,7 +394,7 @@ export function useSosReportGenerator(braceletUsers) {
               console.warn('[SMS] Could not fetch customHelpPhrase, using default.', fetchErr);
             }
 
-            const ownerName  = currentUser.displayName || 'User';
+            const ownerName  = user.name || currentUser.displayName || 'User';
             const pos        = user.position ?? null;
             const locationUrl = pos?.length === 2
               ? buildLocationUrl(pos[0], pos[1], user.id)
@@ -483,7 +483,7 @@ export function useSosReportGenerator(braceletUsers) {
             // ── Send Safe-Status SMS ──────────────────────────────────────
             const contacts = user.emergencyContacts || [];
             if (contacts.length > 0) {
-              const ownerName  = currentUser.displayName || 'User';
+              const ownerName  = user.name || currentUser.displayName || 'User';
               const safeSms    = buildSafeSms(ownerName);
               sendSms(contacts, safeSms).catch(err =>
                 console.error('[SMS] Safe SMS failed:', err)
