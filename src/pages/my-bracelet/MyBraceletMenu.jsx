@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Watch, Settings, Phone, Wallet, ChevronRight, ChevronLeft, Users } from "lucide-react";
+import { Watch, Settings, Phone, Wallet, ChevronRight, ChevronLeft, Users, MessageSquare } from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
 import "../../styles/MenuLayout.css";
@@ -156,6 +156,24 @@ export default function MyBraceletMenu() {
               <span className="acm-menu-label">Authorized Observers</span>
               <span className="acm-menu-desc">
                 People checking your location
+              </span>
+            </span>
+            <ChevronRight size={18} className="acm-menu-arrow" />
+          </button>
+
+          {/* Message Customization */}
+          <button
+            className="acm-menu-item"
+            onClick={() => navigate("/app/my-bracelet/message-customization")}
+            id="bracelet-message-customization-btn"
+          >
+            <span className="acm-menu-icon-wrap" style={{backgroundColor: "rgba(164,38,44,0.1)", color: "#a4262c"}}>
+              <MessageSquare size={18} strokeWidth={2} />
+            </span>
+            <span className="acm-menu-text">
+              <span className="acm-menu-label">Message Customization</span>
+              <span className="acm-menu-desc">
+                Personalize your emergency message
               </span>
             </span>
             <ChevronRight size={18} className="acm-menu-arrow" />

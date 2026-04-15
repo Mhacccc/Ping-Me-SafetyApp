@@ -1,0 +1,296 @@
+/* ────────────────────────────────────────────
+   MyBraceletMessage.css
+   Message Customization Screen Styles
+   Extends the shared MenuLayout (br-*) system
+──────────────────────────────────────────── */
+
+@import "../../styles/MenuLayout.css";
+
+/* ── Page base tweak ── */
+.bmc-page {
+  position: relative;   /* for context menu positioning */
+}
+
+/* ── Three-dot menu (replaces br-nav-spacer) ── */
+.bmc-menu-wrap {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.bmc-three-dot-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.bmc-three-dot-btn:hover { background: rgba(0, 0, 0, 0.06); }
+
+/* Context menu dropdown */
+.bmc-context-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--pm-surface, #fff);
+  border: 1px solid var(--pm-border, #eee);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 200;
+  animation: bmc-pop 0.15s ease;
+}
+
+.bmc-context-item {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 13px 16px;
+  font-size: 14px;
+  font-family: var(--pm-font, inherit);
+  color: var(--pm-text, #333);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.bmc-context-item:hover { background: rgba(0, 0, 0, 0.04); }
+
+/* ── Main layout tweak ── */
+.bmc-main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
+/* ── Transparent Intro ── */
+.bmc-intro {
+  /* No background — sits directly on br-page bg */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bmc-heading {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--pm-text, #1a1a1a);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.bmc-subtext {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Content Sections ── */
+.bmc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bmc-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--pm-primary, #a4262c);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* ── Chat Bubble ── */
+.bmc-chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bmc-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(164, 38, 44, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.bmc-bubble {
+  background: var(--pm-surface, #fff);
+  border-radius: 4px 16px 16px 16px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  max-width: 88%;
+}
+
+.bmc-bubble-text {
+  font-size: 14px;
+  color: var(--pm-text, #333);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Textarea with gradient border ── */
+.bmc-textarea-border {
+  /* Gradient border via background + 2px padding */
+  background: linear-gradient(135deg, #f5a623 0%, #d9363e 100%);
+  padding: 2px;
+  border-radius: 14px;
+}
+
+.bmc-textarea {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-family: var(--pm-font, inherit);
+  color: var(--pm-text, #222);
+  background: var(--pm-surface, #fff);
+  resize: none;
+  outline: none;
+  line-height: 1.6;
+  box-sizing: border-box;
+  display: block;
+}
+
+.bmc-textarea::placeholder { color: #bbb; }
+
+/* ── Apply To — Custom Dropdown ── */
+.bmc-apply-group {
+  gap: 8px;
+}
+
+.bmc-dropdown-wrap {
+  position: relative;
+}
+
+.bmc-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--pm-surface, #fff);
+  border: 1.5px solid var(--pm-border, #e5e5e5);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: var(--pm-font, inherit);
+  font-weight: 600;
+  color: var(--pm-text, #333);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s;
+}
+.bmc-dropdown-trigger:hover,
+.bmc-dropdown-trigger:focus { border-color: var(--pm-primary, #a4262c); outline: none; }
+
+.bmc-chevron {
+  color: #aaa;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.bmc-chevron--open { transform: rotate(180deg); }
+
+/* Dropdown list */
+.bmc-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--pm-surface, #fff);
+  border: 1px solid var(--pm-border, #eee);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 100;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  animation: bmc-pop 0.15s ease;
+}
+
+.bmc-dropdown-option {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: var(--pm-font, inherit);
+  color: var(--pm-text, #333);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bmc-dropdown-option:hover { background: rgba(0, 0, 0, 0.04); }
+.bmc-dropdown-option--active {
+  color: var(--pm-primary, #a4262c);
+  font-weight: 700;
+  background: rgba(164, 38, 44, 0.05);
+}
+
+/* ── Footer override ── */
+.bmc-footer {
+  justify-content: center;
+  padding-bottom: 28px;
+  padding-top: 8px;
+}
+
+/* ── Edit Button — dark red pill, full width ── */
+.bmc-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 600px;
+  background: #8b2328;
+  color: #fff;
+  border: none;
+  border-radius: 40px;
+  padding: 15px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--pm-font, inherit);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(139, 35, 40, 0.3);
+  letter-spacing: 0.2px;
+}
+
+.bmc-edit-btn svg { display: none; }
+
+.bmc-edit-btn:hover:not(:disabled) {
+  background: #a4262c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(139, 35, 40, 0.4);
+}
+.bmc-edit-btn:active:not(:disabled) { transform: translateY(0); }
+
+.bmc-edit-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Animation ── */
+@keyframes bmc-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* ── Dark Mode ── */
+html.pm-dark .bmc-heading     { color: var(--pm-text); }
+html.pm-dark .bmc-subtext     { color: #888; }
+html.pm-dark .bmc-bubble-text { color: var(--pm-text); }
+html.pm-dark .bmc-textarea    { color: var(--pm-text); }
+html.pm-dark .bmc-edit-btn    { background: #2a2a2a; color: #eee; }
+html.pm-dark .bmc-edit-btn svg { background: #555; }
