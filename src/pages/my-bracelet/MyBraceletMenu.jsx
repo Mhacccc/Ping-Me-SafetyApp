@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Watch, Settings, Phone, Wallet, ChevronRight, ChevronLeft, Users, MessageSquare } from "lucide-react";
+import { Watch, Settings, Phone, ChevronRight, ChevronLeft, Users, MessageSquare } from "lucide-react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
 import "../../styles/MenuLayout.css";
@@ -125,23 +125,6 @@ export default function MyBraceletMenu() {
             <ChevronRight size={18} className="acm-menu-arrow" />
           </button>
 
-          {/* Load & Balance */}
-          <button
-            className="acm-menu-item"
-            onClick={() => navigate("/app/my-bracelet/load")}
-            id="bracelet-load-btn"
-          >
-            <span className="acm-menu-icon-wrap" style={{backgroundColor: "rgba(164,38,44,0.1)", color: "#a4262c"}}>
-              <Wallet size={18} strokeWidth={2} />
-            </span>
-            <span className="acm-menu-text">
-              <span className="acm-menu-label">Load & Balance</span>
-              <span className="acm-menu-desc">
-                Current balance and bracelet reload
-              </span>
-            </span>
-            <ChevronRight size={18} className="acm-menu-arrow" />
-          </button>
 
           {/* Authorized Observers */}
           <button
