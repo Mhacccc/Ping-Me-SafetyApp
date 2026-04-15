@@ -1,65 +1,120 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { ChevronLeft, MoreVertical, MessageCircle, Send, ChevronDown, Check } from "lucide-react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import {
+  ChevronLeft,
+  MoreVertical,
+  Send,
+  Lock,
+  MessageCircle,
+  ShieldAlert,
+  MapPin,
+  CheckCircle2,
+} from "lucide-react";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
+import {
+  buildEmergencySms,
+  buildSafeSms,
+  buildLocationUrl,
+  DEFAULT_HELP_PHRASE,
+  LEVEL_LABEL,
+} from "../../utils/smsTemplates";
 import "./MyBraceletMessage.css";
 
-const STATES = {
-  emergency: {
-    tab: "Emergency",
-    defaultMessage: "Help! I'm in an emergency at [Location]. Please check on me.",
-  },
-  safe: {
-    tab: "I am Safe",
-    defaultMessage: "Hi! I'm currently in Manila. I'm safe, no need to worry!",
-  },
-};
+// ── Constants ────────────────────────────────────────────────────────────────
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+/** Example position used purely for the preview URL in the UI. */
+const PREVIEW_POSITION = [14.5995, 120.9842]; // Manila coordinates
+const PREVIEW_BRACELET_ID = "PM-XXXX-XXX";
 
-/** Builds a human-readable summary of selected contacts */
-function buildSummary(selected, allContacts) {
-  if (selected.length === 0) return "No contacts selected";
-  if (selected.length === allContacts.length) return "All Contacts Selected";
-  if (selected.length === 1) return selected[0].name;
-  if (selected.length === 2) return `${selected[0].name} & ${selected[1].name}`;
-  return `${selected[0].name}, ${selected[1].name} & ${selected.length - 2} other${selected.length - 2 > 1 ? "s" : ""}`;
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+/** A single locked field row in the "Required Details" card. */
+function LockedField({ icon: Icon, label, value }) {
+  return (
+    <div className="bmc-locked-field">
+      <span className="bmc-locked-icon">
+        <Icon size={14} strokeWidth={2} />
+      </span>
+      <div className="bmc-locked-body">
+        <span className="bmc-locked-label">{label}</span>
+        <span className="bmc-locked-value">{value}</span>
+      </div>
+      <Lock size={12} className="bmc-lock-icon" />
+    </div>
+  );
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+/** Live SMS preview — splits the assembled message into readable lines. */
+function SmsPreview({ message }) {
+  // Split on the two sentence boundaries so each part sits on its own line
+  // Pattern: "...[Level Emergency]. " / "This is Name. Phrase " / "Track me..."
+  const trackIndex   = message.indexOf('Track me on the app:');
+  const thisIsIndex  = message.indexOf('This is ');
+
+  let lines = [];
+  if (trackIndex > 0 && thisIsIndex > 0) {
+    lines = [
+      message.slice(0, thisIsIndex).trim(),
+      message.slice(thisIsIndex, trackIndex).trim(),
+      message.slice(trackIndex).trim(),
+    ];
+  } else {
+    // Fallback: render as-is
+    lines = [message];
+  }
+
+  return (
+    <div className="bmc-preview-wrap">
+      <div className="bmc-preview-header">
+        <MessageCircle size={13} strokeWidth={2.5} />
+        <span>SMS Preview</span>
+      </div>
+      <div className="bmc-preview-bubble">
+        {lines.map((line, i) => (
+          <p key={i} className="bmc-preview-text">
+            {line}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────
 
 export default function MyBraceletMessage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const dropdownRef = useRef(null);
+  const menuWrapRef = useRef(null);
 
-  // Per-state current messages (committed)
-  const [currentMessages, setCurrentMessages] = useState({
-    emergency: STATES.emergency.defaultMessage,
-    safe: STATES.safe.defaultMessage,
-  });
+  // Bracelet data
+  const [serialNumber, setSerialNumber] = useState(null);
+  const [isLoadingBracelet, setIsLoadingBracelet] = useState(true);
 
-  // Per-state draft inputs
-  const [draftMessages, setDraftMessages] = useState({ emergency: "", safe: "" });
-
+  // Active tab: "emergency" | "safe"
   const [activeTab, setActiveTab] = useState("emergency");
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // The custom middle phrase the user edits (Emergency tab only)
+  const [savedPhrase, setSavedPhrase] = useState(DEFAULT_HELP_PHRASE);
+  const [draftPhrase, setDraftPhrase] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Contacts data
-  const [allContacts, setAllContacts] = useState([]);
-  const [selectedContacts, setSelectedContacts] = useState([]); // array of { name, contactNo }
-  const [isLoadingContacts, setIsLoadingContacts] = useState(true);
+  // Three-dot menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Per-state recipient selections (stored as contact indices for backend)
-  const [recipientMap, setRecipientMap] = useState({ emergency: [], safe: [] });
-
-  // ── Fetch emergency contacts ──
+  // ── Fetch bracelet + saved phrase ────────────────────────────────────────
   useEffect(() => {
-    const fetchContacts = async () => {
+    const fetchBracelet = async () => {
       if (!currentUser) return;
       try {
         const q = query(
@@ -69,94 +124,84 @@ export default function MyBraceletMessage() {
         const snap = await getDocs(q);
         if (!snap.empty) {
           const data = snap.docs[0].data();
-          const contacts = (data.emergencyContacts || []).map((c, i) => ({
-            id: `contact_${i}`,
-            name: c.name,
-            contactNo: c.contactNo,
-          }));
-          setAllContacts(contacts);
-          setSelectedContacts(contacts); // default: all selected
-          setRecipientMap({
-            emergency: contacts.map((c) => c.id),
-            safe: contacts.map((c) => c.id),
-          });
+          setSerialNumber(data.serialNumber ?? snap.docs[0].id);
+          if (data.customHelpPhrase) {
+            setSavedPhrase(data.customHelpPhrase);
+          }
         }
       } catch (err) {
-        console.error("Error fetching contacts:", err);
+        console.error("Error fetching bracelet:", err);
       } finally {
-        setIsLoadingContacts(false);
+        setIsLoadingBracelet(false);
       }
     };
-    fetchContacts();
+    fetchBracelet();
   }, [currentUser]);
 
-  // Close dropdown on outside click
+  // ── Close menu on outside click ──────────────────────────────────────────
   useEffect(() => {
-    const handleOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsDropdownOpen(false);
+    const handler = (e) => {
+      if (menuWrapRef.current && !menuWrapRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Derived state ──
-  const currentDraft = draftMessages[activeTab];
-  const currentDisplayMessage = currentMessages[activeTab];
-  const activeState = STATES[activeTab];
-  const isAllSelected = selectedContacts.length === allContacts.length && allContacts.length > 0;
-  const summaryText = isLoadingContacts
-    ? "Loading contacts..."
-    : allContacts.length === 0
-    ? "No emergency contacts saved"
-    : buildSummary(selectedContacts, allContacts);
+  // ── Derived values ───────────────────────────────────────────────────────
+  const ownerName = currentUser?.displayName || "Your Name";
+  const previewUrl = buildLocationUrl(
+    PREVIEW_POSITION[0], PREVIEW_POSITION[1], PREVIEW_BRACELET_ID
+  );
 
-  // ── Handlers ──
-  const handleDraftChange = (e) =>
-    setDraftMessages((prev) => ({ ...prev, [activeTab]: e.target.value }));
+  // Emergency: build a live preview using all three severity examples
+  const previewPhraseInUse = draftPhrase.trim() || savedPhrase;
+  const emergencyPreview = buildEmergencySms(
+    ownerName, 3, previewUrl, previewPhraseInUse
+  );
+  const safePreview = buildSafeSms(ownerName);
 
-  const handleToggleAll = () => {
-    const next = isAllSelected ? [] : [...allContacts];
-    setSelectedContacts(next);
-    setRecipientMap((prev) => ({ ...prev, [activeTab]: next.map((c) => c.id) }));
-  };
-
-  const handleToggleContact = (contact) => {
-    const isChecked = selectedContacts.some((c) => c.id === contact.id);
-    const next = isChecked
-      ? selectedContacts.filter((c) => c.id !== contact.id)
-      : [...selectedContacts, contact];
-    setSelectedContacts(next);
-    setRecipientMap((prev) => ({ ...prev, [activeTab]: next.map((c) => c.id) }));
-  };
-
-  const handleEdit = async () => {
-    if (!currentDraft.trim()) return;
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleSave = async () => {
+    const phrase = draftPhrase.trim();
+    if (!phrase) return;
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setCurrentMessages((prev) => ({ ...prev, [activeTab]: currentDraft.trim() }));
-    setDraftMessages((prev) => ({ ...prev, [activeTab]: "" }));
-    setIsSaving(false);
+    try {
+      if (serialNumber) {
+        const braceletRef = doc(db, "braceletUsers", serialNumber);
+        await setDoc(braceletRef, { customHelpPhrase: phrase }, { merge: true });
+      }
+      setSavedPhrase(phrase);
+      setDraftPhrase("");
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2500);
+    } catch (err) {
+      console.error("Error saving phrase:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
-    setCurrentMessages((prev) => ({ ...prev, [activeTab]: STATES[activeTab].defaultMessage }));
-    setDraftMessages((prev) => ({ ...prev, [activeTab]: "" }));
+    setSavedPhrase(DEFAULT_HELP_PHRASE);
+    setDraftPhrase("");
     setIsMenuOpen(false);
+    if (serialNumber) {
+      const braceletRef = doc(db, "braceletUsers", serialNumber);
+      setDoc(braceletRef, { customHelpPhrase: DEFAULT_HELP_PHRASE }, { merge: true }).catch(
+        (err) => console.error("Error resetting phrase:", err)
+      );
+    }
   };
 
-  const handleTabSwitch = (key) => {
-    setActiveTab(key);
-    // Restore per-tab recipient selection when switching tabs
-    const tabRecipients = recipientMap[key];
-    setSelectedContacts(allContacts.filter((c) => tabRecipients.includes(c.id)));
-  };
+  const canSave = draftPhrase.trim().length > 0 && !isSaving;
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="br-page bmc-page" onClick={() => setIsMenuOpen(false)}>
 
-      {/* ── Standard Feature Navbar ── */}
+      {/* ── Navbar ── */}
       <header className="br-navbar">
         <button
           className="br-nav-back"
@@ -166,13 +211,18 @@ export default function MyBraceletMessage() {
           <ChevronLeft size={24} color="#444" />
         </button>
 
-        <h1 className="br-nav-title">Chat customization</h1>
+        <h1 className="br-nav-title">Message Customization</h1>
 
-        <div className="bmc-menu-wrap" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="bmc-menu-wrap"
+          ref={menuWrapRef}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             className="bmc-three-dot-btn"
             onClick={() => setIsMenuOpen((p) => !p)}
             id="bmc-menu-btn"
+            aria-label="Options menu"
           >
             <MoreVertical size={22} color="#444" />
           </button>
@@ -186,153 +236,211 @@ export default function MyBraceletMessage() {
         </div>
       </header>
 
-      {/* ── Main Content ── */}
+      {/* ── Main ── */}
       <main className="br-main bmc-main">
 
-        {/* Instructional text — transparent */}
+        {/* Subtext */}
         <p className="bmc-subtext">
-          Personalize your responses for different situations to keep your
-          contacts informed automatically.
+          Customize the help phrase sent during an emergency. The mandatory
+          fields below (name, severity level, location link) are always
+          automatically included in every alert.
         </p>
 
-        {/* ── Segmented Tab Switcher ── */}
+        {/* ── Tab Switcher ── */}
         <div className="bmc-tab-switcher" role="tablist">
-          {Object.entries(STATES).map(([key, val]) => (
+          {[
+            { key: "emergency", label: "Emergency" },
+            { key: "safe",      label: "I am Safe"  },
+          ].map(({ key, label }) => (
             <button
               key={key}
               role="tab"
               aria-selected={activeTab === key}
               className={`bmc-tab ${activeTab === key ? "bmc-tab--active" : ""}`}
-              onClick={(e) => { e.stopPropagation(); handleTabSwitch(key); }}
+              onClick={(e) => { e.stopPropagation(); setActiveTab(key); }}
               id={`bmc-tab-${key}`}
             >
-              {val.tab}
+              {label}
             </button>
           ))}
         </div>
 
-        {/* ── Current Message ── */}
-        <div className="bmc-section">
-          <span className="bmc-section-label">
-            Current {activeState.tab} Message
-          </span>
-          <div className="bmc-chat-row">
-            <div className="bmc-avatar">
-              <MessageCircle size={18} color="#a4262c" strokeWidth={2} />
-            </div>
-            <div className="bmc-bubble">
-              <p className="bmc-bubble-text">{currentDisplayMessage}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── New Message Input ── */}
-        <div className="bmc-section">
-          <span className="bmc-section-label">
-            New {activeState.tab} Message
-          </span>
-          <div className="bmc-textarea-border">
-            <textarea
-              id="bmc-new-message-input"
-              className="bmc-textarea"
-              placeholder="Type here your new message..."
-              value={currentDraft}
-              onChange={handleDraftChange}
-              rows={4}
-            />
-          </div>
-        </div>
-
-        {/* ── Apply To — Multi-select Dropdown ── */}
-        <div className="bmc-section bmc-apply-group" ref={dropdownRef}>
-          <span className="bmc-section-label">Apply to:</span>
-
-          <button
-            className="bmc-dropdown-trigger"
-            id="bmc-apply-select"
-            onClick={(e) => { e.stopPropagation(); setIsDropdownOpen((p) => !p); }}
-            disabled={isLoadingContacts || allContacts.length === 0}
-          >
-            <span className="bmc-dropdown-summary">{summaryText}</span>
-            <ChevronDown
-              size={16}
-              className={`bmc-chevron ${isDropdownOpen ? "bmc-chevron--open" : ""}`}
-            />
-          </button>
-
-          {isDropdownOpen && allContacts.length > 0 && (
-            <div className="bmc-checklist" onClick={(e) => e.stopPropagation()}>
-              {/* Select All row */}
-              <label className="bmc-check-row bmc-check-row--all" htmlFor="bmc-check-all">
-                <span className="bmc-check-box-wrap">
-                  <input
-                    type="checkbox"
-                    id="bmc-check-all"
-                    className="bmc-check-input"
-                    checked={isAllSelected}
-                    onChange={handleToggleAll}
-                  />
-                  <span className={`bmc-check-box ${isAllSelected ? "bmc-check-box--checked" : ""}`}>
-                    {isAllSelected && <Check size={11} strokeWidth={3} color="#fff" />}
-                  </span>
+        {/* ════════════════════ EMERGENCY TAB ════════════════════ */}
+        {activeTab === "emergency" && (
+          <>
+            {/* ── Required Details (locked) ── */}
+            <div className="bmc-section">
+              <div className="bmc-section-header-row">
+                <span className="bmc-section-label">Required Details</span>
+                <span className="bmc-locked-badge">
+                  <Lock size={10} strokeWidth={3} /> Auto-injected
                 </span>
-                <span className="bmc-check-label bmc-check-label--all">All Emergency Contacts</span>
-              </label>
+              </div>
 
-              <div className="bmc-check-divider" />
+              <div className="bmc-locked-card">
+                <div className="bmc-locked-card-note">
+                  The fields below are automatically included in
+                  every SMS alert and cannot be edited or removed.
+                </div>
 
-              {/* Individual contacts */}
-              {allContacts.map((contact) => {
-                const checked = selectedContacts.some((c) => c.id === contact.id);
-                return (
-                  <label
-                    key={contact.id}
-                    className="bmc-check-row"
-                    htmlFor={`bmc-check-${contact.id}`}
-                  >
-                    <span className="bmc-check-box-wrap">
-                      <input
-                        type="checkbox"
-                        id={`bmc-check-${contact.id}`}
-                        className="bmc-check-input"
-                        checked={checked}
-                        onChange={() => handleToggleContact(contact)}
-                      />
-                      <span className={`bmc-check-box ${checked ? "bmc-check-box--checked" : ""}`}>
-                        {checked && <Check size={11} strokeWidth={3} color="#fff" />}
-                      </span>
+                <LockedField
+                  icon={({ size, strokeWidth }) => (
+                    /* person icon inline */
+                    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
+                  )}
+                  label="User Name"
+                  value={isLoadingBracelet ? "Loading…" : ownerName}
+                />
+
+                <div className="bmc-locked-divider" />
+
+                {/* Show all 3 severity levels as badges */}
+                <div className="bmc-locked-field bmc-locked-field--levels">
+                  <span className="bmc-locked-icon">
+                    <ShieldAlert size={14} strokeWidth={2} />
+                  </span>
+                  <div className="bmc-locked-body">
+                    <span className="bmc-locked-label">Emergency Level</span>
+                    <div className="bmc-level-badges">
+                      {Object.entries(LEVEL_LABEL).map(([lvl, label]) => (
+                        <span
+                          key={lvl}
+                          className={`bmc-level-badge bmc-level-badge--${label.toLowerCase()}`}
+                        >
+                          [{label} Emergency]
+                        </span>
+                      ))}
+                    </div>
+                    <span className="bmc-locked-hint">
+                      Dynamically set by bracelet sensor at alert time
                     </span>
-                    <span className="bmc-check-info">
-                      <span className="bmc-check-label">{contact.name}</span>
-                      <span className="bmc-check-sub">{contact.contactNo}</span>
+                  </div>
+                  <Lock size={12} className="bmc-lock-icon" />
+                </div>
+
+                <div className="bmc-locked-divider" />
+
+                <div className="bmc-locked-field bmc-locked-field--url">
+                  <span className="bmc-locked-icon">
+                    <MapPin size={14} strokeWidth={2} />
+                  </span>
+                  <div className="bmc-locked-body">
+                    <span className="bmc-locked-label">Location Link</span>
+                    <span className="bmc-locked-value bmc-locked-value--url">
+                      https://ping-me-now.netlify.app/track?lat=…&amp;lng=…
                     </span>
-                  </label>
-                );
-              })}
+                    <span className="bmc-locked-hint">
+                      Real-time coordinates are injected at alert time
+                    </span>
+                  </div>
+                  <Lock size={12} className="bmc-lock-icon" />
+                </div>
+              </div>
             </div>
-          )}
 
-          {/* Empty state if no contacts saved */}
-          {!isLoadingContacts && allContacts.length === 0 && (
-            <p className="bmc-no-contacts">
-              No emergency contacts found. Add contacts in the Emergency Contact screen first.
-            </p>
-          )}
-        </div>
+            {/* ── Help Message ── */}
+            <div className="bmc-section">
+              <span className="bmc-section-label">Help Message</span>
+              <p className="bmc-field-hint">
+                Current phrase:{" "}
+                <strong className="bmc-current-phrase">"{savedPhrase}"</strong>
+              </p>
+              <div className="bmc-textarea-border">
+                <textarea
+                  id="bmc-new-message-input"
+                  className="bmc-textarea"
+                  placeholder={`Type a new phrase (default: "${DEFAULT_HELP_PHRASE}")`}
+                  value={draftPhrase}
+                  onChange={(e) => setDraftPhrase(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <p className="bmc-field-hint bmc-field-hint--subtle">
+                Only this phrase is editable. Name, level, and location are
+                always prepended/appended automatically.
+              </p>
+            </div>
+
+            {/* ── Live SMS Preview ── */}
+            <div className="bmc-section">
+              <span className="bmc-section-label">Live SMS Preview</span>
+              <SmsPreview message={emergencyPreview} />
+              <p className="bmc-field-hint bmc-field-hint--subtle">
+                Showing <strong>[SEVERE]</strong> example · actual level is
+                set by sensor at alert time
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ════════════════════ SAFE TAB ════════════════════ */}
+        {activeTab === "safe" && (
+          <>
+            <div className="bmc-section">
+              <span className="bmc-section-label">Automated Safe Message</span>
+              <div className="bmc-safe-info-card">
+                <CheckCircle2 size={18} className="bmc-safe-check-icon" strokeWidth={2.5} />
+                <p className="bmc-safe-info-text">
+                  When the SOS is deactivated, this message is automatically
+                  sent to all emergency contacts. No customization is needed —
+                  it always includes your current profile name.
+                </p>
+              </div>
+            </div>
+
+            <div className="bmc-section">
+              <div className="bmc-section-header-row">
+                <span className="bmc-section-label">Required Details</span>
+                <span className="bmc-locked-badge">
+                  <Lock size={10} strokeWidth={3} /> Auto-injected
+                </span>
+              </div>
+              <div className="bmc-locked-card">
+                <LockedField
+                  icon={({ size, strokeWidth }) => (
+                    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
+                  )}
+                  label="User Name"
+                  value={ownerName}
+                />
+              </div>
+            </div>
+
+            <div className="bmc-section">
+              <span className="bmc-section-label">SMS Preview</span>
+              <SmsPreview message={safePreview} />
+            </div>
+          </>
+        )}
       </main>
 
-      {/* ── Footer Action ── */}
-      <footer className="br-footer bmc-footer">
-        <button
-          id="bmc-edit-btn"
-          className={`bmc-edit-btn ${!currentDraft.trim() ? "bmc-edit-btn--disabled" : ""}`}
-          onClick={handleEdit}
-          disabled={!currentDraft.trim() || isSaving}
-        >
-          <Send size={15} strokeWidth={2.5} />
-          {isSaving ? "Saving…" : "Edit"}
-        </button>
-      </footer>
+      {/* ── Footer — only shown on Emergency tab when there's a draft ── */}
+      {activeTab === "emergency" && (
+        <footer className="br-footer bmc-footer">
+          {savedSuccess ? (
+            <div className="bmc-save-success">
+              <CheckCircle2 size={16} strokeWidth={2.5} />
+              Phrase saved successfully!
+            </div>
+          ) : (
+            <button
+              id="bmc-edit-btn"
+              className={`bmc-edit-btn ${!canSave ? "bmc-edit-btn--disabled" : ""}`}
+              onClick={handleSave}
+              disabled={!canSave}
+            >
+              <Send size={15} strokeWidth={2.5} />
+              {isSaving ? "Saving…" : "Save Help Phrase"}
+            </button>
+          )}
+        </footer>
+      )}
     </div>
   );
 }

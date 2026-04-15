@@ -24,6 +24,13 @@ import { useAuth } from '../context/AuthContext';
 import { reverseGeocode } from '../utils/geocode';
 import { useToast } from '../context/ToastContext';
 import { saveSosNotification, saveSosResolvedNotification } from '../services/notificationService';
+import { sendSms } from '../services/smsService';
+import {
+  buildEmergencySms,
+  buildSafeSms,
+  buildLocationUrl,
+  DEFAULT_HELP_PHRASE,
+} from '../utils/smsTemplates';
 
 /**
  * Generates a unique cache key for TanStack Query.
@@ -363,9 +370,44 @@ export function useSosReportGenerator(braceletUsers) {
         });
 
         // Trigger real-time notification record for the SOS Alert
-        saveSosNotification(currentUser, user).catch(err => 
+        saveSosNotification(currentUser, user).catch(err =>
           console.error('Failed to save SOS notification:', err)
         );
+
+        // ── Send Emergency SMS ──────────────────────────────────────────
+        // Run async in background so it never blocks SOS report logic.
+        (async () => {
+          try {
+            const contacts = user.emergencyContacts || [];
+            if (contacts.length === 0) return;
+
+            // Fetch the owner's custom help phrase saved in Firestore.
+            // Falls back to the default if the field has never been saved.
+            let customPhrase = DEFAULT_HELP_PHRASE;
+            try {
+              const braceletRef = doc(db, 'braceletUsers', user.id);
+              const braceletSnap = await getDoc(braceletRef);
+              if (braceletSnap.exists() && braceletSnap.data().customHelpPhrase) {
+                customPhrase = braceletSnap.data().customHelpPhrase;
+              }
+            } catch (fetchErr) {
+              console.warn('[SMS] Could not fetch customHelpPhrase, using default.', fetchErr);
+            }
+
+            const ownerName  = currentUser.displayName || 'User';
+            const pos        = user.position ?? null;
+            const locationUrl = pos?.length === 2
+              ? buildLocationUrl(pos[0], pos[1], user.id)
+              : buildLocationUrl(null, null, user.id);
+            const sosLvl     = user.sosLevel ?? 1;
+
+            const message = buildEmergencySms(ownerName, sosLvl, locationUrl, customPhrase);
+            await sendSms(contacts, message);
+          } catch (smsErr) {
+            console.error('[SMS] Emergency SMS failed:', smsErr);
+          }
+        })();
+        // ────────────────────────────────────────────────────────────────
       }
 
       /**
@@ -434,9 +476,20 @@ export function useSosReportGenerator(braceletUsers) {
             });
 
             // Trigger notification record for SOS Resolved, now with a report reference
-            saveSosResolvedNotification(currentUser, user, reportRef.id).catch(err => 
+            saveSosResolvedNotification(currentUser, user, reportRef.id).catch(err =>
               console.error('Failed to save SOS resolved notification:', err)
             );
+
+            // ── Send Safe-Status SMS ──────────────────────────────────────
+            const contacts = user.emergencyContacts || [];
+            if (contacts.length > 0) {
+              const ownerName  = currentUser.displayName || 'User';
+              const safeSms    = buildSafeSms(ownerName);
+              sendSms(contacts, safeSms).catch(err =>
+                console.error('[SMS] Safe SMS failed:', err)
+              );
+            }
+            // ─────────────────────────────────────────────────────────────
 
             addToast('SOS Resolved: New incident report generated.', 'success');
           } catch (err) {

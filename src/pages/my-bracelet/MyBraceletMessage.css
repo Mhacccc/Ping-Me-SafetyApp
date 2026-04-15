@@ -1,17 +1,17 @@
-/* ────────────────────────────────────────────
+/* ────────────────────────────────────────────────────────────────────────────
    MyBraceletMessage.css
-   Message Customization Screen Styles
-   Extends the shared MenuLayout (br-*) system
-──────────────────────────────────────────── */
+   Message Customization Screen – Dynamic SMS Alert System
+   Extends the shared MenuLayout (br-*) tokens
+──────────────────────────────────────────────────────────────────────────── */
 
 @import "../../styles/MenuLayout.css";
 
-/* ── Page base ── */
+/* ── Page wrapper ─────────────────────────────────────────────────────────── */
 .bmc-page {
   position: relative;
 }
 
-/* ── Three-dot menu ── */
+/* ── Three-dot menu ──────────────────────────────────────────────────────── */
 .bmc-menu-wrap {
   position: absolute;
   right: 16px;
@@ -60,31 +60,31 @@
 }
 .bmc-context-item:hover { background: rgba(0, 0, 0, 0.04); }
 
-/* ── Main layout ── */
+/* ── Main layout ─────────────────────────────────────────────────────────── */
 .bmc-main {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 28px;          /* increased from 22px */
   padding-top: 24px;
-  padding-bottom: 24px;
+  padding-bottom: 32px;
 }
 
-/* ── Instructional text ── */
+/* ── Instructional subtext ───────────────────────────────────────────────── */
 .bmc-subtext {
-  font-size: 12px;
-  color: #888;
-  line-height: 1.65;
+  font-size: 12.5px;
+  color: #999;
+  line-height: 1.7;
   margin: 0;
 }
 
-/* ── Segmented Tab Switcher ── */
+/* ── Segmented Tab Switcher ──────────────────────────────────────────────── */
 .bmc-tab-switcher {
   display: flex;
   background: #f0f0f0;
   border-radius: 30px;
   padding: 5px;
   gap: 4px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .bmc-tab {
@@ -93,20 +93,19 @@
   background: transparent;
   border-radius: 24px;
   padding: 11px 12px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   font-family: var(--pm-font, inherit);
   color: #888;
   cursor: pointer;
   letter-spacing: 0.1px;
-  transition: background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease, transform 0.15s ease;
+  transition: background 0.22s ease, color 0.22s ease,
+              box-shadow 0.22s ease, transform 0.15s ease;
 }
-
 .bmc-tab:hover:not(.bmc-tab--active) {
   color: #555;
-  background: rgba(255,255,255,0.4);
+  background: rgba(255, 255, 255, 0.4);
 }
-
 .bmc-tab--active {
   background: #8b2328;
   color: #fff;
@@ -114,11 +113,11 @@
   transform: scale(1.01);
 }
 
-/* ── Content Sections ── */
+/* ── Section wrappers ────────────────────────────────────────────────────── */
 .bmc-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;          /* increased from 10px */
 }
 
 .bmc-section-label {
@@ -126,44 +125,177 @@
   font-weight: 800;
   color: var(--pm-primary, #a4262c);
   text-transform: uppercase;
-  letter-spacing: 0.7px;
+  letter-spacing: 0.8px;
 }
 
-/* ── Chat Bubble ── */
-.bmc-chat-row {
+/* Header row: label + badge side by side */
+.bmc-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── "Auto-injected" badge ───────────────────────────────────────────────── */
+.bmc-locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(139, 35, 40, 0.08);
+  color: #8b2328;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ── Locked Card ─────────────────────────────────────────────────────────── */
+.bmc-locked-card {
+  background: rgba(164, 38, 44, 0.025);
+  border: 1.5px dashed rgba(164, 38, 44, 0.22);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.bmc-locked-card-note {
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.55;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid rgba(164, 38, 44, 0.1);
+  background: rgba(164, 38, 44, 0.02);
+}
+
+/* ── Individual locked field row ─────────────────────────────────────────── */
+.bmc-locked-field {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 14px;
+  padding: 18px 18px;    /* generous vertical padding so each field breathes */
 }
 
-.bmc-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+/* Variants for multi-line fields */
+.bmc-locked-field--levels { align-items: flex-start; padding-bottom: 20px; }
+.bmc-locked-field--url    { align-items: flex-start; padding-bottom: 20px; }
+
+.bmc-locked-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   background: rgba(164, 38, 44, 0.1);
+  color: #a4262c;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.bmc-locked-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;          /* space between sub-label / value / hint */
+  min-width: 0;
+}
+
+.bmc-locked-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.bmc-locked-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pm-text, #222);
+  line-height: 1.4;
+}
+
+.bmc-locked-value--url {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a4262c;
+  word-break: break-all;
+  line-height: 1.55;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", monospace;
+}
+
+.bmc-locked-hint {
+  font-size: 11px;
+  color: #c5c5c5;
+  line-height: 1.45;
+  margin-top: 1px;
+  font-style: italic;
+}
+
+.bmc-lock-icon {
+  color: #d5d5d5;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* Subtle horizontal divider between fields — full-width inside the card */
+.bmc-locked-divider {
+  height: 1px;
+  background: rgba(164, 38, 44, 0.08);
+  margin: 0 18px;    /* indented slightly so it doesn't touch the card edge */
+}
+
+/* ── Emergency Level badges ──────────────────────────────────────────────── */
+.bmc-level-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 2px;
 }
 
-.bmc-bubble {
-  background: var(--pm-surface, #fff);
-  border-radius: 4px 16px 16px 16px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-  max-width: 88%;
+.bmc-level-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
-.bmc-bubble-text {
-  font-size: 14px;
-  color: var(--pm-text, #333);
+.bmc-level-badge--mild {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+.bmc-level-badge--moderate {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+.bmc-level-badge--severe {
+  background: rgba(164, 38, 44, 0.12);
+  color: #a4262c;
+}
+
+/* ── Field hints below textarea ──────────────────────────────────────────── */
+.bmc-field-hint {
+  font-size: 12.5px;
+  color: #888;
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
-/* ── Textarea with gradient border ── */
+.bmc-field-hint--subtle {
+  font-size: 11.5px;
+  color: #bbb;
+  font-style: italic;
+}
+
+.bmc-current-phrase {
+  color: var(--pm-text, #333);
+  font-weight: 700;
+}
+
+/* ── Textarea with gradient border ──────────────────────────────────────── */
 .bmc-textarea-border {
   background: linear-gradient(135deg, #f5a623 0%, #d9363e 100%);
   padding: 2px;
@@ -181,175 +313,107 @@
   background: var(--pm-surface, #fff);
   resize: none;
   outline: none;
-  line-height: 1.6;
+  line-height: 1.65;
   box-sizing: border-box;
   display: block;
 }
-.bmc-textarea::placeholder { color: #bbb; }
+.bmc-textarea::placeholder { color: #ccc; }
 
-/* ── Apply To ── */
-.bmc-apply-group {
-  gap: 8px;
-  position: relative;
-}
-
-/* Trigger button */
-.bmc-dropdown-trigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--pm-surface, #fff);
-  border: 1.5px solid var(--pm-border, #e5e5e5);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 14px;
-  font-family: var(--pm-font, inherit);
-  font-weight: 600;
-  color: var(--pm-text, #333);
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.2s;
-  text-align: left;
-}
-.bmc-dropdown-trigger:hover:not(:disabled),
-.bmc-dropdown-trigger:focus:not(:disabled) {
-  border-color: var(--pm-primary, #a4262c);
-  outline: none;
-}
-.bmc-dropdown-trigger:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.bmc-dropdown-summary {
-  flex: 1;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.bmc-chevron {
-  color: #aaa;
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-.bmc-chevron--open { transform: rotate(180deg); }
-
-/* ── Multi-select Checklist Panel ── */
-.bmc-checklist {
-  background: var(--pm-surface, #fff);
-  border: 1.5px solid var(--pm-border, #e5e5e5);
-  border-radius: 14px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  animation: bmc-pop 0.15s ease;
-  padding: 4px 0;
-}
-
-/* Individual row */
-.bmc-check-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.14s;
-  user-select: none;
-}
-.bmc-check-row:hover { background: rgba(0, 0, 0, 0.03); }
-
-/* "All" row accent */
-.bmc-check-row--all {
-  background: rgba(164, 38, 44, 0.03);
-}
-.bmc-check-row--all:hover { background: rgba(164, 38, 44, 0.07); }
-
-/* Hide native checkbox */
-.bmc-check-input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-
-/* Custom checkbox box */
-.bmc-check-box-wrap {
-  flex-shrink: 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bmc-check-box {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  border: 2px solid var(--pm-border, #ddd);
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.18s, border-color 0.18s;
-  flex-shrink: 0;
-}
-
-.bmc-check-box--checked {
-  background: var(--pm-primary, #a4262c);
-  border-color: var(--pm-primary, #a4262c);
-}
-
-/* Label text */
-.bmc-check-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--pm-text, #222);
-}
-
-.bmc-check-label--all {
-  color: var(--pm-primary, #a4262c);
-  font-weight: 700;
-}
-
-.bmc-check-info {
+/* ── SMS Preview bubble ───────────────────────────────────────────────────── */
+.bmc-preview-wrap {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 10px;
 }
 
-.bmc-check-sub {
-  font-size: 11.5px;
-  color: #aaa;
-  font-weight: 400;
+.bmc-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
-/* Divider between "All" and individual contacts */
-.bmc-check-divider {
-  height: 1px;
-  background: var(--pm-border, #eee);
-  margin: 2px 0;
+.bmc-preview-bubble {
+  background: #1e1e1e;
+  border-radius: 6px 18px 18px 18px;
+  padding: 18px 20px;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
-/* Empty contacts notice */
-.bmc-no-contacts {
-  font-size: 12px;
-  color: #aaa;
+/* ── Sender label inside bubble ── */
+.bmc-preview-bubble::before {
+  content: "PingMe";
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #a4262c;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  opacity: 0.85;
+}
+
+.bmc-preview-text {
+  font-size: 13.5px;
+  color: #e8e8e8;
+  margin: 0 0 10px 0;     /* gap between each sentence line */
+  line-height: 1.75;
+  word-break: break-word;
+  font-family: var(--pm-font, inherit);
+  white-space: pre-wrap;
+}
+.bmc-preview-text:last-child { margin-bottom: 0; }
+
+/* ── Safe tab info card ───────────────────────────────────────────────────── */
+.bmc-safe-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: rgba(22, 163, 74, 0.05);
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.bmc-safe-check-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.bmc-safe-info-text {
   margin: 0;
-  padding: 4px 2px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  color: #555;
+  line-height: 1.65;
 }
 
-/* ── Footer ── */
+/* ── Footer ──────────────────────────────────────────────────────────────── */
 .bmc-footer {
   justify-content: center;
   padding-bottom: 28px;
   padding-top: 8px;
 }
 
-/* ── Edit button — dark red full-width pill ── */
+/* Save-success inline confirmation */
+.bmc-save-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #16a34a;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 14px;
+  animation: bmc-pop 0.2s ease;
+}
+
+/* ── Save button (pill) ──────────────────────────────────────────────────── */
 .bmc-edit-btn {
   display: flex;
   align-items: center;
@@ -371,8 +435,6 @@
   box-shadow: 0 4px 14px rgba(139, 35, 40, 0.35);
 }
 
-.bmc-edit-btn svg { display: none; }
-
 .bmc-edit-btn:hover:not(:disabled) {
   background: #a4262c;
   transform: translateY(-1px);
@@ -386,19 +448,22 @@
   box-shadow: none;
 }
 
-/* ── Animation ── */
+/* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes bmc-pop {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── Dark mode ── */
-html.pm-dark .bmc-tab-switcher       { background: rgba(255,255,255,0.1); }
-html.pm-dark .bmc-tab--active        { background: var(--pm-surface); }
-html.pm-dark .bmc-bubble-text        { color: var(--pm-text); }
-html.pm-dark .bmc-textarea           { color: var(--pm-text); }
-html.pm-dark .bmc-check-box          { background: #2a2a2a; border-color: #555; }
-html.pm-dark .bmc-check-box--checked { background: var(--pm-primary); border-color: var(--pm-primary); }
-html.pm-dark .bmc-checklist          { background: var(--pm-surface); }
-html.pm-dark .bmc-edit-btn           { background: #2a2a2a; color: #ddd; }
-html.pm-dark .bmc-edit-btn svg       { background: #555; }
+/* ── Dark mode overrides ─────────────────────────────────────────────────── */
+html.pm-dark .bmc-tab-switcher        { background: rgba(255, 255, 255, 0.1); }
+html.pm-dark .bmc-tab--active         { background: var(--pm-primary, #8b2328); }
+html.pm-dark .bmc-locked-card         { background: rgba(255, 255, 255, 0.02); border-color: rgba(164, 38, 44, 0.3); }
+html.pm-dark .bmc-locked-card-note    { color: #777; background: transparent; }
+html.pm-dark .bmc-locked-value        { color: var(--pm-text); }
+html.pm-dark .bmc-locked-divider      { background: rgba(255,255,255,0.06); }
+html.pm-dark .bmc-textarea            { color: var(--pm-text); background: var(--pm-surface); }
+html.pm-dark .bmc-preview-bubble      { background: #141414; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+html.pm-dark .bmc-preview-text        { color: #ddd; }
+html.pm-dark .bmc-safe-info-card      { background: rgba(22, 163, 74, 0.08); }
+html.pm-dark .bmc-safe-info-text      { color: #aaa; }
+html.pm-dark .bmc-edit-btn            { background: #8b2328; }

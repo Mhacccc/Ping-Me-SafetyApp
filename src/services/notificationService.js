@@ -5,7 +5,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, doc,
 /**
  * Saves a geofence entry notification to Firestore.
  */
-export const saveGeofenceNotification = async (currentUser, detection) => { 
+export const saveGeofenceNotification = async (currentUser, detection) => {
     if (!currentUser) return;
     const { user, zone, message } = detection;
 
@@ -54,7 +54,7 @@ export const saveSosNotification = async (currentUser, user) => {
     await addDoc(collection(db, 'notifications'), {
         appUserId: currentUser.uid,
         braceletUserId: user.id,
-        title: '🚨 SOS EMERGENCY',
+        title: 'SOS EMERGENCY',
         message: `${user.name} has triggered an SOS alert!`,
         read: false,
         type: 'sos_alert',
@@ -73,7 +73,7 @@ export const saveSosResolvedNotification = async (currentUser, user, reportId = 
     await addDoc(collection(db, 'notifications'), {
         appUserId: currentUser.uid,
         braceletUserId: user.id,
-        title: '✅ SOS Resolved',
+        title: 'SOS Resolved',
         message: `${user.name} is now safe.`,
         read: false,
         type: 'sos_resolved',
