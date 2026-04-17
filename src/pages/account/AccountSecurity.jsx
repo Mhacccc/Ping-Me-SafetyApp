@@ -199,6 +199,7 @@ export default function AccountSecurity() {
                       className="br-btn-secondary"
                       style={{
                         height: "40px",
+                        width: "100%",
                         padding: "0 20px",
                         fontSize: "13px",
                         alignSelf: "flex-start",

@@ -3,11 +3,17 @@ import { db } from "../config/firebaseConfig";
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, doc, updateDoc } from "firebase/firestore";
 
 /**
- * Saves a geofence entry notification to Firestore.
+ * Saves a geofence notification (entry or exit) to Firestore.
+ * The detection.message determines the action type:
+ *   - "Lola entered Home" → action: 'entry'
+ *   - "Lola left Home"    → action: 'exit'
  */
 export const saveGeofenceNotification = async (currentUser, detection) => {
     if (!currentUser) return;
     const { user, zone, message } = detection;
+
+    // Derive action from the message content
+    const action = message.includes('left') ? 'exit' : 'entry';
 
     // Prevent duplicate notifications
     const dupQ = query(
@@ -29,16 +35,18 @@ export const saveGeofenceNotification = async (currentUser, detection) => {
     await addDoc(collection(db, 'notifications'), {
         appUserId: currentUser.uid,
         braceletUserId: user.id,
-        title: 'Geofence Alert',
+        title: action === 'exit' ? '⚠️ Left Safe Zone' : 'Geofence Alert',
         message: message,
         read: false,
         type: 'Geofence',
+        action: action,
         time: serverTimestamp(),
         icon: user.avatar || null,
         coords: user.position ? { lat: user.position[0], lng: user.position[1] } : null,
     });
 
-    if (user.deviceStatusId) {
+    // Only update currentGeofenceId on ENTRY — exit already clears it in the provider
+    if (action === 'entry' && user.deviceStatusId) {
         await updateDoc(doc(db, 'deviceStatus', user.deviceStatusId), {
             currentGeofenceId: zone.id
         });

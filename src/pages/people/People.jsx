@@ -548,14 +548,14 @@ function People() {
       )}
 
       {/* Pending Requests Visual Tag */}
-      <div className="pending-requests-section" style={{ padding: '0 20px', marginBottom: '16px' }}>
+      <div className="pending-requests-section" style={{marginBottom: '16px' }}>
         {pendingRequests.length > 0 && (
           <>
             <h3 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--pm-text-muted)', marginBottom: '8px', letterSpacing: '0.05em', fontWeight: 'bold' }}>
               Pending Connections
             </h3>
             {pendingRequests.map(req => (
-              <div key={req.id} style={{ display: 'flex', alignItems: 'center', background: '#fff3cd', padding: '12px 16px', borderRadius: '12px', marginBottom: '8px', border: '1px solid #ffeeba' }}>
+              <div key={req.id} style={{ display: 'flex', alignItems: 'center', background: '#fff3cd', padding: '10px 16px', borderRadius: '12px', marginBottom: '8px', border: '1px solid #ffeeba' }}>
                 <div style={{ marginRight: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffeeba', borderRadius: '50%', width: '40px', height: '40px' }}>
                    <Clock size={20} color="#856404" />
                 </div>

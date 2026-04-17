@@ -10,15 +10,20 @@
   --pm-border: rgba(34, 34, 34, 0.1);
   --pm-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.1);
 
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #FAF9F6 0%, #FCF9EE 46%, #D85C4F 100%);
   position: relative;
-  overflow-x: hidden;
+
   color: var(--pm-text);
   font-family: 'Inter', sans-serif;
   /* font-family: 'Inter', 'Poppins'; */
+
+  /* Ensure scrollability */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .authMain {
@@ -26,7 +31,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center;  <-- Removed to prevent top-cutoff on overflow */
   padding: 40px 24px;
   width: 100%;
   box-sizing: border-box;
@@ -39,6 +44,8 @@
   flex-direction: column;
   background: transparent;
   transition: all 0.3s ease;
+  /* Centering that allows overflow */
+  margin: auto 0;
 }
 
 /* Side-by-Side Desktop View (Rectangular Form) */
@@ -50,7 +57,6 @@
     border-radius: 24px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(0, 0, 0, 0.05);
-    overflow: hidden;
     /* Round corners for children */
   }
 
@@ -203,8 +209,13 @@
   border-bottom: 1px solid #ddd;
 }
 
-.authDivider::before { margin-right: .75em; }
-.authDivider::after { margin-left: .75em; }
+.authDivider::before {
+  margin-right: .75em;
+}
+
+.authDivider::after {
+  margin-left: .75em;
+}
 
 .authBtnGoogle {
   width: 100%;
@@ -284,7 +295,8 @@
 }
 
 /* Specific iPhone SE adjustments / Small Height viewports */
-@media (max-width: 375px), (max-height: 700px) {
+@media (max-width: 375px),
+(max-height: 700px) {
   .authMain {
     padding: 20px 20px;
   }
@@ -295,7 +307,7 @@
 
   .authLogo {
     height: 60px;
-    
+
   }
 
   .authHeader {
@@ -346,8 +358,15 @@
 }
 
 @keyframes pwFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Strength label */
@@ -360,10 +379,21 @@
   margin-top: -4px;
 }
 
-.pwStrengthLabel--weak   { color: #E53935; }
-.pwStrengthLabel--fair   { color: #FB8C00; }
-.pwStrengthLabel--good   { color: #43A047; }
-.pwStrengthLabel--strong { color: #1B5E20; }
+.pwStrengthLabel--weak {
+  color: #E53935;
+}
+
+.pwStrengthLabel--fair {
+  color: #FB8C00;
+}
+
+.pwStrengthLabel--good {
+  color: #43A047;
+}
+
+.pwStrengthLabel--strong {
+  color: #1B5E20;
+}
 
 /* Rule checklist */
 .pwRuleList {
@@ -390,11 +420,22 @@
   transition: color 0.2s ease;
 }
 
-.pwRuleItem--pass { color: #2E7D32; }
-.pwRuleItem--fail { color: #9E9E9E; }
+.pwRuleItem--pass {
+  color: #2E7D32;
+}
 
-.pwRuleIcon { flex-shrink: 0; }
+.pwRuleItem--fail {
+  color: #9E9E9E;
+}
 
-.pwRuleItem--pass .pwRuleIcon { color: #43A047; }
-.pwRuleItem--fail .pwRuleIcon { color: #BDBDBD; }
+.pwRuleIcon {
+  flex-shrink: 0;
+}
 
+.pwRuleItem--pass .pwRuleIcon {
+  color: #43A047;
+}
+
+.pwRuleItem--fail .pwRuleIcon {
+  color: #BDBDBD;
+}
