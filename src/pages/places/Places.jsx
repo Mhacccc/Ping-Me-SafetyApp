@@ -44,7 +44,7 @@ if (L.Edit && L.Edit.Circle) {
 }
 import "./Places.css";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import * as mapHelpers from "../../utils/mapHelpers";
 import { useBraceletUsers } from "../../context/BraceletDataProvider";
@@ -57,8 +57,7 @@ import MapLoader from "../../components/loading/MapLoader";
 
 // New decoupled modules
 import * as geofenceService from "../../services/geofenceService";
-import * as geofenceUtils from "../../utils/geofenceUtils";
-import * as notificationService from "../../services/notificationService";
+import { useGeofenceMonitor } from "../../context/GeofenceMonitorProvider";
 import GeofenceGradient from "../../components/map/GeofenceGradient";
 
 // Initialize Leaflet icons (Boilerplate moved to mapHelpers)
@@ -84,18 +83,20 @@ const Places = () => {
   // Leaflet map instance state
   const [map, setMap] = useState(null);
 
-  // Custom hook to fetch bracelet users and their positions
-  const { braceletUsers, loading, addressCache, mapViewState, setMapViewState } = useBraceletUsers();
+  // Read coords passed from Notifications page via router state
+  const location = useLocation();
+  const focusCoords  = location.state?.focusCoords  ?? null;
+  const focusUserId  = location.state?.focusUserId  ?? null;
 
-  // Address cache for popup location display
-  const [activeAlerts, setActiveAlerts] = useState([]);
+  // Custom hook to fetch bracelet users and their positions
+  const { braceletUsers, addressCache, mapViewState, setMapViewState } = useBraceletUsers();
+  
+  // Use the global geofence monitor instead of fetching locally
+  const { geofences, geofencesLoaded, activeAlerts } = useGeofenceMonitor();
 
   const groupedMarkers = useMemo(() => {
     return mapHelpers.groupUsersByLocation(braceletUsers);
   }, [braceletUsers]);
-
-  // List of geofences fetched from Firestore
-  const [geofences, setGeofences] = useState([]);
 
   // State to toggle the Monitor Popup
   const [isMonitorOpen, setIsMonitorOpen] = useState(false);
@@ -135,6 +136,22 @@ const Places = () => {
   }, [map]);
 
   /**
+   * Effect: Fly to focusCoords passed from Notifications page.
+   * Runs when the map instance is ready OR when focusCoords changes.
+   * Uses flyTo so the user gets a smooth animated pan-and-zoom to the target pin.
+   */
+  useEffect(() => {
+    if (!map || !focusCoords) return;
+    // Small delay to let the map finish its initial render cycle
+    const tid = setTimeout(() => {
+      if (map && map._container) {
+        map.flyTo(focusCoords, 18, { animate: true, duration: 1.2 });
+      }
+    }, 300);
+    return () => clearTimeout(tid);
+  }, [map, focusCoords]);
+
+  /**
    * Effect: Scroll Lock
    * Prevents the whole page from scrolling when the map is active.
    */
@@ -162,80 +179,8 @@ const Places = () => {
   const featureGroupRef = useRef(null);
   const pendingLayerRef = useRef(null);
 
-  // Ref to debounce/cache alerts locally to avoid spamming Firestore
-  const alertedUsersRef = useRef(new Set());
-
   // Auth context for the current logged-in user (the monitor/app user)
   const { currentUser } = useAuth();
-
-  /**
-   * Effect: Fetches and syncs geofences from Firestore.
-   * Filters by the current user's UID and updates the local state in real-time.
-   */
-  useEffect(() => {
-    if (!currentUser) {
-      setGeofences([]);
-      return;
-    }
-
-    const q = query(
-      collection(db, "geofences"),
-      where("appUserId", "==", currentUser.uid)
-    );
-
-    // Set up a real-time listener for the geofences collection
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedZones = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          appUserName: currentUser.displayName,
-          id: doc.id,
-          name: data.name,
-          radius: data.radius,
-          latlngs: data.coordinates, // Store coordinates {lat, lng}
-          type: data.type,
-        };
-      });
-      setGeofences(fetchedZones);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser]);
-
-
-
-  /**
-   * Memoized geofence transition calculations.
-   * Only recalculates when braceletUsers or geofences actually change.
-   */
-  const geofenceResult = useMemo(
-    () => geofenceUtils.checkGeofenceTransitions(
-      braceletUsers,
-      geofences,
-      alertedUsersRef.current
-    ),
-    [braceletUsers, geofences]
-  );
-
-  /**
-   * Effect: Process geofence side-effects from memoized result.
-   */
-  useEffect(() => {
-    const { currentAlerts, newlyDetected, usersToUpdateOffline } = geofenceResult;
-
-    setActiveAlerts(currentAlerts);
-
-    // Update statuses for users who left their zones
-    usersToUpdateOffline.forEach(status => {
-      updateDoc(doc(db, 'deviceStatus', status.id), { currentGeofenceId: null })
-        .catch(e => console.error("Error clearing geofence status", e));
-    });
-
-    // Save notifications for entries
-    if (newlyDetected.length > 0) {
-      newlyDetected.forEach(det => notificationService.saveGeofenceNotification(currentUser, det));
-    }
-  }, [geofenceResult, currentUser]);
 
   /**
    * Centers and flies the map to a specific geofence when clicked in the list.
@@ -381,8 +326,7 @@ const Places = () => {
 
   // if (loading) return <LoadingSpinner />;
 
-
-  if (loading) {
+  if (!geofencesLoaded) {
     return (
       <div className="home-layout" style={{ position: 'relative' }}>
         <MapLoader text="Syncing Safety Zones..." fullScreen={true} lightTheme={false} />
@@ -616,7 +560,13 @@ const Places = () => {
                           {singleUser.sos && (
                             <div className="detail-row">
                               <span style={{ color: 'red', fontWeight: 'bold' }}>SOS Status</span>
-                              <span style={{ color: 'red', fontWeight: 'bold' }}>🚨 Active!</span>
+                              <span style={{ color: 'red', fontWeight: 'bold' }}>
+                                🚨 {
+                                  singleUser.sosLevel === 3 ? 'Level 3 (Severe)' :
+                                  singleUser.sosLevel === 2 ? 'Level 2 (Moderate)' :
+                                  'Level 1 (Mild)'
+                                }
+                              </span>
                             </div>
                           )}
                         </div>

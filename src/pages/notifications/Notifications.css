@@ -3,7 +3,7 @@
 /* Notifications page — extends the shared br-page layout */
 
 .notif-main {
-  padding: 0px 16px;
+  padding: 0;
 }
 
 .notif-loading {
@@ -38,18 +38,56 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
 }
 
-/* Individual item */
+/* ── Swipe-to-delete wrapper ── */
+.notif-swipe-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Red reveal layer — fixed to the RIGHT edge, same width as DELETE_WIDTH (80px) */
+.notif-swipe-delete-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 80px;                   /* matches DELETE_WIDTH in JS */
+  background: #c0392b;
+  border-radius: 12px 0 0 12px;  /* rounded top-left + bottom-left — always visible */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-swipe-delete-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--pm-font);
+  cursor: pointer;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 0;
+}
+
+/* Individual item — draggable foreground card */
 .notif-item {
   display: flex;
   align-items: flex-start;
   padding: 14px 16px;
-  border-radius: var(--pm-radius-md);
+  width: 100%;
+  box-sizing: border-box;
   cursor: pointer;
-  transition: background-color 0.2s;
   position: relative;
+  background: var(--pm-bg, #fff);
+  will-change: transform;
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .notif-item:hover {
@@ -57,18 +95,37 @@
 }
 
 .notif-item.unread {
-  background-color: rgba(164, 38, 44, 0.06);
+  /* Stack tint on top of the solid page bg — keeps the card fully opaque
+     so the red delete panel behind it can never bleed through.           */
+  background: 
+    linear-gradient(rgba(164, 38, 44, 0.055), rgba(164, 38, 44, 0.055)),
+    var(--pm-bg, #fff);
 }
 
+/* Left accent bar — primary visual cue for unread */
 .notif-item.unread::before {
   content: '';
   position: absolute;
   top: 0;
-  bottom: 0;
   left: 0;
-  width: 4px;
+  bottom: 0;
+  width: 3px;
   background-color: var(--pm-primary);
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 2px 2px 0;
+}
+
+/* ── Delete panel visibility ───────────────────────────────────────────
+   Hidden by default — overflow:hidden clips it at rest, but we also
+   set visibility:hidden so it is completely invisible even if the card
+   background ever becomes transparent.
+   Revealed only when the wrapper has the .is-open class (set from JSX
+   when isSwiped === true or a live drag is in progress).               */
+.notif-swipe-delete-bg {
+  visibility: hidden;
+}
+
+.notif-swipe-wrapper.is-open .notif-swipe-delete-bg {
+  visibility: visible;
 }
 
 /* Icon / avatar */
@@ -120,69 +177,195 @@
   white-space: nowrap;
 }
 
-.notif-delete-btn {
+/* ── Bulk-select UI ── */
+
+/* Select-All bar beneath the tab row */
+.notif-select-all-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 4px;
+  border-top: 1px solid var(--pm-border);
+  margin-top: 8px;
+}
+
+.notif-select-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: none;
   border: none;
-  color: var(--pm-text-muted);
+  color: var(--pm-primary);
+  font-weight: 600;
+  font-size: 13px;
+  font-family: var(--pm-font);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  padding: 0;
 }
 
-.notif-item:hover .notif-delete-btn {
-  opacity: 1;
-}
-
-.notif-delete-btn:hover {
-  color: var(--pm-danger);
-}
-
-/* Mobile touch — always show delete on small screens */
-@media (max-width: 767px) {
-  .notif-delete-btn {
-    opacity: 0.5;
-  }
-}
-
-/* Center Title Strategy */
-.br-navbar {
-  display: grid;
-  grid-template-columns: 80px 1fr 80px;
+.notif-select-all-icon {
+  display: flex;
   align-items: center;
-  padding: 0 16px;
+  color: var(--pm-primary);
 }
 
-.br-nav-back {
-  justify-self: start;
+.notif-select-count {
+  font-size: 12px;
+  color: var(--pm-text-muted);
+  font-weight: 500;
 }
 
-.br-nav-title {
-  justify-self: center;
-  text-align: center;
+/* Per-row checkbox */
+.notif-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 10px;
+  width: 24px;
 }
 
-.br-nav-clear-all {
-  justify-self: end;
+.notif-checkbox-icon {
+  color: var(--pm-text-muted);
+  transition: color 0.15s;
+}
+
+.notif-checkbox-icon.checked {
+  color: var(--pm-primary);
+}
+
+/* Checked row highlight */
+.notif-item.checked {
+  background-color: rgba(164, 38, 44, 0.05);
+}
+
+/* ── Bottom bulk-action bar ── */
+.notif-bulk-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--pm-border);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Animate up from below */
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.notif-bulk-bar.active {
+  transform: translateY(0);
+}
+
+.notif-bulk-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 14px 8px;
+  background: none;
+  border: none;
+  font-family: var(--pm-font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.notif-bulk-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.notif-bulk-btn.read {
+  color: var(--pm-text);
+}
+
+.notif-bulk-btn.read:not(:disabled):hover {
+  background: var(--pm-surface);
+}
+
+.notif-bulk-btn.delete {
+  color: #c0392b;
+}
+
+.notif-bulk-btn.delete:not(:disabled):hover {
+  background: rgba(192, 57, 43, 0.06);
+}
+
+.notif-bulk-divider {
+  width: 1px;
+  background: var(--pm-border);
+  align-self: stretch;
+  margin: 10px 0;
+}
+
+/* Right-side button group (Select + Clear All) */
+.br-nav-actions {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Select button — plain text in primary colour, no border or background */
+.br-nav-select {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: var(--pm-primary);
   font-weight: 700;
   font-size: 13px;
-  cursor: pointer;
   padding: 8px 0;
+  cursor: pointer;
+  font-family: var(--pm-font);
   transition: opacity 0.2s;
   white-space: nowrap;
 }
 
-.br-nav-clear-all:hover:not(:disabled) {
+.br-nav-select:hover:not(:disabled) {
   opacity: 0.7;
 }
 
-.br-nav-clear-all:disabled {
+.br-nav-select:disabled {
   opacity: 0.3;
   cursor: default;
+}
+
+/* Cancel button — plain text in primary colour, no border */
+.br-nav-cancel {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--pm-primary);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-family: var(--pm-font);
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.br-nav-cancel:hover {
+  opacity: 0.7;
 }
 
 /* Horizontal Nav (Tabs) Style integrated from Tips */
@@ -321,4 +504,39 @@
 
 .notif-modal-btn.confirm:hover {
   background: #8c2025;
+}
+
+/* Success Modal */
+.notif-success-modal {
+  background: #ffffff;
+  padding: 32px 24px;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+}
+
+.notif-success-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(46, 204, 113, 0.12);
+  color: #2ecc71;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-success-modal p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pm-text);
+  line-height: 1.4;
 }

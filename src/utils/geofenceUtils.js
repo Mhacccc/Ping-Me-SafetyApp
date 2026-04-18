@@ -14,26 +14,30 @@ import L from "leaflet";
  * 
  * @param {Array} braceletUsers - Array of currently tracked users (with GPS positions).
  * @param {Array} geofences - Array of circle definitions: { id, name, latlngs {lat, lng}, radius }.
- * @param {Set} alertedUsersSet - A persistent Set tracking "userId-zoneId" to prevent duplicate alerts.
+
+* @param {Set} alertedUsersSet - A persistent Set tracking "userId-zoneId" keys to prevent duplicate alerts.
+ *   Entry keys use the format "userId-zoneId", exit keys use "exit-userId-zoneId".
  * 
  * @returns {Object} {
  *   currentAlerts: Array of human strings for immediate UI display,
- *   newlyDetected: Array of event objects for trigger-based actions (e.g. push notifications),
+ *   newlyDetected: Array of entry event objects for notifications,
+ *   newlyExited: Array of exit event objects for notifications (debounced by provider),
  *   usersToUpdateOffline: IDs of devices that left a zone and need their 'currentGeofenceId' reset in DB.
  * }
  * 
  * @example
- * // newlyDetected return sample:
+ * // newlyDetected / newlyExited return sample:
  * {
  *   user: { id: "U-1", name: "Lola" },
  *   zone: { id: "Z-5", name: "Home" },
- *   message: "Lola entered Home"
+ *   message: "Lola entered Home"  // or "Lola left Home"
  * }
  */
 export const checkGeofenceTransitions = (braceletUsers, geofences, alertedUsersSet) => {
     // Accumulators for the different types of results
     const currentAlerts = [];
     const newlyDetected = [];
+    const newlyExited = [];
     const usersToUpdateOffline = [];
 
     braceletUsers.forEach((user) => {
@@ -83,6 +87,10 @@ export const checkGeofenceTransitions = (braceletUsers, geofences, alertedUsersS
                 // Only alert if we haven't already alerted for THIS specific entry session.
                 if (!alertedUsersSet.has(alertKey)) {
                     alertedUsersSet.add(alertKey);
+
+                    // Clear any lingering exit key — they're back inside, so cancel exit detection
+                    alertedUsersSet.delete(`exit-${user.id}-${insideZoneId}`);
+
                     newlyDetected.push({
                         user,
                         zone: { id: insideZoneId, name: insideZoneName },
@@ -100,10 +108,26 @@ export const checkGeofenceTransitions = (braceletUsers, geofences, alertedUsersS
              * If they were previously marked as being inside a zone, they have now LEFT.
              */
             if (user.currentGeofenceId && user.deviceStatusId) {
+                // Resolve the name of the zone they just left from the geofences array
+                const exitedZone = geofences.find(z => z.id === user.currentGeofenceId);
+                const exitedZoneName = exitedZone?.name || 'a safe zone';
+
+                const exitKey = `exit-${user.id}-${user.currentGeofenceId}`;
+
+                // Only report the exit if we haven't already reported it
+                if (!alertedUsersSet.has(exitKey)) {
+                    alertedUsersSet.add(exitKey);
+                    newlyExited.push({
+                        user,
+                        zone: { id: user.currentGeofenceId, name: exitedZoneName },
+                        message: `${user.name} left ${exitedZoneName}`
+                    });
+                }
+
                 usersToUpdateOffline.push({ id: user.deviceStatusId });
                 
                 /**
-                 * CLEANUP: Reset alert key in the tracking set.
+                 * CLEANUP: Reset the ENTRY alert key in the tracking set.
                  * This allows the system to notify the user AGAIN if they re-enter the same zone later.
                  */
                 alertedUsersSet.delete(`${user.id}-${user.currentGeofenceId}`);
@@ -111,5 +135,5 @@ export const checkGeofenceTransitions = (braceletUsers, geofences, alertedUsersS
         }
     });
 
-    return { currentAlerts, newlyDetected, usersToUpdateOffline };
+    return { currentAlerts, newlyDetected, newlyExited, usersToUpdateOffline };
 };

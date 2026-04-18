@@ -23,6 +23,14 @@ import * as mapHelpers from '../utils/mapHelpers';
 import { useAuth } from '../context/AuthContext';
 import { reverseGeocode } from '../utils/geocode';
 import { useToast } from '../context/ToastContext';
+import { saveSosNotification, saveSosResolvedNotification } from '../services/notificationService';
+import { sendSms } from '../services/smsService';
+import {
+  buildEmergencySms,
+  buildSafeSms,
+  buildLocationUrl,
+  DEFAULT_HELP_PHRASE,
+} from '../utils/smsTemplates';
 
 /**
  * Generates a unique cache key for TanStack Query.
@@ -194,6 +202,7 @@ export function useBraceletData() {
                 braceletOn: false,
                 lastSeen: null,
                 sos: false,
+                sosLevel: null,
                 position: u.position,
                 online: false,
               };
@@ -204,6 +213,13 @@ export function useBraceletData() {
             const lastSeen = mapHelpers.parseFirestoreDate(dd.lastSeen);
             const online = mapHelpers.isUserOnline(lastSeen);
 
+            // Derive the SOS active flag and the numeric severity level (1=Mild, 2=Moderate, 3=Severe)
+            const sosActive = (dd.sos && (dd.sos.active ?? dd.sos)) || false;
+            const rawSosLevel = dd.sos && typeof dd.sos === 'object'
+              ? Number(dd.sos.level ?? dd.sos.priority ?? 1)
+              : 1;
+            const sosLevel = (rawSosLevel >= 1 && rawSosLevel <= 3) ? rawSosLevel : 1;
+
             return {
               ...u,
               battery: Number(dd.battery ?? u.battery),
@@ -211,7 +227,8 @@ export function useBraceletData() {
               // to prevent the user from thinking a disconnected device is still "monitoring".
               braceletOn: online ? Boolean(dd.isBraceletOn ?? u.braceletOn) : false,
               lastSeen,
-              sos: (dd.sos && (dd.sos.active ?? dd.sos)) || false,
+              sos: sosActive,
+              sosLevel: sosActive ? sosLevel : null,
               position: loc || u.position,
               online,
               currentGeofenceId: dd.currentGeofenceId ?? u.currentGeofenceId,
@@ -320,48 +337,160 @@ export function useBraceletData() {
 export function useSosReportGenerator(braceletUsers) {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
-  // We use a ref to persist previous states across re-renders without triggering new ones.
+  // Persist previous SOS booleans across re-renders
   const previousSosStates = useRef(new Map());
+  // Track when + where SOS was first activated for each bracelet user
+  const sosStartData = useRef(new Map()); // braceletId → { startTime, startPosition }
+
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
     if (!currentUser || !braceletUsers?.length) return;
+
+    if (isFirstRun.current) {
+        braceletUsers.forEach((user) => {
+            previousSosStates.current.set(user.id, user.sos || false);
+        });
+        isFirstRun.current = false;
+        return;
+    }
 
     braceletUsers.forEach((user) => {
       const currentSos = user.sos || false;
       const previousSos = previousSosStates.current.get(user.id);
 
       /**
+       * LOGIC: SOS False → True transition detector.
+       * Capture the exact moment and position when the user first called for help.
+       */
+      if (!previousSos && currentSos === true) {
+        sosStartData.current.set(user.id, {
+          startTime: new Date(),
+          startPosition: user.position ?? null,
+        });
+
+        // Trigger real-time notification record for the SOS Alert
+        saveSosNotification(currentUser, user).catch(err =>
+          console.error('Failed to save SOS notification:', err)
+        );
+
+        // ── Send Emergency SMS ──────────────────────────────────────────
+        // Run async in background so it never blocks SOS report logic.
+        (async () => {
+          try {
+            const contacts = user.emergencyContacts || [];
+            if (contacts.length === 0) return;
+
+            // Fetch the owner's custom help phrase saved in Firestore.
+            // Falls back to the default if the field has never been saved.
+            let customPhrase = DEFAULT_HELP_PHRASE;
+            try {
+              const braceletRef = doc(db, 'braceletUsers', user.id);
+              const braceletSnap = await getDoc(braceletRef);
+              if (braceletSnap.exists() && braceletSnap.data().customHelpPhrase) {
+                customPhrase = braceletSnap.data().customHelpPhrase;
+              }
+            } catch (fetchErr) {
+              console.warn('[SMS] Could not fetch customHelpPhrase, using default.', fetchErr);
+            }
+
+            const ownerName  = user.name || currentUser.displayName || 'User';
+            const pos        = user.position ?? null;
+            const locationUrl = pos?.length === 2
+              ? buildLocationUrl(pos[0], pos[1], user.id)
+              : buildLocationUrl(null, null, user.id);
+            const sosLvl     = user.sosLevel ?? 1;
+
+            const message = buildEmergencySms(ownerName, sosLvl, locationUrl, customPhrase);
+            await sendSms(contacts, message);
+          } catch (smsErr) {
+            console.error('[SMS] Emergency SMS failed:', smsErr);
+          }
+        })();
+        // ────────────────────────────────────────────────────────────────
+      }
+
+      /**
        * LOGIC: SOS True → False transition detector.
-       * Why: We only want to generate a report once an emergency is OVER.
+       * Generate a full timeline report once the emergency is resolved.
        */
       if (previousSos === true && currentSos === false) {
         (async () => {
           try {
-            const loc = user.position;
-            let locationAddress = 'Unknown Location';
-            
-            // Resolve the coordinates to a street address for readability in the report list
-            if (loc && loc.length === 2) {
-              const addr = await reverseGeocode(loc[0], loc[1]);
-              if (addr) locationAddress = addr;
+            // ── Marked Safe (end) data ────────────────────────────────────
+            const endDate   = new Date();
+            const endPos    = user.position ?? null;
+            let   endAddr   = 'Unknown Location';
+            if (endPos?.length === 2) {
+              const a = await reverseGeocode(endPos[0], endPos[1]);
+              if (a) endAddr = a;
             }
 
-            const reportDate = new Date();
+            // ── Request for Help (start) data ─────────────────────────────
+            const start     = sosStartData.current.get(user.id);
+            const startDate = start?.startTime ?? endDate; // fallback: use end time
+            const startPos  = start?.startPosition ?? endPos;
+            let   startAddr = 'Unknown Location';
+            if (startPos?.length === 2) {
+              // Avoid a duplicate geocode call if user hasn't moved
+              if (
+                !endPos ||
+                Math.abs(startPos[0] - endPos[0]) > 0.0001 ||
+                Math.abs(startPos[1] - endPos[1]) > 0.0001
+              ) {
+                const a = await reverseGeocode(startPos[0], startPos[1]);
+                if (a) startAddr = a;
+              } else {
+                startAddr = endAddr; // same location at start and end
+              }
+            }
+            sosStartData.current.delete(user.id);
 
-            // Create the record in the 'reports' collection
-            await addDoc(collection(db, 'reports'), {
+            const fmtDate = (d) =>
+              d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            const fmtTime = (d) =>
+              d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            // Create the timeline report in Firestore
+            const reportRef = await addDoc(collection(db, 'reports'), {
               braceletStatus: user.braceletOn ?? false,
-              avatar: null, // Future feature: incident photos
-              date: reportDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-              time: reportDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-              location: locationAddress,
-              appUserId: currentUser.uid,
-              appUserName: currentUser.displayName || 'App User',
-              braceletUserId: user.id,
-              braceletUserName: user.name || 'Unknown Bracelet',
+              avatar: null,
+
+              // ── Request for Help (SOS triggered) ──────────────────────
+              sosStartDate:     fmtDate(startDate),
+              sosStartTime:     fmtTime(startDate),
+              sosStartLocation: startAddr,
+              sosStartPosition: startPos,
+
+              // ── Marked Safe (SOS resolved) ────────────────────────────
+              date:     fmtDate(endDate),
+              time:     fmtTime(endDate),
+              location: endAddr,
+              position: endPos,
+
+              appUserId:          currentUser.uid,
+              appUserName:        currentUser.displayName || 'App User',
+              braceletUserId:     user.id,
+              braceletUserName:   user.name || 'Unknown Bracelet',
+              sosLevel:           user.sosLevel ?? 1,
             });
-            
-            // Feedback to the user that saving was successful
+
+            // Trigger notification record for SOS Resolved, now with a report reference
+            saveSosResolvedNotification(currentUser, user, reportRef.id).catch(err =>
+              console.error('Failed to save SOS resolved notification:', err)
+            );
+
+            // ── Send Safe-Status SMS ──────────────────────────────────────
+            const contacts = user.emergencyContacts || [];
+            if (contacts.length > 0) {
+              const ownerName  = user.name || currentUser.displayName || 'User';
+              const safeSms    = buildSafeSms(ownerName);
+              sendSms(contacts, safeSms).catch(err =>
+                console.error('[SMS] Safe SMS failed:', err)
+              );
+            }
+            // ─────────────────────────────────────────────────────────────
+
             addToast('SOS Resolved: New incident report generated.', 'success');
           } catch (err) {
             console.error('REPORT GEN ERROR:', err);

@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import L from "leaflet";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import "leaflet/dist/leaflet.css";
 import "./Home.css";
 import { Link } from "react-router-dom";
@@ -8,6 +9,7 @@ import { useBraceletUsers } from "../../context/BraceletDataProvider";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import MapLoader from "../../components/loading/MapLoader";
 import HomeSidePanel from "../../components/HomeSidePanel";
+import { Navigation, X, Plus, Minus, Search } from "lucide-react";
 
 function Home() {
   const { braceletUsers, loading, addressCache, mapViewState, setMapViewState } = useBraceletUsers();
@@ -15,6 +17,11 @@ function Home() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all"); // all | online | sos
   const [selectedId, setSelectedId] = useState(null);
+
+  // Map search bar state (mobile overlay)
+  const [mapSearch, setMapSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const mapSearchRef = useRef(null);
 
   const mapRef = useRef(null);
 
@@ -42,6 +49,18 @@ function Home() {
   const groupedMarkers = useMemo(() => {
     return mapHelpers.groupUsersByLocation(braceletUsers);
   }, [braceletUsers]);
+
+  // Collect all bracelet users that currently have an active SOS signal
+  const sosUsers = useMemo(() => {
+    return (braceletUsers || []).filter((u) => u.sos && u.position);
+  }, [braceletUsers]);
+
+  // Track when the user last manually interacted with the map so the
+  // auto-zoom doesn't fight them (10-second grace window)
+  const lastUserInteractionRef = useRef(0);
+  const markUserInteraction = useCallback(() => {
+    lastUserInteractionRef.current = Date.now();
+  }, []);
 
   const getInitialCenter = () => {
     // 1. Priority: Any user in SOS mode (even if marked offline, SOS takes precedence)
@@ -77,6 +96,104 @@ function Home() {
     }
   };
 
+  // Map search bar: real-time filtered suggestions
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [locationError, setLocationError] = useState(false);
+
+  // Map search bar: real-time filtered suggestions
+  const userSuggestions = useMemo(() => {
+    const q = mapSearch.trim().toLowerCase();
+    if (!q) return [];
+    return (braceletUsers || [])
+      .filter((u) => (u.name || "").toLowerCase().includes(q))
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      .slice(0, 8);
+  }, [braceletUsers, mapSearch]);
+
+  useEffect(() => {
+    const q = mapSearch.trim();
+    if (!q) {
+      setLocationSuggestions([]);
+      setIsSearchingLocation(false);
+      setLocationError(false);
+      return;
+    }
+
+    if (userSuggestions.length > 0) {
+      setLocationSuggestions([]);
+      setIsSearchingLocation(false);
+      setLocationError(false);
+      return;
+    }
+
+    setIsSearchingLocation(true);
+    setLocationError(false);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
+        const data = await response.json();
+        setLocationSuggestions(data || []);
+      } catch (err) {
+        console.error("Geocoding fetch error:", err);
+        setLocationSuggestions([]);
+        setLocationError(true);
+      } finally {
+        setIsSearchingLocation(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [mapSearch, userSuggestions.length]);
+
+  const handleLocationSelect = (loc) => {
+    setMapSearch("");
+    setSearchFocused(false);
+    mapSearchRef.current?.blur();
+    if (mapRef.current) {
+      mapRef.current.flyTo([parseFloat(loc.lat), parseFloat(loc.lon)], 16, { duration: 1.2 });
+    }
+  };
+
+  const handleMapSearchSelect = (u) => {
+    setMapSearch("");
+    setSearchFocused(false);
+    mapSearchRef.current?.blur();
+    handleSelectUser(u);
+  };
+
+  const handleLocationSearch = async (searchQuery) => {
+    const q = searchQuery.trim();
+    if (!q) return;
+
+    const userMatch = (braceletUsers || []).find((u) => (u.name || "").toLowerCase() === q.toLowerCase());
+    if (userMatch && userMatch.position) {
+       handleSelectUser(userMatch);
+       return;
+    }
+
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        if (mapRef.current) {
+          mapRef.current.flyTo([parseFloat(lat), parseFloat(lon)], 16, { duration: 1.2 });
+        }
+      }
+    } catch (err) {
+      console.error("Geocoding failed", err);
+    }
+  };
+  const handleZoomIn = () => {
+    if (mapRef.current) mapRef.current.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    if (mapRef.current) mapRef.current.zoomOut();
+  };
+
   if (loading) {
     return (
       <div className="home-layout" style={{ position: 'relative' }}>
@@ -95,7 +212,8 @@ function Home() {
           attributionControl={false}
           style={{ height: "100%", width: "100%" }}
         >
-          <MapController mapRef={mapRef} setMapViewState={setMapViewState} />
+          <MapController mapRef={mapRef} setMapViewState={setMapViewState} onUserInteraction={markUserInteraction} />
+          <SosMapController sosUsers={sosUsers} lastUserInteractionRef={lastUserInteractionRef} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -169,7 +287,13 @@ function Home() {
                           {singleUser.sos && (
                             <div className="detail-row">
                               <span style={{color: 'red', fontWeight: 'bold'}}>SOS Status</span>
-                              <span style={{color: 'red', fontWeight: 'bold'}}>🚨 Active!</span>
+                              <span style={{color: 'red', fontWeight: 'bold'}}>
+                                🚨 {
+                                  singleUser.sosLevel === 3 ? 'Level 3 (Severe)' :
+                                  singleUser.sosLevel === 2 ? 'Level 2 (Moderate)' :
+                                  'Level 1 (Mild)'
+                                }
+                              </span>
                             </div>
                           )}
                         </div>
@@ -195,6 +319,117 @@ function Home() {
             );
           })}
         </MapContainer>
+
+        {/* Floating map search bar (mobile + desktop) */}
+        <div className="map-search-overlay">
+          <div className={`map-search-bar ${searchFocused ? "focused" : ""}`}>
+            <input
+              ref={mapSearchRef}
+              className="map-search-input"
+              type="text"
+              placeholder="Search Name/Place"
+              value={mapSearch}
+              onChange={(e) => setMapSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleLocationSearch(mapSearch);
+                  setSearchFocused(false);
+                  mapSearchRef.current?.blur();
+                }
+              }}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+              autoComplete="off"
+            />
+            {mapSearch.length > 0 ? (
+              <X 
+                size={16} 
+                className="map-search-nav-icon" 
+                style={{ cursor: "pointer" }}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setMapSearch("");
+                  mapSearchRef.current?.focus();
+                }}
+              />
+            ) : (
+              <Search size={16} className="map-search-nav-icon" />
+            )}
+          </div>
+
+          {/* Suggestions dropdown */}
+          {searchFocused && (
+            <>
+              {userSuggestions.length > 0 && (
+                <ul className="map-search-dropdown">
+                  {userSuggestions.map((u) => (
+                    <li
+                      key={u.id}
+                      className="map-search-item"
+                      onMouseDown={() => handleMapSearchSelect(u)}
+                    >
+                      <img src={u.avatar} alt={u.name} className="map-search-avatar" />
+                      <div className="map-search-item-info">
+                        <span className="map-search-item-name">{u.name}</span>
+                        <span className={`map-search-item-status ${u.sos ? "sos" : u.online ? "online" : "offline"}`}>
+                          {u.sos ? "🚨 SOS" : u.online ? "Online" : "Offline"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {userSuggestions.length === 0 && locationSuggestions.length > 0 && (
+                <ul className="map-search-dropdown">
+                  {locationSuggestions.map((loc, i) => (
+                    <li
+                      key={i}
+                      className="map-search-item"
+                      onMouseDown={() => handleLocationSelect(loc)}
+                    >
+                      <div className="map-search-item-info" style={{ paddingLeft: "8px" }}>
+                        <span className="map-search-item-name">{loc.display_name}</span>
+                        <span className="map-search-item-status" style={{ color: "#8b0000" }}>📍 Location Match</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {mapSearch.trim() && userSuggestions.length === 0 && isSearchingLocation && (
+                <div className="map-search-no-results">Searching locations...</div>
+              )}
+
+              {mapSearch.trim() && userSuggestions.length === 0 && locationSuggestions.length === 0 && !isSearchingLocation && (
+                <div className="map-search-no-results">
+                   {locationError ? "Error fetching locations" : "No user or location found"}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Floating zoom controls */}
+        <div className="map-zoom-controls">
+          <button
+            className="map-zoom-btn"
+            onClick={handleZoomIn}
+            type="button"
+            aria-label="Zoom in"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+          </button>
+          <div className="map-zoom-divider" />
+          <button
+            className="map-zoom-btn"
+            onClick={handleZoomOut}
+            type="button"
+            aria-label="Zoom out"
+          >
+            <Minus size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
       {/* Desktop right-side monitoring panel */}
@@ -207,6 +442,7 @@ function Home() {
         selectedId={selectedId}
         onSelectUser={handleSelectUser}
         addressCache={addressCache}
+        onSearchLocation={handleLocationSearch}
       />
     </div>
   );
@@ -215,7 +451,7 @@ function Home() {
 export default Home;
 
 // Helper to access map instance and track pan/zoom state globally
-function MapController({ mapRef, setMapViewState }) {
+function MapController({ mapRef, setMapViewState, onUserInteraction }) {
   const map = useMapEvents({
     moveend: () => {
       if (setMapViewState) {
@@ -237,7 +473,10 @@ function MapController({ mapRef, setMapViewState }) {
           return { center: [newLat, newLng], zoom: newZoom };
         });
       }
-    }
+    },
+    // Record any deliberate user interaction so SosMapController won't override it
+    dragstart: () => onUserInteraction?.(),
+    zoomstart: () => onUserInteraction?.(),
   });
 
   useEffect(() => {
@@ -247,5 +486,50 @@ function MapController({ mapRef, setMapViewState }) {
       map.invalidateSize();
     }, 200);
   }, [map, mapRef]);
+  return null;
+}
+
+/**
+ * SosMapController
+ * Reactively zooms / fits the map whenever active SOS users change:
+ *  - 0 SOS users → do nothing
+ *  - 1 SOS user  → flyTo their pin at zoom 17
+ *  - 2+ SOS users → fitBounds to include all emergency pins with padding
+ *
+ * A 10-second user-interaction grace period prevents the controller from
+ * fighting the user when they have manually panned/zoomed the map.
+ */
+function SosMapController({ sosUsers, lastUserInteractionRef }) {
+  const map = useMap();
+  // Serialise sos positions so we can compare across renders
+  const prevKeyRef = useRef("");
+
+  useEffect(() => {
+    if (!sosUsers || sosUsers.length === 0) return;
+
+    // Build a stable key from current SOS positions
+    const key = sosUsers
+      .map((u) => `${u.id}:${u.position[0].toFixed(5)},${u.position[1].toFixed(5)}`)
+      .sort()
+      .join("|");
+
+    // Don't re-fly if nothing changed
+    if (key === prevKeyRef.current) return;
+    prevKeyRef.current = key;
+
+    // Respect a 10-second window after the user last interacted with the map
+    const timeSinceInteraction = Date.now() - (lastUserInteractionRef.current || 0);
+    if (timeSinceInteraction < 10_000) return;
+
+    if (sosUsers.length === 1) {
+      // Single emergency: fly smoothly to that user's pin
+      map.flyTo(sosUsers[0].position, 17, { duration: 1.2 });
+    } else {
+      // Multiple emergencies: fit all pins inside the current viewport
+      const bounds = L.latLngBounds(sosUsers.map((u) => u.position));
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17, animate: true });
+    }
+  }, [sosUsers, map, lastUserInteractionRef]);
+
   return null;
 }

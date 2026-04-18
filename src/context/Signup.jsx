@@ -27,8 +27,9 @@ export default function Signup() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Track whether the user has interacted with the password field yet
-  const [passwordTouched, setPasswordTouched] = useState(false);
+  // Track whether the user has focused the password fields
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
   /* ── Derived password state ────────────────────────────────────── */
   const rules = checkPasswordRules(password);
@@ -42,7 +43,6 @@ export default function Signup() {
 
     // 1. Strong-password gate
     if (!isPasswordValid(password)) {
-      setPasswordTouched(true); // reveal checklist if not shown yet
       setFormError("Please create a stronger password meeting all the requirements below.");
       return;
     }
@@ -128,9 +128,9 @@ export default function Signup() {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setPasswordTouched(true);
                 }}
-                onBlur={() => setPasswordTouched(true)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 autoComplete="new-password"
                 required
                 leftSlot={<Lock size={18} />}
@@ -146,32 +146,34 @@ export default function Signup() {
                 }
               />
 
-              {/* Strength indicator — only visible after user starts typing */}
-              {passwordTouched && password.length > 0 && (
+              {/* Strength indicator — block always exists if typing started, checklist hides on blur */}
+              {password.length > 0 && (
                 <div className="pwStrengthBlock" aria-live="polite">
-                  {/* Label only — no bar */}
+                  {/* Label only — always visible */}
                   {strengthLabel && (
                     <span className={`pwStrengthLabel pwStrengthLabel--${strengthLevel}`}>
                       {strengthLabel}
                     </span>
                   )}
 
-                  {/* Per-rule checklist */}
-                  <ul className="pwRuleList" aria-label="Password requirements">
-                    {rules.map((rule) => (
-                      <li
-                        key={rule.id}
-                        className={`pwRuleItem ${rule.passed ? "pwRuleItem--pass" : "pwRuleItem--fail"}`}
-                      >
-                        {rule.passed ? (
-                          <Check size={12} strokeWidth={3} className="pwRuleIcon" />
-                        ) : (
-                          <X size={12} strokeWidth={3} className="pwRuleIcon" />
-                        )}
-                        {rule.label}
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Per-rule checklist — hidden when unfocused */}
+                  {passwordFocused && (
+                    <ul className="pwRuleList" aria-label="Password requirements">
+                      {rules.map((rule) => (
+                        <li
+                          key={rule.id}
+                          className={`pwRuleItem ${rule.passed ? "pwRuleItem--pass" : "pwRuleItem--fail"}`}
+                        >
+                          {rule.passed ? (
+                            <Check size={12} strokeWidth={3} className="pwRuleIcon" />
+                          ) : (
+                            <X size={12} strokeWidth={3} className="pwRuleIcon" />
+                          )}
+                          {rule.label}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
 
@@ -181,6 +183,8 @@ export default function Signup() {
                 placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                onFocus={() => setConfirmPasswordFocused(true)}
+                onBlur={() => setConfirmPasswordFocused(false)}
                 autoComplete="new-password"
                 required
                 leftSlot={<Lock size={18} />}
@@ -194,9 +198,9 @@ export default function Signup() {
                     {showPw ? <EyeOff size={18} color="#888" /> : <Eye size={18} color="#888" />}
                   </button>
                 }
-                /* Inline mismatch hint — only when both fields have text */
+                /* Inline mismatch hint — only when both fields have text and confirm is focused */
                 error={
-                  confirmPassword && password && confirmPassword !== password
+                  confirmPasswordFocused && confirmPassword && password && confirmPassword !== password
                     ? "Passwords do not match"
                     : undefined
                 }

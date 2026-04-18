@@ -25,6 +25,7 @@ export default function HomeSidePanel({
   selectedId,
   onSelectUser,
   addressCache = {},
+  onSearchLocation,
 }) {
   return (
     <aside className="hsp">
@@ -38,7 +39,12 @@ export default function HomeSidePanel({
           className="hsp-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name…"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && onSearchLocation) {
+              onSearchLocation(query);
+            }
+          }}
+          placeholder="Search Name/Place"
         />
       </div>
 
