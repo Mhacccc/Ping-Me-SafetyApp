@@ -43,6 +43,7 @@ export const braceletQueryKey = (uid) => ['braceletUsers', uid];
  * @function fetchBraceletUsers
  * @description Performs a deep fetch and merge of all IDs, profiles, and statuses.
  * @param {string} uid - Current app user ID.
+ * @param {Object} currentUser - Firebase Auth user object for account name and avatar.
  * @returns {Promise<{users: Array, appUserData: Object}>} Merged data ready for the UI.
  * 
  * @example
@@ -57,7 +58,7 @@ export const braceletQueryKey = (uid) => ['braceletUsers', uid];
  *   ...
  * }
  */
-async function fetchBraceletUsers(uid) {
+async function fetchBraceletUsers(uid, currentUser = null) {
   // 1. Establish the source of truth: The appUser doc defines which bracelets we "own".
   const appUserRef = doc(db, 'appUsers', uid);
   const appUserSnap = await getDoc(appUserRef);
@@ -68,15 +69,34 @@ async function fetchBraceletUsers(uid) {
   }
 
   const appUserData = appUserSnap.data();
-  const linkedBraceletsID = appUserData?.linkedBraceletsID;
+  const linkedBraceletsID = appUserData?.linkedBraceletsID || [];
 
-  // Edge case: User logged in but hasn't linked any bracelets yet.
-  if (!linkedBraceletsID || linkedBraceletsID.length === 0) {
+  /**
+   * 2. Fetch the user's OWN bracelet (if configured)
+   * This allows the user to see themselves on the map as a self-marker.
+   */
+  const ownBraceletQuery = query(
+    collection(db, 'braceletUsers'),
+    where('ownerAppUserId', '==', uid)
+  );
+  const ownBraceletSnap = await getDocs(ownBraceletQuery);
+
+  // Extract the owned bracelet ID (if exists)
+  let ownBraceletId = null;
+  if (!ownBraceletSnap.empty) {
+    ownBraceletId = ownBraceletSnap.docs[0].id;
+  }
+
+  // Build the complete list of bracelet IDs to fetch (linked + own, avoiding duplicates)
+  const allBraceletIds = [...new Set([...linkedBraceletsID, ...(ownBraceletId ? [ownBraceletId] : [])])];
+
+  // Edge case: User logged in but hasn't linked any bracelets and hasn't configured their own.
+  if (allBraceletIds.length === 0) {
     return { users: [], appUserData };
   }
 
   /**
-   * 2. Parallel Fetching Strategy
+   * 3. Parallel Fetching Strategy
    * We need data from two separate collections:
    * - 'braceletUsers': Persistent info (name, serial, emergency contacts).
    * - 'deviceStatus': Volatile status (GPS, battery, SOS, lastSeen).
@@ -84,11 +104,11 @@ async function fetchBraceletUsers(uid) {
    */
   const usersQuery = query(
     collection(db, 'braceletUsers'),
-    where(documentId(), 'in', linkedBraceletsID)
+    where(documentId(), 'in', allBraceletIds)
   );
   const deviceQuery = query(
     collection(db, 'deviceStatus'),
-    where(documentId(), 'in', linkedBraceletsID)
+    where(documentId(), 'in', allBraceletIds)
   );
 
   const [usersSnap, deviceSnap] = await Promise.all([
@@ -97,7 +117,7 @@ async function fetchBraceletUsers(uid) {
   ]);
 
   /**
-   * 3. Indexing Device Status
+   * 4. Indexing Device Status
    * Convert the device results into a Map for O(1) lookup during merging.
    * key: deviceId (e.g., "PM-2023-001"), value: status object.
    */
@@ -106,17 +126,45 @@ async function fetchBraceletUsers(uid) {
     deviceMap.set(d.id, { ...d.data(), id: d.id });
   });
 
-  // 4. Nickname resolution logic
+  // 5. Nickname resolution logic
   // App-level nicknames take priority over the global bracelet name.
   const braceletNicknames = appUserData?.braceletNicknames || {};
   const merged = usersSnap.docs.map((u) => {
     // Utility function handles the heavy lifting of coordinate parsing and date conversion.
     const userObj = mapHelpers.buildUserWithDevice(u, deviceMap);
     
-    // Apply user-defined nickname if it exists in appUser/braceletNicknames/BR_ID
-    if (braceletNicknames[u.id]) {
-      userObj.name = braceletNicknames[u.id];
+    // Mark if this is the user's own bracelet
+    const isSelf = u.id === ownBraceletId;
+    userObj.isSelf = isSelf;
+    
+    if (isSelf) {
+      // For self-marker: Use account name from Firebase Auth (first word only)
+      const fullName = currentUser?.displayName || userObj.name || 'You';
+      const nameParts = fullName.trim().split(/\s+/); // Split by whitespace
+      userObj.name = nameParts[0] || 'You'; // Take only first word
+      
+      // Use account avatar from Firebase Auth
+      userObj.avatar = currentUser?.photoURL || userObj.avatar;
+      // If no GPS data yet, use default location (TUP Manila)
+      if (!userObj.position || (userObj.position[0] === 0 && userObj.position[1] === 0)) {
+        userObj.position = [14.5921, 120.9755]; // TUP Manila default
+        userObj.hasDefaultLocation = true; // Flag to indicate this is a default location
+      }
+    } else {
+      // For other users: Apply nickname if exists, otherwise use first word of name
+      if (braceletNicknames[u.id]) {
+        // If there's a custom nickname, use first word of nickname
+        const nickname = braceletNicknames[u.id];
+        const nicknameParts = nickname.trim().split(/\s+/);
+        userObj.name = nicknameParts[0] || nickname;
+      } else {
+        // No nickname: use first word of bracelet name
+        const fullName = userObj.name || 'User';
+        const nameParts = fullName.trim().split(/\s+/);
+        userObj.name = nameParts[0] || fullName;
+      }
     }
+    
     return userObj;
   });
 
@@ -140,7 +188,7 @@ export function useBraceletData() {
    */
   const { data, isLoading, error } = useQuery({
     queryKey: braceletQueryKey(uid),
-    queryFn: () => fetchBraceletUsers(uid),
+    queryFn: () => fetchBraceletUsers(uid, currentUser),
     enabled: !!uid, // Wait for auth to resolve
     placeholderData: keepPreviousData, // Prevent flickering during background refreshes
   });
@@ -156,12 +204,15 @@ export function useBraceletData() {
   useEffect(() => {
     if (!uid || !appUserData) return;
 
-    const linkedBraceletsID = appUserData?.linkedBraceletsID;
-    if (!linkedBraceletsID || linkedBraceletsID.length === 0) return;
+    const linkedBraceletsID = appUserData?.linkedBraceletsID || [];
+    
+    // Build list of all bracelet IDs to monitor (linked + own)
+    const allBraceletIds = braceletUsers.map(u => u.id);
+    if (allBraceletIds.length === 0) return;
 
     const deviceQuery = query(
       collection(db, 'deviceStatus'),
-      where(documentId(), 'in', linkedBraceletsID)
+      where(documentId(), 'in', allBraceletIds)
     );
 
     const unsub = onSnapshot(deviceQuery, (snapshot) => {
@@ -242,7 +293,7 @@ export function useBraceletData() {
     });
 
     return () => unsub();
-  }, [uid, appUserData, queryClient]);
+  }, [uid, appUserData, queryClient, braceletUsers]);
 
   /**
    * 3. The Profile Engine (Real-time listener)
@@ -252,12 +303,13 @@ export function useBraceletData() {
   useEffect(() => {
     if (!uid || !appUserData) return;
 
-    const linkedBraceletsID = appUserData?.linkedBraceletsID;
-    if (!linkedBraceletsID || linkedBraceletsID.length === 0) return;
+    // Build list of all bracelet IDs to monitor (linked + own)
+    const allBraceletIds = braceletUsers.map(u => u.id);
+    if (allBraceletIds.length === 0) return;
 
     const usersQuery = query(
       collection(db, 'braceletUsers'),
-      where(documentId(), 'in', linkedBraceletsID)
+      where(documentId(), 'in', allBraceletIds)
     );
 
     const unsub = onSnapshot(usersQuery, (snapshot) => {
@@ -277,14 +329,43 @@ export function useBraceletData() {
           users: old.users.map((u) => {
             if (!userUpdates.has(u.id)) return u;
             const newData = userUpdates.get(u.id);
-            return {
-              ...u,
-              // Nickname logic reapplied here to maintain user preference over global name
-              name: appUserData?.braceletNicknames?.[u.id] || newData.name || u.name,
-              avatar: newData.avatar || u.avatar,
-              emergencyContacts: newData.emergencyContacts || u.emergencyContacts || [],
-              serialNumber: newData.serialNumber || u.serialNumber,
-            };
+            
+            if (u.isSelf) {
+              // For self-marker: Always use account name from Firebase Auth (first word only)
+              const fullName = currentUser?.displayName || newData.name || u.name;
+              const nameParts = fullName.trim().split(/\s+/); // Split by whitespace
+              const shortName = nameParts[0] || 'You'; // Take only first word
+              
+              return {
+                ...u,
+                name: shortName,
+                avatar: currentUser?.photoURL || newData.avatar || u.avatar,
+                emergencyContacts: newData.emergencyContacts || u.emergencyContacts || [],
+                serialNumber: newData.serialNumber || u.serialNumber,
+              };
+            } else {
+              // For others: Apply nickname logic (first word only)
+              let displayName;
+              if (appUserData?.braceletNicknames?.[u.id]) {
+                // If there's a custom nickname, use first word of nickname
+                const nickname = appUserData.braceletNicknames[u.id];
+                const nicknameParts = nickname.trim().split(/\s+/);
+                displayName = nicknameParts[0] || nickname;
+              } else {
+                // No nickname: use first word of bracelet name
+                const fullName = newData.name || u.name;
+                const nameParts = fullName.trim().split(/\s+/);
+                displayName = nameParts[0] || fullName;
+              }
+              
+              return {
+                ...u,
+                name: displayName,
+                avatar: newData.avatar || u.avatar,
+                emergencyContacts: newData.emergencyContacts || u.emergencyContacts || [],
+                serialNumber: newData.serialNumber || u.serialNumber,
+              };
+            }
           }),
         };
       });
@@ -293,7 +374,7 @@ export function useBraceletData() {
     });
 
     return () => unsub();
-  }, [uid, appUserData, queryClient]);
+  }, [uid, appUserData, queryClient, braceletUsers]);
 
   /**
    * 4. Heartbeat Monitor (Client-side interval)

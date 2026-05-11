@@ -125,19 +125,28 @@ function People() {
   /**
    * Memoized filtered and sorted user list.
    * Only recalculates when braceletUsers or searchQuery actually change.
+   * Self-marker is always shown at the top, followed by others sorted by SOS/online/name.
    */
   const filteredUsers = useMemo(() => {
     const filtered = braceletUsers.filter((user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    return filtered.sort((a, b) => {
+    // Separate self from others
+    const self = filtered.find(u => u.isSelf);
+    const others = filtered.filter(u => !u.isSelf);
+
+    // Sort others: SOS first, then online, then name
+    const sortedOthers = others.sort((a, b) => {
       if (a.sos && !b.sos) return -1;
       if (!a.sos && b.sos) return 1;
       if (a.online && !b.online) return -1;
       if (!a.online && b.online) return 1;
       return a.name.localeCompare(b.name);
     });
+
+    // Return self first (if exists), then others
+    return self ? [self, ...sortedOthers] : sortedOthers;
   }, [braceletUsers, searchQuery]);
 
   const handleOpenDeleteModal = (e, braceletId) => {
@@ -621,46 +630,78 @@ function People() {
           
           filteredUsers.map((person) => (
             <div key={person.id} className="person-row-item">
-              <Link to={`/app/userProfile/${person.id}`} state={{ personData: person }} className="person-link">
-                <div className="person-main-info">
-                  <div className="avatar-wrapper">
-                    <img src={person.avatar} alt={person.name} className="person-avatar-img" />
-                    <div className={`status-dot ${person.online ? 'online' : 'offline'}`} />
-                  </div>
-                  <div className="name-status-info">
-                    <p className="person-row-name">{person.name}</p>
-                    <div className="person-row-meta">
-                      <p className="person-row-status">
-                        Bracelet: <span className={person.online && person.braceletOn ? 'status-on' : 'status-off'}>
-                          {person.online && person.braceletOn ? 'ON' : 'OFF'}
-                        </span>
-                      </p>
-                      <span className="meta-dot">•</span>
-                      <p className="battery-percentage" style={person.online ? { color: '#34A853' } : { color: "var(--pm-text-muted)" }}>
-                        {person.battery}%
-                      </p>
+              {person.isSelf ? (
+                // Self-marker: Non-clickable, shows "You" badge
+                <div className="person-link" style={{ cursor: 'default' }}>
+                  <div className="person-main-info">
+                    <div className="avatar-wrapper">
+                      <img src={person.avatar} alt={person.name} className="person-avatar-img" style={{ border: '2px solid #2563eb' }} />
+                      <div className={`status-dot ${person.online ? 'online' : 'offline'}`} />
+                    </div>
+                    <div className="name-status-info">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <p className="person-row-name" style={{ color: '#2563eb' }}>{person.name}</p>
+                        <span className="you-badge">You</span>
+                      </div>
+                      <div className="person-row-meta">
+                        <p className="person-row-status">
+                          Bracelet: <span className={person.online && person.braceletOn ? 'status-on' : 'status-off'}>
+                            {person.online && person.braceletOn ? 'ON' : 'OFF'}
+                          </span>
+                        </p>
+                        <span className="meta-dot">•</span>
+                        <p className="battery-percentage" style={person.online ? { color: '#34A853' } : { color: "var(--pm-text-muted)" }}>
+                          {person.battery}%
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </Link>
+              ) : (
+                // Other people: Clickable with edit/delete actions
+                <Link to={`/app/userProfile/${person.id}`} state={{ personData: person }} className="person-link">
+                  <div className="person-main-info">
+                    <div className="avatar-wrapper">
+                      <img src={person.avatar} alt={person.name} className="person-avatar-img" />
+                      <div className={`status-dot ${person.online ? 'online' : 'offline'}`} />
+                    </div>
+                    <div className="name-status-info">
+                      <p className="person-row-name">{person.name}</p>
+                      <div className="person-row-meta">
+                        <p className="person-row-status">
+                          Bracelet: <span className={person.online && person.braceletOn ? 'status-on' : 'status-off'}>
+                            {person.online && person.braceletOn ? 'ON' : 'OFF'}
+                          </span>
+                        </p>
+                        <span className="meta-dot">•</span>
+                        <p className="battery-percentage" style={person.online ? { color: '#34A853' } : { color: "var(--pm-text-muted)" }}>
+                          {person.battery}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )}
 
-              <div className="person-actions">
-                <button
-                  className="edit-person-btn"
-                  onClick={(e) => handleOpenEditModal(e, person)}
-                  aria-label="Edit"
-                >
-                  <Pencil size={20} />
-                </button>
+              {!person.isSelf && (
+                <div className="person-actions">
+                  <button
+                    className="edit-person-btn"
+                    onClick={(e) => handleOpenEditModal(e, person)}
+                    aria-label="Edit"
+                  >
+                    <Pencil size={20} />
+                  </button>
 
-                <button
-                  className="delete-person-btn"
-                  onClick={(e) => handleOpenDeleteModal(e, person.id)}
-                  aria-label="Delete"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
+                  <button
+                    className="delete-person-btn"
+                    onClick={(e) => handleOpenDeleteModal(e, person.id)}
+                    aria-label="Delete"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}

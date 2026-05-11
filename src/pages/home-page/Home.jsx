@@ -239,24 +239,104 @@ function Home() {
                         </div>
                         <div className="popup-user-list">
                           {group.users.map((user) => (
-                            <Link
-                              key={user.id}
-                              to={`/app/userProfile/${user.id}`}
-                              state={{ personData: user }}
-                              className="popup-user-item"
-                            >
-                              <img src={user.avatar} alt={user.name} className="popup-user-avatar" />
-                              <div className="popup-user-info">
-                                <span className="popup-user-name">{user.name}</span>
-                                <div className="popup-user-meta">
-                                  <span>{user.battery}% Battery</span> • 
-                                  <span style={{ color: user.online ? '#34A853' : '#666', marginLeft: '4px' }}>
-                                    {user.online ? 'Active' : 'Offline'}
+                            user.isSelf ? (
+                              <div
+                                key={user.id}
+                                className="popup-user-item"
+                                style={{ cursor: 'default', background: 'rgba(37, 99, 235, 0.05)' }}
+                              >
+                                <img src={user.avatar} alt={user.name} className="popup-user-avatar" />
+                                <div className="popup-user-info">
+                                  <span className="popup-user-name" style={{ color: '#2563eb' }}>
+                                    {user.name} (You)
                                   </span>
+                                  <div className="popup-user-meta">
+                                    <span>{user.battery}% Battery</span> • 
+                                    <span style={{ color: user.online ? '#34A853' : '#666', marginLeft: '4px' }}>
+                                      {user.online ? 'Active' : 'Offline'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </Link>
+                            ) : (
+                              <Link
+                                key={user.id}
+                                to={`/app/userProfile/${user.id}`}
+                                state={{ personData: user }}
+                                className="popup-user-item"
+                              >
+                                <img src={user.avatar} alt={user.name} className="popup-user-avatar" />
+                                <div className="popup-user-info">
+                                  <span className="popup-user-name">{user.name}</span>
+                                  <div className="popup-user-meta">
+                                    <span>{user.battery}% Battery</span> • 
+                                    <span style={{ color: user.online ? '#34A853' : '#666', marginLeft: '4px' }}>
+                                      {user.online ? 'Active' : 'Offline'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </Link>
+                            )
                           ))}
+                        </div>
+                      </>
+                    ) : singleUser.isSelf ? (
+                      <>
+                        <div className="popup-header" style={{ background: 'rgba(37, 99, 235, 0.08)' }}>
+                          <h3 style={{ color: '#2563eb' }}>📍 Your Location</h3>
+                        </div>
+                        
+                        <div className="popup-details">
+                          <div className="detail-row">
+                            <span>Bracelet Status</span>
+                            <span className={`status-val ${singleUser.online ? "active" : "inactive"}`}>
+                              {singleUser.online ? "Active" : "Offline"}
+                            </span>
+                          </div>
+                          <div className="detail-row">
+                            <span>Battery</span>
+                            <span>{singleUser.battery}%</span>
+                          </div>
+                          <div className="detail-row">
+                            <span>Last Seen</span>
+                            <span>
+                              {singleUser.lastSeen
+                                ? singleUser.lastSeen.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                                : "—"}
+                            </span>
+                          </div>
+                          {singleUser.sos && (
+                            <div className="detail-row">
+                              <span style={{color: 'red', fontWeight: 'bold'}}>SOS Status</span>
+                              <span style={{color: 'red', fontWeight: 'bold'}}>
+                                🚨 {
+                                  singleUser.sosLevel === 3 ? 'Level 3 (Severe)' :
+                                  singleUser.sosLevel === 2 ? 'Level 2 (Moderate)' :
+                                  'Level 1 (Mild)'
+                                }
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="popup-location-box" style={{ background: 'rgba(37, 99, 235, 0.1)', borderLeft: '4px solid #2563eb' }}>
+                          {singleUser.hasDefaultLocation ? (
+                            <p style={{ fontStyle: 'italic', color: '#666' }}>
+                              📍 Default location (TUP Manila) - GPS data not available yet
+                            </p>
+                          ) : (
+                            <p>{addressCache[singleUser.id] || "Fetching location…"}</p>
+                          )}
+                        </div>
+
+                        <div className="popup-footer">
+                          <Link
+                            to="/app/my-bracelet"
+                            className="profile-link"
+                            style={{ color: '#2563eb' }}
+                          >
+                            Manage My Bracelet
+                          </Link>
                         </div>
                       </>
                     ) : (

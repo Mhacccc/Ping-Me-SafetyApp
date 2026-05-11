@@ -65,12 +65,22 @@ body {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
+/* Self-marker styling - blue pin for the user's own location */
+.marker-pin.self-pin {
+  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.4));
+}
+
 .marker-bg {
   position: absolute;
   top: 0;
   left: 0;
   width: 100px;
   height: 62px;
+}
+
+/* Blue tint for self-marker background */
+.marker-bg.self-bg {
+  filter: hue-rotate(200deg) saturate(1.2) brightness(1.1);
 }
 
 .marker-content {
@@ -85,6 +95,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* Blue background for self-marker content */
+.marker-content.self-content {
+  background-color: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #2563eb;
 }
 
 .marker-image {

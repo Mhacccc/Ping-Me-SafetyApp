@@ -1,0 +1,53 @@
+feat: Add self-tracking with first name display for all users
+
+Implemented comprehensive self-tracking feature that allows users to see their own location on the map alongside monitored users. All user names now display as first name only for cleaner UI.
+
+Key Features:
+- Self-marker appears automatically when bracelet is configured
+- Blue pin styling distinguishes self from others (red pins)
+- Account name from Firebase Auth used for self-marker identity
+- Default location (TUP Manila) shown when GPS data unavailable
+- First name only display applied to all users app-wide
+
+Changes:
+- Modified useBraceletData.js to fetch owned bracelet alongside linked bracelets
+- Added isSelf flag to distinguish user's own bracelet from others
+- Implemented name truncation to show first word only for all users
+- Created distinct blue pin styling for self-marker (vs red for others)
+- Added default location fallback [14.5921, 120.9755] when GPS unavailable
+- Updated map popup to show "Your Location" for self with manage bracelet link
+- Modified People page to display self at top with "You" badge
+- Updated HomeSidePanel to show self with blue styling and badge
+- Applied first name extraction to both self and other users
+- Preserved nickname functionality with first word extraction
+
+UI/UX Improvements:
+- Self-marker non-editable/non-deletable in People list
+- Clear "Default location (GPS not available)" indicator
+- Blue color scheme for all self-marker elements
+- Consistent first name display across map, people list, and side panel
+- Smooth transition from default to real location when GPS syncs
+
+Technical Details:
+- Account name priority: currentUser.displayName > braceletUsers.name > fallback
+- Location priority: Real GPS > Default location (TUP Manila)
+- Name extraction: Split by whitespace, take first word only
+- Real-time updates maintain first name display
+- Handles edge cases: empty names, single words, extra spaces
+
+Files Modified:
+- src/hooks/useBraceletData.js (data fetching and real-time listeners)
+- src/utils/mapHelpers.js (blue icon generation for self-marker)
+- src/pages/home-page/Home.jsx (self-marker popup rendering)
+- src/pages/home-page/Home.css (blue pin styling)
+- src/pages/people/People.jsx (self at top with badge)
+- src/pages/people/People.css (you badge styling)
+- src/components/HomeSidePanel.jsx (self-marker in side panel)
+- src/components/HomeSidePanel.css (badge styling)
+
+Breaking Changes: None
+Backward Compatible: Yes
+Build Status: ✅ No errors
+
+Closes: Self-tracking feature request
+Related: User identity and name display improvements
