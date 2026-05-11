@@ -83,9 +83,9 @@ export default function HomeSidePanel({
         ) : (
           users.map((u) => {
             const isSelected = selectedId === u.id;
-            const locationText =
-              addressCache[u.id] ||
-              (u.position ? "Fetching location…" : "No GPS data");
+            const locationText = u.hasDefaultLocation 
+              ? "Default location (GPS not available)"
+              : (addressCache[u.id] || (u.position ? "Fetching location…" : "No GPS data"));
 
             return (
               <div
@@ -102,7 +102,10 @@ export default function HomeSidePanel({
 
                 <div className="hsp-info">
                   <div className="hsp-row">
-                    <div className="hsp-name">{u.name}</div>
+                    <div className="hsp-name" style={u.isSelf ? { color: '#2563eb' } : {}}>
+                      {u.name}
+                      {u.isSelf && <span className="hsp-you-badge">You</span>}
+                    </div>
                     <StatusChip sos={u.sos} online={u.online} />
                   </div>
 
@@ -117,14 +120,25 @@ export default function HomeSidePanel({
                   </div>
 
                   <div className="hsp-actions">
-                    <Link
-                      className="hsp-link"
-                      to={`/app/userProfile/${u.id}`}
-                      state={{ personData: u }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View profile →
-                    </Link>
+                    {u.isSelf ? (
+                      <Link
+                        className="hsp-link"
+                        to="/app/my-bracelet"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ color: '#2563eb' }}
+                      >
+                        Manage bracelet →
+                      </Link>
+                    ) : (
+                      <Link
+                        className="hsp-link"
+                        to={`/app/userProfile/${u.id}`}
+                        state={{ personData: u }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View profile →
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

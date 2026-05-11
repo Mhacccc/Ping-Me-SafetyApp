@@ -198,6 +198,7 @@ const iconCache = new Map();
  * - SOS state: Adds a flashing red ring.
  * - Online state: Shows a green/red status dot.
  * - Group mode: Replaces avatar with a multi-person SVG and a count badge.
+ * - Self mode: Uses blue pin color instead of red for the user's own marker.
  * - Caching: Returns existing icons if the visual state hasn't changed.
  * 
  * @param {Object} data - Either a User object or a Group object.
@@ -208,6 +209,9 @@ export const createCustomIcon = (data) => {
   const isGroup = Array.isArray(data.users) && data.users.length > 1;
   const person = isGroup ? data.users[0] : (data.users ? data.users[0] : data);
   const count = isGroup ? data.users.length : 1;
+  
+  // Check if this is the user's own marker
+  const isSelf = person.isSelf === true;
 
   // 2. Logic Check: Status aggregation for groups
   const anyOnline = isGroup ? data.users.some(u => u.online && u.braceletOn) : (person.online && person.braceletOn);
@@ -215,9 +219,9 @@ export const createCustomIcon = (data) => {
 
   /**
    * 3. Performance: The Cache Key
-   * If these 6 variables are identical, the icon is visually identical.
+   * If these 7 variables are identical, the icon is visually identical.
    */
-  const cacheKey = `${isGroup}-${person.id}-${count}-${anyOnline}-${anySos}-${person.avatar}`;
+  const cacheKey = `${isGroup}-${person.id}-${count}-${anyOnline}-${anySos}-${person.avatar}-${isSelf}`;
 
   if (iconCache.has(cacheKey)) {
     return iconCache.get(cacheKey);
@@ -236,13 +240,14 @@ export const createCustomIcon = (data) => {
   /**
    * 5. HTML Generation
    * Combines a background container (custom SVG) with dynamic internal layers.
+   * Self-marker uses a blue pin instead of red.
    */
   const icon = L.divIcon({
-    className: `custom-marker-icon ${anySos ? 'sos-active' : ''}`,
+    className: `custom-marker-icon ${anySos ? 'sos-active' : ''} ${isSelf ? 'self-marker' : ''}`,
     html: `
-      <div class="marker-pin">
-        <img src="/mark-container.svg" class="marker-bg" />
-        <div class="marker-content ${isGroup ? 'group-content' : ''}">
+      <div class="marker-pin ${isSelf ? 'self-pin' : ''}">
+        <img src="/mark-container.svg" class="marker-bg ${isSelf ? 'self-bg' : ''}" />
+        <div class="marker-content ${isGroup ? 'group-content' : ''} ${isSelf ? 'self-content' : ''}">
           ${isGroup ? groupIconSvg : `<img src="${person.avatar}" alt="${person.name}" class="marker-image" />`}
           ${!isGroup ? `<div class="marker-status ${anyOnline ? 'online' : 'offline'}"></div>` : ''}
         </div>
