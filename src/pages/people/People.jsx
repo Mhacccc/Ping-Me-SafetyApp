@@ -64,7 +64,8 @@ function People() {
         const qApproved = query(
           collection(db, 'notifications'),
           where('appUserId', '==', user.uid),
-          where('type', '==', 'connection_approved_popup')
+          where('type', '==', 'connection_approved_popup'),
+          where('read', '==', false)
         );
         const unsubApproved = onSnapshot(qApproved, (snapshot) => {
           const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
