@@ -43,7 +43,7 @@ if (L.Edit && L.Edit.Circle) {
   };
 }
 import "./Places.css";
-import { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import * as mapHelpers from "../../utils/mapHelpers";
@@ -175,8 +175,7 @@ const Places = () => {
   // Leaflet ID of a temporary layer being drawn but not yet saved
   const [pendingLayerId, setPendingLayerId] = useState(null);
 
-  // Refs for tracking map group and temporary drawing layers
-  const featureGroupRef = useRef(null);
+  // Refs for tracking temporary drawing layers
   const pendingLayerRef = useRef(null);
 
   // Auth context for the current logged-in user (the monitor/app user)
@@ -197,50 +196,7 @@ const Places = () => {
     }
   };
 
-  /**
-   * Callback for when a new layer (circle) is finished being drawn on the map.
-   * @param {Object} e Leaflet draw event.
-   */
-  const _onCreate = (e) => {
-    const layer = e.layer;
-    // Prevent drawing multiple pending zones at once
-    if (pendingLayerId !== null) {
-      layer.remove();
-      return;
-    }
-    pendingLayerRef.current = layer;
-    setPendingLayerId(layer._leaflet_id);
 
-    setIsMonitorOpen(true); // Open the monitor to show the save form
-  };
-
-  /**
-   * Callback for when existing layers are edited on the map via the UI.
-   */
-  const _onEdited = (e) => {
-    e.layers.eachLayer(async (layer) => {
-      const id = layer.options.id;
-      if (!id) return;
-      try {
-        await geofenceService.updateGeofence(id, layer.getLatLng(), layer.getRadius());
-      } catch (err) {
-        console.error("Error updating geofence:", err);
-      }
-    });
-  };
-
-  /**
-   * Callback for when layers are deleted from the map via the UI.
-   */
-  const _onDeleted = (e) => {
-    e.layers.eachLayer(async (layer) => {
-      try {
-        await geofenceService.deleteGeofence(layer.options.id || layer._leaflet_id);
-      } catch (err) {
-        console.error("Error deleting geofence:", err);
-      }
-    });
-  };
 
   /**
    * Opens the Rename Modal for a specific geofence.
@@ -593,52 +549,14 @@ const Places = () => {
           })}
 
           {/* Leaflet Draw functionality group */}
-          <FeatureGroup ref={featureGroupRef}>
-            <EditControl
-              key={`edit-control-${geofences.length}-${isMonitorOpen}`}
-              position="topright"
-              onCreated={_onCreate}
-              onEdited={_onEdited}
-              onDeleted={_onDeleted}
-              draw={{
-                polygon: false,
-                rectangle: false,
-                polyline: false,
-                marker: false,
-                circlemarker: false,
-                circle: { shapeOptions: { stroke: true, color: "#A4262C", weight: 2, opacity: 0.5, fillColor: "url(#geofenceGradient)", fillOpacity: 0.5 } }, // Red boundary for safety zones
-              }}
-              edit={{
-                edit: {
-                  selectedPathOptions: {
-                    stroke: true,
-                    color: "#A4262C",
-                    weight: 2,
-                    opacity: 0.5,
-                    fillColor: "url(#geofenceGradient)",
-                    fillOpacity: 0.6,
-                    maintainColor: true,
-                  }
-                },
-                remove: {},
-              }}
-            />
-
-            {/* Visualize saved geofences as semi-transparent red circles */}
-            {geofences.map((zone) => (
-              <Circle
-                key={zone.id}
-                id={zone.id}
-                center={zone.latlngs}
-                radius={zone.radius}
-                pathOptions={{
-                  stroke: false,
-                  fillColor: "url(#geofenceGradient)",
-                  fillOpacity: 1,
-                }}
-              />
-            ))}
-          </FeatureGroup>
+          <GeofenceDrawingLayer
+            geofences={geofences}
+            currentUser={currentUser}
+            pendingLayerId={pendingLayerId}
+            setPendingLayerId={setPendingLayerId}
+            pendingLayerRef={pendingLayerRef}
+            setIsMonitorOpen={setIsMonitorOpen}
+          />
         </MapContainer>
       </div>
 
@@ -734,6 +652,99 @@ const Places = () => {
     </div>
   );
 };
+
+// Memoized drawing layer to prevent EditControl from resetting when user tracking data updates
+const GeofenceDrawingLayer = memo(({
+  geofences,
+  currentUser,
+  pendingLayerId,
+  setPendingLayerId,
+  pendingLayerRef,
+  setIsMonitorOpen
+}) => {
+  const featureGroupRef = useRef(null);
+
+  const _onCreate = useCallback((e) => {
+    const layer = e.layer;
+    if (pendingLayerId !== null) {
+      layer.remove();
+      return;
+    }
+    pendingLayerRef.current = layer;
+    setPendingLayerId(layer._leaflet_id);
+    setIsMonitorOpen(true);
+  }, [pendingLayerId, setPendingLayerId, pendingLayerRef, setIsMonitorOpen]);
+
+  const _onEdited = useCallback((e) => {
+    e.layers.eachLayer(async (layer) => {
+      const id = layer.options.id;
+      if (!id) return;
+      try {
+        await geofenceService.updateGeofence(id, layer.getLatLng(), layer.getRadius());
+      } catch (err) {
+        console.error("Error updating geofence:", err);
+      }
+    });
+  }, []);
+
+  const _onDeleted = useCallback((e) => {
+    e.layers.eachLayer(async (layer) => {
+      try {
+        await geofenceService.deleteGeofence(layer.options.id || layer._leaflet_id);
+      } catch (err) {
+        console.error("Error deleting geofence:", err);
+      }
+    });
+  }, []);
+
+  return (
+    <FeatureGroup ref={featureGroupRef}>
+      <EditControl
+        key="edit-control"
+        position="topright"
+        onCreated={_onCreate}
+        onEdited={_onEdited}
+        onDeleted={_onDeleted}
+        draw={{
+          polygon: false,
+          rectangle: false,
+          polyline: false,
+          marker: false,
+          circlemarker: false,
+          circle: { shapeOptions: { stroke: true, color: "#A4262C", weight: 2, opacity: 0.5, fillColor: "url(#geofenceGradient)", fillOpacity: 0.5 } },
+        }}
+        edit={{
+          edit: {
+            selectedPathOptions: {
+              stroke: true,
+              color: "#A4262C",
+              weight: 2,
+              opacity: 0.5,
+              fillColor: "url(#geofenceGradient)",
+              fillOpacity: 0.6,
+              maintainColor: true,
+            }
+          },
+          remove: {},
+        }}
+      />
+
+      {geofences.map((zone) => (
+        <Circle
+          key={zone.id}
+          center={zone.latlngs}
+          radius={zone.radius}
+          pathOptions={{
+            id: zone.id, // Custom option stored in Leaflet options so layer.options.id exists during edits/deletes
+            stroke: false,
+            fillColor: "url(#geofenceGradient)",
+            fillOpacity: 1,
+          }}
+        />
+      ))}
+    </FeatureGroup>
+  );
+});
 
 // Helper component to explicitly track map moves and sync to Context
 function MapStateTracker({ setMapViewState }) {

@@ -483,26 +483,8 @@
 }
 
 /* --- Styling for the Actions (Save/Cancel sub-menus) --- */
-.leaflet-draw-actions {
-  /* Exit animation: slowly fade out when Leaflet hides it */
-  position: fixed !important;
-  top: auto !important;
-  bottom: 80px !important;
-  /* Matches slightly above animation finish */
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  display: flex !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
-  transition: opacity 0.25s ease, z-index 0s 0.25s !important;
-}
-
-/* Leaflet-draw adds .leaflet-draw-actions-top when it's actively shown */
-.leaflet-draw-actions-top,
-.leaflet-draw-actions-bottom,
-.active-drawing-actions .leaflet-draw-actions {
-  /* Fallback for active state */
+.leaflet-draw-actions[style*="display: block"],
+.leaflet-draw-actions[style*="display:block"] {
   /* Positioning it floating at the bottom center of the screen above the navbar */
   position: fixed !important;
   top: auto !important;
@@ -514,40 +496,30 @@
   /* Fancy Glassmorphism Pill Design - Single line layout */
   display: flex !important;
   flex-wrap: nowrap !important;
-  /* Prevent wrapping onto multiple lines */
   align-items: center !important;
   justify-content: center !important;
   gap: 4px !important;
-  /* Spacing between items */
   background-color: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   border-radius: 999px !important;
-  /* Fully rounded pill shape */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
   padding: 6px 12px !important;
   border: 1px solid rgba(255, 255, 255, 0.8) !important;
   z-index: 2000 !important;
-  /* Ensure it stays above everything */
   margin: 0 !important;
 
-  /* Ensure it doesn't overflow mobile width, but allow horizontal scroll if absolutely necessary */
   max-width: 90vw !important;
   overflow-x: auto !important;
-  /* Hide scrollbar for a cleaner look */
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 
   /* Smooth animation when it appears from the bottom */
   animation: slide-up-fade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
-
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  z-index: 2000 !important;
-  transition: none !important;
 }
 
-.active-drawing-actions .leaflet-draw-actions::-webkit-scrollbar {
+.leaflet-draw-actions[style*="display: block"]::-webkit-scrollbar,
+.leaflet-draw-actions[style*="display:block"]::-webkit-scrollbar {
   display: none !important;
 }
 
@@ -968,7 +940,8 @@ html.pm-dark .zone-items-list::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
 }
 
-html.pm-dark .leaflet-draw-actions {
+html.pm-dark .leaflet-draw-actions[style*="display: block"],
+html.pm-dark .leaflet-draw-actions[style*="display:block"] {
   background-color: rgba(30, 30, 30, 0.95) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
